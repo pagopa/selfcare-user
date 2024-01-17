@@ -1,16 +1,12 @@
-package it.pagopa.selfcare.user.controller.response;
+package it.pagopa.selfcare.user.model.notification;
 
 import it.pagopa.selfcare.user.constant.QueueEvent;
-import it.pagopa.selfcare.user.controller.response.notification.UserToNotify;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
 
-/**
- * This objects wrap user's info sent on topic sc-users
- */
 @Data
-public class UserNotificationResponse {
+public class UserNotificationToSend {
 
     private String id;
     private String institutionId;

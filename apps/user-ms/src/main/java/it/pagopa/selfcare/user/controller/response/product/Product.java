@@ -1,20 +1,20 @@
-package it.pagopa.selfcare.user.controller.response;
+package it.pagopa.selfcare.user.controller.response.product;
 
-import it.pagopa.selfcare.commons.base.security.PartyRole;
-import it.pagopa.selfcare.mscore.constant.Env;
-import it.pagopa.selfcare.mscore.constant.RelationshipState;
+import it.pagopa.selfcare.user.common.Env;
+import it.pagopa.selfcare.user.common.PartyRole;
+import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
 
-import static it.pagopa.selfcare.mscore.constant.Env.ROOT;
+import static it.pagopa.selfcare.user.common.Env.ROOT;
 
 @Data
 public class Product {
 
     private String productId;
     private String tokenId;
-    private RelationshipState status;
+    private OnboardedProductState status;
     private String contract;
     private String productRole;
     private PartyRole role;

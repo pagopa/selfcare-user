@@ -3,6 +3,8 @@ package it.pagopa.selfcare.user.controller.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.pagopa.selfcare.user.common.InstitutionType;
 import it.pagopa.selfcare.user.common.PartyRole;
+import it.pagopa.selfcare.user.controller.response.institution.Billing;
+import it.pagopa.selfcare.user.controller.response.product.ProductInfo;
 import lombok.Data;
 
 import java.util.List;

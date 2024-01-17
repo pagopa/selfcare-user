@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.controller.response;
+package it.pagopa.selfcare.user.controller.response.product;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
