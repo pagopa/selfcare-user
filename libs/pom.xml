@@ -19,6 +19,8 @@
     <modules>
         <module>user-sdk-common</module>
         <module>user-sdk-pom</module>
+        <module>user-sdk-product</module>
+        <module>user-sdk-azure-storage</module>
     </modules>
 
 
