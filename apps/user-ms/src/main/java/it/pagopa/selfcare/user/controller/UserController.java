@@ -5,7 +5,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.OnboardingInfoResponse;
-import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.notification.UsersNotificationResponse;

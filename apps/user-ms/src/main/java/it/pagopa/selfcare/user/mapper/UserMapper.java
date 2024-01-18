@@ -23,5 +23,5 @@ public interface UserMapper {
 
    // UsersNotificationResponse toUserNotificationResponse(List<UserNotificationToSend> userNotificationToSends);
 
-   // UserProduct toOnboardedProduct(OnboardedProduct onboardedProduct);
+    UserProduct toOnboardedProduct(OnboardedProduct onboardedProduct);
 }

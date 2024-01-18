@@ -1,7 +1,6 @@
-package it.pagopa.selfcare.user.controller.response;
+package it.pagopa.selfcare.user.controller.response.notification;
 
 import it.pagopa.selfcare.user.constant.QueueEvent;
-import it.pagopa.selfcare.user.controller.response.notification.UserToNotify;
 import lombok.Data;
 
 import java.time.OffsetDateTime;

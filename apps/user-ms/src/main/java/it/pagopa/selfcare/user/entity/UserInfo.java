@@ -4,17 +4,20 @@ import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.bson.types.ObjectId;
+import lombok.experimental.FieldNameConstants;
+import org.bson.codecs.pojo.annotations.BsonId;
 
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @MongoEntity(collection = "userInfo")
+@FieldNameConstants(asEnum = true)
 public class UserInfo extends ReactivePanacheMongoEntity {
 
-    private ObjectId id;
+    @BsonId
     private String userId;
+
     private List<UserInstitutionRole> institutions;
 
 }
