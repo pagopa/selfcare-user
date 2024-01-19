@@ -42,17 +42,6 @@
         <module>user-ms</module>
       </modules>
     </profile>
-    <profile>
-      <id>user-functions</id>
-      <activation>
-        <file>
-          <exists>user-functions/pom.xml</exists>
-        </file>
-      </activation>
-      <modules>
-        <module>user-functions</module>
-      </modules>
-    </profile>
   </profiles>
 
 </project>

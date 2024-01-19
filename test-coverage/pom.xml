@@ -56,19 +56,6 @@
             </dependencies>
         </profile>
         <profile>
-            <id>user-functions</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-functions</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>user-sdk</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
