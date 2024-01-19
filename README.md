@@ -2,6 +2,7 @@
 
 This repo structure and build monorepo with Apache Maven for selfcare user domain. 
 
+Applications under apps/ depend on shared code under libs/.
 test-coverage/ is used to assess the test coverage of the entire project.
 
 
