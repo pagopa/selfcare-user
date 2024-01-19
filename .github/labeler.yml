@@ -1,13 +1,13 @@
-onboarding-ms:
-- apps/user-ms/**
+user-ms:
+  - apps/user-ms/**
 
 libs:
-- libs/**
+  - libs/**
 
 ops:
-- .github/**
-- .container_apps/**
-- .identity/**
+  - .github/**
+  - infra/**
+  - .identity/**
 
 docs:
-- README.md
+  - README.md
