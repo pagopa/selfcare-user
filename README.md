@@ -10,7 +10,6 @@ test-coverage/ is used to assess the test coverage of the entire project.
 .
 
 ├── apps
-│   ├── user-functions
 │   └── user-ms
 └── test-coverage
 ```
