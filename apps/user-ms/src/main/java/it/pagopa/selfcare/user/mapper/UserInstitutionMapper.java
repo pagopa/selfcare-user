@@ -9,10 +9,8 @@ import org.mapstruct.Named;
 
 @Mapper(componentModel = "jakarta", uses = {OnboardedProductMapper.class})
 public interface UserInstitutionMapper {
-
     @Mapping(target = "id", expression = "java(objectIdToString(userInstitution.getId()))")
     UserInstitutionResponse toResponse(UserInstitution userInstitution);
-
 
     @Named("objectIdToString")
     default String objectIdToString(ObjectId objectId) {

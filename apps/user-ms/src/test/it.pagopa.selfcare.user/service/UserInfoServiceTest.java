@@ -10,7 +10,6 @@ import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.service.UserInfoServiceDefault;
 import jakarta.inject.Inject;
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -24,17 +23,6 @@ public class UserInfoServiceTest {
 
     @Inject
     private UserInfoServiceDefault userInfoService;
-
-    @Test
-    void findById() {
-        final String id = new ObjectId().toHexString();
-        UserInfo userInfo = createDummyUserInfo();
-        PanacheMock.mock(UserInfo.class);
-        when(UserInfo.findById(any()))
-                .thenReturn(Uni.createFrom().item(userInfo));
-        Uni<UserInfoResponse> response = userInfoService.findById(id);
-        Assertions.assertNotNull(response);
-    }
 
     @Test
     void findByUserId() {
@@ -51,7 +39,6 @@ public class UserInfoServiceTest {
 
     private UserInfo createDummyUserInfo() {
         UserInfo userInfo = new UserInfo();
-        userInfo.setId(ObjectId.get());
         userInfo.setUserId("userId");
         return userInfo;
     }

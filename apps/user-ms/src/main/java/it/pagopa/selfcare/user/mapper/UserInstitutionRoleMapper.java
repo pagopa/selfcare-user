@@ -6,6 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "cdi")
 public interface UserInstitutionRoleMapper {
-
     UserInstitutionRoleResponse toResponse(UserInstitutionRole model);
 }
