@@ -67,11 +67,6 @@
       <artifactId>quarkus-mailer</artifactId>
     </dependency>
     <dependency>
-      <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>user-sdk-common</artifactId>
-      <version>${user-sdk.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
       <scope>compile</scope>
