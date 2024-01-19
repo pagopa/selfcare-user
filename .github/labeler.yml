@@ -1,0 +1,13 @@
+user-ms:
+  - apps/user-ms/**
+
+libs:
+  - libs/**
+
+ops:
+  - .github/**
+  - infra/**
+  - .identity/**
+
+docs:
+  - README.md
