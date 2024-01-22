@@ -42,6 +42,17 @@
         <module>user-ms</module>
       </modules>
     </profile>
+    <profile>
+      <id>user-cdc</id>
+      <activation>
+        <file>
+          <exists>user-cdc/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>user-cdc</module>
+      </modules>
+    </profile>
   </profiles>
 
 </project>

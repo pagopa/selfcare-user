@@ -6,10 +6,12 @@ Applications under apps/ depend on shared code under libs/.
 test-coverage/ is used to assess the test coverage of the entire project.
 
 
+
 ```
 .
 
 ├── apps
+│   ├── user-cdc
 │   └── user-ms
 └── test-coverage
 ```
