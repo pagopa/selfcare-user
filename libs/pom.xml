@@ -17,8 +17,6 @@
     </properties>
 
     <modules>
-        <module>user-sdk-common</module>
-        <module>user-sdk-pom</module>
     </modules>
 
 
