@@ -24,7 +24,8 @@ jobs:
 
     steps:
 
-      - name: Setup Maven Actionuses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+      - name: Setup Maven Action
+        uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
         with:
           servers: '[{"id": "selfcare-github", "username": "${{ inputs.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
           checkout-fetch-depth: 0
