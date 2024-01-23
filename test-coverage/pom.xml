@@ -56,28 +56,15 @@
             </dependencies>
         </profile>
         <profile>
-            <id>user-functions</id>
+            <id>user-cdc</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-functions</artifactId>
+                    <artifactId>user-cdc</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>user-sdk</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-sdk-common</artifactId>
-                    <version>0.1.3</version>
                 </dependency>
             </dependencies>
 
