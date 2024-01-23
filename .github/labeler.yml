@@ -1,13 +1,18 @@
 user-ms:
-  - apps/user-ms/**
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-ms/**']
 
 libs:
-  - libs/**
+  - changed-files:
+      - any-glob-to-any-file: ['libs/**']
 
 ops:
-  - .github/**
-  - infra/**
-  - .identity/**
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'infra/**', '.identity/**']
 
 docs:
-  - README.md
+  - changed-files:
+      - any-glob-to-any-file: ['README.md']
+
+hotfix:
+  - base-branch: ['releases/*']
