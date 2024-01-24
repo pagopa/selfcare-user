@@ -1,6 +1,8 @@
 prefix    = "selc"
 env       = "prod"
 env_short = "p"
+domain    = "user-ms"
+location  = "westeurope"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -10,20 +12,51 @@ tags = {
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
 }
 
+ci_github_federations = [
+  {
+    repository = "selfcare-user"
+    subject    = "prod-ci"
+  }
+]
 
-environment_roles = {
+cd_github_federations = [
+  {
+    repository = "selfcare-user"
+    subject    = "prod-cd"
+  }
+]
+
+environment_ci_roles = {
   subscription = [
     "Reader",
-    "Reader and Data Access",
-    "Storage Blob Data Reader",
-    "Storage File Data SMB Share Reader",
-    "Storage Queue Data Reader",
-    "Storage Table Data Reader",
-    "PagoPA Export Deployments Template",
-    "Key Vault Secrets User",
-    "DocumentDB Account Contributor",
-    "API Management Service Contributor",
+    "Key Vault Secrets User"
   ]
+  resource_groups = {
+    "terraform-state-rg" = [
+      "Storage Blob Data Contributor"
+    ]
+  }
 }
 
+environment_cd_roles = {
+  subscription = [
+    "Reader",
+    "Contributor"
+  ]
+  resource_groups = {
+    "terraform-state-rg" = [
+      "Storage Blob Data Contributor"
+    ]
+  }
+}
 
+github_repository_environment_ci = {
+  protected_branches     = false
+  custom_branch_policies = true
+}
+
+github_repository_environment_cd = {
+  protected_branches     = true
+  custom_branch_policies = false
+  reviewers_teams        = ["selfcare-contributors"]
+}
