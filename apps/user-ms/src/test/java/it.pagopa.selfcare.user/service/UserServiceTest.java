@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
+
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
@@ -9,6 +10,7 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -33,10 +35,13 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Inject
     private UserService userService;
+
+    @InjectMock
+    private UserInstitutionService userInstitutionService;
 
     @RestClient
     @InjectMock
@@ -46,14 +51,6 @@ public class UserServiceTest {
     private static UserInstitution userInstitution;
 
     static {
-        userInstitution = new UserInstitution();
-        userInstitution.setId(ObjectId.get());
-        userInstitution.setUserId("userId");
-        userInstitution.setInstitutionId("institutionId");
-        OnboardedProduct product = new OnboardedProduct();
-        product.setProductId("test");
-        userInstitution.setProducts(List.of(product));
-
         userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
         CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
@@ -67,7 +64,34 @@ public class UserServiceTest {
         workContactResource.setEmail(certifiedEmail);
         userResource.setEmail(certifiedEmail);
         userResource.setWorkContacts(Map.of("institutionId", workContactResource));
+
+        userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId("userId");
+        userInstitution.setInstitutionId("institutionId");
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        userInstitution.setProducts(List.of(product));
     }
+    
+    @Test
+    void getUsersEmailsTest() {
+
+        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<String>> subscriber = userService
+                .getUsersEmails("institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<String> actual = subscriber.assertCompleted().awaitItem().getItem();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+        assertEquals("test@test.it", actual.get(0));
+    }
+
 
     @Test
     void getUserProductsByInstitutionTest() {
