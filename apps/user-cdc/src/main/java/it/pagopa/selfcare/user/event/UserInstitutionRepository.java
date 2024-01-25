@@ -4,6 +4,7 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.mongodb.ChangeStreamOptions;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
@@ -32,6 +33,7 @@ import static java.util.Arrays.asList;
 @Startup
 @Slf4j
 @ApplicationScoped
+@IfBuildProperty(name = "mongodb.watch.enabled", stringValue = "true")
 public class UserInstitutionRepository {
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final List<OnboardedProductState> VALID_PRODUCT_STATE = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
