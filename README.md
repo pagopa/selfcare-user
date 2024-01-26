@@ -13,6 +13,9 @@ test-coverage/ is used to assess the test coverage of the entire project.
 ├── apps
 │   ├── user-cdc
 │   └── user-ms
+└── libs
+    ├── user-sdk-pom
+    ├── user-sdk-common
 └── test-coverage
 ```
 
