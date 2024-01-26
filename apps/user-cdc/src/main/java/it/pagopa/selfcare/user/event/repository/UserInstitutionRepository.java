@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.event;
+package it.pagopa.selfcare.user.event.repository;
 
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -20,6 +20,7 @@ import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.event.mapper.UserMapper;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -30,49 +31,13 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static java.util.Arrays.asList;
 
-@Startup
 @Slf4j
+@RequiredArgsConstructor
 @ApplicationScoped
-@IfBuildProperty(name = "mongodb.watch.enabled", stringValue = "true")
 public class UserInstitutionRepository {
-    private static final String COLLECTION_NAME = "userInstitutions";
     private static final List<OnboardedProductState> VALID_PRODUCT_STATE = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
 
-    private final String mongodbDatabase;
-    private final ReactiveMongoClient mongoClient;
     private final UserMapper userMapper;
-
-    public UserInstitutionRepository(ReactiveMongoClient mongoClient,
-                                     @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
-                                     UserMapper userMapper) {
-        this.mongoClient = mongoClient;
-        this.mongodbDatabase = mongodbDatabase;
-        this.userMapper = userMapper;
-        initOrderStream();
-    }
-
-    private void initOrderStream() {
-        ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
-        ChangeStreamOptions options = new ChangeStreamOptions().fullDocument(FullDocument.UPDATE_LOOKUP);
-
-        Bson match = Aggregates.match(Filters.in("operationType", asList("update", "replace", "insert")));
-        Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
-        List<Bson> pipeline = Arrays.asList(match, project);
-
-        Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
-        publisher.subscribe().with(this::consumerUserInstitutionRepositoryEvent);
-    }
-
-    private ReactiveMongoCollection<UserInstitution> getCollection() {
-        return mongoClient
-                .getDatabase(mongodbDatabase)
-                .getCollection(COLLECTION_NAME, UserInstitution.class);
-    }
-
-    protected void consumerUserInstitutionRepositoryEvent(ChangeStreamDocument<UserInstitution> document) {
-        assert document.getFullDocument() != null;
-        updateUser(document.getFullDocument());
-    }
 
     public void updateUser(UserInstitution userInstitution) {
         OnboardedProductState state = retrieveStatusForGivenInstitution(userInstitution.getProducts());
@@ -94,16 +59,16 @@ public class UserInstitutionRepository {
     private Uni<Void> deleteInstitutionOrAllUserInfo(Optional<ReactivePanacheMongoEntityBase> opt, UserInstitution userInstitution) {
         return opt.map(UserInfo.class::cast)
                 .map(userInfo -> {
-                    if(userInfo.getInstitutions().stream()
-                            .anyMatch(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()))){
+                    if (userInfo.getInstitutions().stream()
+                            .anyMatch(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()))) {
 
                         List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
                         roleList.removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()));
                         userInfo.setInstitutions(roleList);
 
-                        if(roleList.isEmpty()){
+                        if (roleList.isEmpty()) {
                             return UserInfo.deleteById(userInstitution.getUserId()).replaceWith(Uni.createFrom().voidItem());
-                        }else{
+                        } else {
                             return UserInfo.persistOrUpdate(userInfo);
                         }
                     }
@@ -150,6 +115,6 @@ public class UserInstitutionRepository {
                 .map(OnboardedProduct::getStatus)
                 .toList();
         return Collections.min(list);
-
     }
 }
+

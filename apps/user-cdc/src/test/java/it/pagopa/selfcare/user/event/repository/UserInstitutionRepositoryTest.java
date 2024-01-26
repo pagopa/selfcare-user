@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.event;
+package it.pagopa.selfcare.user.event.repository;
 
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.event.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.event.entity.UserInfo;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.entity.UserInstitutionRole;
+import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -135,6 +136,20 @@ class UserInstitutionRepositoryTest {
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
+        mockPersistUserInfo(asserter);
+        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
+    }
+
+
+    @Test
+    @RunOnVertxContext
+    void initOrderStreamWithNotFoundValidStateButMoreInstitutions(UniAsserter asserter){
+        UserInstitution userInstitution = constructUserInstitution();
+        userInstitution.getProducts().get(0).setStatus(OnboardedProductState.SUSPENDED);
+        PanacheMock.mock(UserInfo.class);
+        UserInfo userInfo = retrieveUserInfo();
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(userInfo)));
         mockPersistUserInfo(asserter);
         Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
     }
