@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
+import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.service.UserEventService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -103,6 +104,23 @@ public class UserController {
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
+    }
+
+    @Operation(summary = "Retrieve all users according to optional params in input")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UsersNotificationResponse> getUsers(@QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                                   @QueryParam(value = "size") @DefaultValue("100") Integer size,
+                                                   @QueryParam(value = "productId") String productId) {
+        return userService.findPaginatedUserNotificationToSend(size, page, productId)
+                .map(userNotificationToSends -> {
+                    UsersNotificationResponse usersNotificationResponse = new UsersNotificationResponse();
+                    usersNotificationResponse.setUsers(userNotificationToSends.stream()
+                            .map(userMapper::toUserNotification)
+                            .toList());
+                    return usersNotificationResponse;
+                });
     }
 }
 
