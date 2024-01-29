@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,10 +68,10 @@ class UserServiceTest {
     private UserApi userRegistryApi;
 
     @InjectMock
-    private UserUtils userUtils;
+    private UserMapper userMapper;
 
     @InjectMock
-    private UserMapper userMapper;
+    private ProductService productService;
 
     private static UserResource userResource;
     private static UserInstitution userInstitution;
@@ -183,12 +185,11 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilter(){
-        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
         when(userInstitutionService
-                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(1L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -197,12 +198,11 @@ class UserServiceTest {
 
     @Test
     void updateUserStatusWithOptionalFilterUserNotFound(){
-        doNothing().when(userUtils).checkProductRole("prod-pagopa", PartyRole.MANAGER, null);
         when(userInstitutionService
-                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)).thenReturn(Uni.createFrom().item(0L));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", PartyRole.MANAGER, null, OnboardedProductState.ACTIVE)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", "prod-pagopa", MANAGER, null, OnboardedProductState.ACTIVE)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -212,7 +212,7 @@ class UserServiceTest {
     @Test
     void updateUserStatusWithOptionalFilterInvalidRequest(){
         UniAssertSubscriber<Void> subscriber = userService
-                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, PartyRole.MANAGER, null, null)
+                .updateUserStatusWithOptionalFilter("userId", "institutionId", null, MANAGER, null, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -260,14 +260,11 @@ class UserServiceTest {
     @Test
     void findPaginatedUserNotificationToSend() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Collections.singletonList(new UserInstitution())));
+                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
         UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
-        UserNotificationToSend userNotificationToSend = mock(UserNotificationToSend.class);
-        when(userUtils.constructUserNotificationToSend(any(), any(), any()))
-                .thenReturn(List.of(userNotificationToSend));
         when(userMapper.toUserNotification(any()))
                 .thenReturn(userNotificationResponse);
 
@@ -282,14 +279,11 @@ class UserServiceTest {
     @Test
     void findPaginatedUserNotificationToSendQueryWithoutProductId() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(Collections.singletonList(new UserInstitution())));
+                .thenReturn(Uni.createFrom().item(Collections.singletonList(userInstitution)));
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
         UserNotificationResponse userNotificationResponse = mock(UserNotificationResponse.class);
-        UserNotificationToSend userNotificationToSend = mock(UserNotificationToSend.class);
-        when(userUtils.constructUserNotificationToSend(any(), any(), any()))
-                .thenReturn(List.of(userNotificationToSend));
         when(userMapper.toUserNotification(any()))
                 .thenReturn(userNotificationResponse);
 
