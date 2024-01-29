@@ -24,8 +24,10 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 
 @RequiredArgsConstructor
 @ApplicationScoped
@@ -116,7 +118,7 @@ public class UserServiceImpl implements UserService {
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
-        Multi<UserInstitution> userInstitutions =  userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
+        Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
@@ -130,5 +132,78 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().nullItem();
                 });
     }
+        @Override
+        public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
+            Map<String, Object> userInstitutionFilters = constructUserInstitutionFilterMap(userIds);
+            Multi<UserInstitution> multiUserInstitution = userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters));
+            Uni<List<UserInstitution>> uniList = multiUserInstitution.collect().asList();
+            return uniList.onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+        }
 
-}
+        private Map<String, Object> buildQueryParams (String userId, String productId, String institutionId){
+            OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
+                    .productId(productId)
+                    .build();
+
+            UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
+                    .userId(userId)
+                    .institutionId(institutionId)
+                    .build();
+
+            Map<String, Object> filterMap = userInstitutionFilter.constructMap();
+            filterMap.putAll(onboardedProductFilter.constructMap());
+            return filterMap;
+        }
+
+        private Map<String, Object> constructUserInstitutionFilterMap (String institutionId, String userId){
+            return UserInstitutionFilter
+                    .builder()
+                    .institutionId(institutionId)
+                    .userId(userId)
+                    .build()
+                    .constructMap();
+        }
+
+        private Map<String, Object> constructUserInstitutionFilterMap (List < String > userIds) {
+            return UserInstitutionFilter
+                    .builder()
+                    .userId(formatQueryParameterList(userIds))
+                    .build().constructMap();
+        }
+
+        private Map<String, Object> constructOnboardedProductFilterMap (List < String > products,
+                List < String > states,
+                List < String > roles,
+                List < String > productRoles){
+            return OnboardedProductFilter.builder()
+                    .productId(formatQueryParameterList(products))
+                    .role(formatQueryParameterList(roles))
+                    .status(formatQueryParameterList(states))
+                    .productRole(formatQueryParameterList(productRoles))
+                    .build()
+                    .constructMap();
+        }
+
+        private Map<String, Object> constructUserInstitutionFilterMap (String institutionId){
+            return UserInstitutionFilter
+                    .builder()
+                    .institutionId(institutionId)
+                    .build()
+                    .constructMap();
+        }
+
+        private Map<String, Object> constructOnboardedProductFilterMap (String productId){
+            return OnboardedProductFilter.builder()
+                    .productId(productId)
+                    .build()
+                    .constructMap();
+        }
+
+        private Map<String, Object> retrieveMapForFilter (Map < String, Object > ...maps){
+            Map<String, Object> map = new HashMap<>();
+            Arrays.stream(maps).forEach(map::putAll);
+            return map;
+        }
+
+    }
+
