@@ -1,16 +1,6 @@
 package it.pagopa.selfcare.user.event.repository;
 
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.changestream.ChangeStreamDocument;
-import com.mongodb.client.model.changestream.FullDocument;
-import io.quarkus.arc.properties.IfBuildProperty;
-import io.quarkus.mongodb.ChangeStreamOptions;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
-import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
-import io.quarkus.runtime.Startup;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.event.constant.OnboardedProductState;
@@ -22,14 +12,9 @@ import it.pagopa.selfcare.user.event.mapper.UserMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.conversions.Bson;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.*;
 
-import static com.mongodb.client.model.Projections.fields;
-import static com.mongodb.client.model.Projections.include;
-import static java.util.Arrays.asList;
 
 @Slf4j
 @RequiredArgsConstructor
