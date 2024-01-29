@@ -8,20 +8,16 @@ import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import io.smallrye.mutiny.Uni;
 
 import java.util.List;
+
 
 public interface UserService {
     Uni<List<String>> getUsersEmails(String institutionId, String productId);
     Multi<UserProductResponse> getUserProductsByInstitution(String institutionId);
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
-    Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId,
-                                                           String userId,
-                                                           List<String> roles,
-                                                           List<String> states,
-                                                           List<String> products,
-                                                           List<String> productRoles);
-
+    Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
+    Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
     Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
+
 }

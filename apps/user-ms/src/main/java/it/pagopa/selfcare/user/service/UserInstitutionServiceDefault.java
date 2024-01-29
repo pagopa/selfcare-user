@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.service;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -74,6 +75,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
         return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+    }
+
+    @Override
+    public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
+        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilterMap, userInstitutionFilterMap);
+        return updateUserStatusDao(filterMap, status);
     }
 
     @Override

@@ -135,6 +135,35 @@ class UserInstitutionServiceTest {
     }
 
     @Test
+    void updateUserStatusWithInstitutionAndOnboardedFilter() {
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        String productId = "productId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, null, OnboardedProductState.ACTIVE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void updateUserStatusWithInstitutionFilter() {
+        final String userId = "userId";
+        String institutionId = "institutionId";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, null, null, null, OnboardedProductState.ACTIVE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
     void deleteUserInstitutionProduct(){
         final String userId = "userId";
         String institutionId = "institutionId";
