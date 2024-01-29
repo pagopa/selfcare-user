@@ -137,7 +137,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId) {
-        List<UserNotificationToSend> response = new ArrayList<>();
         Map<String, Object> queryParameter;
         if (StringUtils.isNotBlank(productId)) {
             queryParameter = OnboardedProductFilter.builder().productId(productId).status(VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION).build().constructMap();
@@ -153,13 +152,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
                         .map(userResource -> buildUsersNotificationResponse(userInstitution, userResource, productId)))
-                .collect()
-                .asList()
-                .map(lists -> {
-                    lists.forEach(response::addAll);
-                    return lists;
-                })
-                .replaceWith(response);
+                        .collect().in(ArrayList::new, List::addAll);
     }
 
     private List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
