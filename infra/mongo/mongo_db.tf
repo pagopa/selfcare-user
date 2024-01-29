@@ -11,10 +11,10 @@ resource "azurerm_management_lock" "mongodb_selc_user" {
   notes      = "This items can't be deleted in this subscription!"
 }
 
-module "mongodb_collection_users" {
+module "mongodb_collection_user_institutions" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.39.0"
 
-  name                = "users"
+  name                = "userInstitutions"
   resource_group_name = local.mongo_db.mongodb_rg_name
 
   cosmosdb_mongo_account_name  = local.mongo_db.cosmosdb_account_mongodb_name
@@ -29,10 +29,10 @@ module "mongodb_collection_users" {
   lock_enable = true
 }
 
-module "mongodb_collection_tokens" {
+module "mongodb_collection_user_info" {
   source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.39.0"
 
-  name                = "tokens"
+  name                = "userInfo"
   resource_group_name = local.mongo_db.mongodb_rg_name
 
   cosmosdb_mongo_account_name  = local.mongo_db.cosmosdb_account_mongodb_name
