@@ -1,5 +1,5 @@
 output "container_app_resource_group_name" {
-  value = azapi_resource.container_app_user_cdc.location
+  value = azapi_resource.container_app_user_ms.location
 }
 
 output "container_app_environment_name" {
