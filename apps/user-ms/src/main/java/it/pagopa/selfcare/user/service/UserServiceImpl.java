@@ -137,8 +137,9 @@ public class UserServiceImpl implements UserService {
         @Override
         public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
             var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
-            Multi<UserInstitution> multiUserInstitution = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters));
-            Uni<List<UserInstitution>> uniList = multiUserInstitution.collect().asList();
+            Uni<List<UserInstitution>> uniList = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                    .collect()
+                    .asList();
             return uniList.onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
         }
 
