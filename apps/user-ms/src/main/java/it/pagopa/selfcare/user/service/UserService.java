@@ -9,7 +9,6 @@ import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-
 import java.util.List;
 
 
@@ -27,4 +26,6 @@ public interface UserService {
     Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
 
     Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId);
+
+    Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds);
 }
