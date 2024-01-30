@@ -23,7 +23,9 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
@@ -135,17 +137,9 @@ public class UserServiceImpl implements UserService {
         @Override
         public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
             var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
-            Multi<UserInstitution> multiUserInstitution = userInstitutionService.findAllWithFilter(retrieveMapForFilter(userInstitutionFilters));
+            Multi<UserInstitution> multiUserInstitution = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters));
             Uni<List<UserInstitution>> uniList = multiUserInstitution.collect().asList();
             return uniList.onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
-        }
-
-
-
-        private Map<String, Object> retrieveMapForFilter (Map < String, Object > ...maps){
-            Map<String, Object> map = new HashMap<>();
-            Arrays.stream(maps).forEach(map::putAll);
-            return map;
         }
 
     }
