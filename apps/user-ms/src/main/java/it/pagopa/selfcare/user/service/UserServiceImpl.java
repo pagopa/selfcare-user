@@ -120,8 +120,10 @@ public class UserServiceImpl implements UserService {
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
-        Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
-        return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
+        return userInstitutionService
+                .findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem()
+                .transform(userInstitutionMapper::toResponse);
     }
 
     @Override
