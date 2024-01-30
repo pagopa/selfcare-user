@@ -69,6 +69,10 @@ public class UserInstitutionCdcService {
 
     protected void consumerUserInstitutionRepositoryEvent(ChangeStreamDocument<UserInstitution> document) {
         assert document.getFullDocument() != null;
-        userInstitutionRepository.updateUser(document.getFullDocument());
+        userInstitutionRepository.updateUser(document.getFullDocument())
+                .subscribe().with(
+                        result -> log.info("UserInfo collection successfully updated"),
+                        failure -> log.error("Error during UserInfo collection updating, message:" + failure.getMessage()));
+
     }
 }

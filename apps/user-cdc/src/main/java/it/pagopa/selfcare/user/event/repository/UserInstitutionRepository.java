@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.event.mapper.UserMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 
@@ -24,31 +25,30 @@ public class UserInstitutionRepository {
 
     private final UserMapper userMapper;
 
-    public void updateUser(UserInstitution userInstitution) {
+    public Uni<Void> updateUser(UserInstitution userInstitution) {
         OnboardedProductState state = retrieveStatusForGivenInstitution(userInstitution.getProducts());
-        UserInfo.findByIdOptional(userInstitution.getUserId())
-                .onItem().transformToUni(opt -> {
-                    if (VALID_PRODUCT_STATE.contains(state)) {
-                        PartyRole role = retrieveRoleForGivenInstitution(userInstitution.getProducts());
-                        return updateOrCreateNewUserInfo(opt, userInstitution, role, state);
-                    } else {
-                        return deleteInstitutionOrAllUserInfo(opt, userInstitution);
-                    }
-                })
-                .subscribe().with(
-                        result -> log.info("UserInfo collection successfully updated"),
-                        failure -> log.error("Error during UserInfo collection updating, message:" + failure.getMessage()));
-
+        return UserInfo.findByIdOptional(userInstitution.getUserId())
+                .onItem().transformToUni(opt -> opt.map(entityBase -> {
+                            if (VALID_PRODUCT_STATE.contains(state)) {
+                                PartyRole role = retrieveRoleForGivenInstitution(userInstitution.getProducts());
+                                return updateOrCreateNewUserInfo(opt.get(), userInstitution, role, state);
+                            } else {
+                                return deleteInstitutionOrAllUserInfo(opt.get(), userInstitution);
+                            }
+                        })
+                        .orElse(Uni.createFrom().voidItem()));
     }
 
-    private Uni<Void> deleteInstitutionOrAllUserInfo(Optional<ReactivePanacheMongoEntityBase> opt, UserInstitution userInstitution) {
-        return opt.map(UserInfo.class::cast)
-                .map(userInfo -> {
+    private Uni<Void> deleteInstitutionOrAllUserInfo(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution) {
+        return Uni.createFrom().item((UserInfo) entityBase)
+                .flatMap(userInfo -> {
                     if (userInfo.getInstitutions().stream()
                             .anyMatch(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()))) {
 
-                        List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
-                        roleList.removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()));
+                        List<UserInstitutionRole> roleList = userInfo.getInstitutions().stream()
+                                .filter(userInstitutionRole -> userInstitutionRole.getInstitutionId()
+                                        .equalsIgnoreCase(userInstitution.getInstitutionId())).toList();
+
                         userInfo.setInstitutions(roleList);
 
                         if (roleList.isEmpty()) {
@@ -58,31 +58,30 @@ public class UserInstitutionRepository {
                         }
                     }
                     return Uni.createFrom().voidItem();
-                })
-                .orElse(Uni.createFrom().voidItem());
+                });
     }
 
-    private Uni<Void> updateOrCreateNewUserInfo(Optional<ReactivePanacheMongoEntityBase> opt, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
-        return opt.map(UserInfo.class::cast)
+    private Uni<Void> updateOrCreateNewUserInfo(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
+        return Uni.createFrom().item((UserInfo) entityBase)
                 .map(userInfo -> replaceOrAddInstitution(userInfo, userInstitution, role, state))
-                .orElse(userMapper.toNewUserInfo(userInstitution, role, state))
-                .persistOrUpdate()
-                .replaceWith(Uni.createFrom().voidItem());
+                .flatMap(userInfo -> UserInfo.persistOrUpdate(userInfo));
     }
 
     private UserInfo replaceOrAddInstitution(UserInfo userInfo, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
-        userInfo.getInstitutions().stream()
-                .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
-                .findFirst()
-                .ifPresentOrElse(userInstitutionRole -> {
-                            userInstitutionRole.setRole(role);
-                            userInstitutionRole.setState(state);
-                        },
-                        () -> {
-                            List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
-                            roleList.add(userMapper.toUserInstitutionRole(userInstitution, role, state));
-                            userInfo.setInstitutions(roleList);
-                        });
+        if (!CollectionUtils.isEmpty(userInfo.getInstitutions())) {
+            userInfo.getInstitutions().stream()
+                    .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
+                    .findFirst()
+                    .ifPresentOrElse(userInstitutionRole -> {
+                                userInstitutionRole.setRole(role);
+                                userInstitutionRole.setState(state);
+                            },
+                            () -> {
+                                List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
+                                roleList.add(userMapper.toUserInstitutionRole(userInstitution, role, state));
+                                userInfo.setInstitutions(roleList);
+                            });
+        }
         return userInfo;
     }
 

@@ -7,6 +7,7 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.event.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.event.entity.OnboardedProduct;
@@ -69,7 +70,12 @@ class UserInstitutionRepositoryTest {
         UserInstitution userInstitution = constructUserInstitution();
         mockRetrieveUserInfoFounded(asserter);
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
+        PanacheMock.mock(UserInfo.class);
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
     }
 
     @Test
@@ -81,8 +87,9 @@ class UserInstitutionRepositoryTest {
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
     }
 
     @Test
@@ -90,11 +97,11 @@ class UserInstitutionRepositoryTest {
     void initOrderStreamWithNotFoundUserId(UniAsserter asserter){
         UserInstitution userInstitution = constructUserInstitution();
         PanacheMock.mock(UserInfo.class);
-        when(UserInfo.findByIdOptional(any()))
+        when(UserInfo.findByIdOptional(anyString()))
                 .thenReturn(Uni.createFrom().item(Optional.empty()));
-        mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
     }
 
     @Test
@@ -110,8 +117,9 @@ class UserInstitutionRepositoryTest {
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(userInfo)));
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-    }
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();    }
 
     @Test
     @RunOnVertxContext
@@ -123,8 +131,9 @@ class UserInstitutionRepositoryTest {
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-    }
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();    }
 
 
     @Test
@@ -137,8 +146,9 @@ class UserInstitutionRepositoryTest {
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(retrieveUserInfo())));
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-    }
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();    }
 
 
     @Test
@@ -151,8 +161,9 @@ class UserInstitutionRepositoryTest {
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(userInfo)));
         mockPersistUserInfo(asserter);
-        Assertions.assertDoesNotThrow(() -> userInstitutionRepository.updateUser(userInstitution));
-    }
+        UniAssertSubscriber<Void> subscriber =  userInstitutionRepository.updateUser(userInstitution)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();    }
 
     private UserInfo retrieveUserInfo() {
         UserInfo userInfo = new UserInfo();
