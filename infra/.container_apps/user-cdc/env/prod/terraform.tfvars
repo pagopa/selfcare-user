@@ -10,8 +10,8 @@ tags = {
 }
 
 container_app = {
-  min_replicas = 0
-  max_replicas = 5
+  min_replicas = 1
+  max_replicas = 1
   scale_rules  = [
     {
       custom = {
@@ -26,8 +26,8 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu    = 1.25
-  memory = "2.5Gi"
+  cpu = 0.2
+  memory = "0.25Gi"
 }
 
 app_settings = [

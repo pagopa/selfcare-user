@@ -1,4 +1,4 @@
 resource_group_name  = "terraform-state-rg"
 storage_account_name = "tfappdevselfcare"
 container_name       = "terraform-state"
-key                  = "user-app.tfstate"
+key                  = "selfcare-user.user-app.tfstate"
