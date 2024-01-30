@@ -120,10 +120,8 @@ public class UserServiceImpl implements UserService {
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
-        return userInstitutionService
-                .findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
-                .onItem()
-                .transform(userInstitutionMapper::toResponse);
+        return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
@@ -139,10 +137,9 @@ public class UserServiceImpl implements UserService {
         @Override
         public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
             var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
-            Uni<List<UserInstitution>> uniList = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
+            return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
                     .collect()
-                    .asList();
-            return uniList.onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+                    .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
         }
 
     }
