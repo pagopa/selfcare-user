@@ -27,4 +27,6 @@ public interface UserInstitutionService {
     Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
 
     Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
+
+    Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 }
