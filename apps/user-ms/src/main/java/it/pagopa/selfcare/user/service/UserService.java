@@ -6,12 +6,12 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import it.pagopa.selfcare.user.entity.UserInstitution;
 
 
 public interface UserService {
@@ -21,7 +21,7 @@ public interface UserService {
 
     Uni<UserResource> retrievePerson(String userId, String productId, String institutionId);
 
-    Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states);
+    Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
 
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 

@@ -14,16 +14,15 @@ import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserNotificationResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
-import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
@@ -44,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
@@ -52,7 +52,6 @@ import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FO
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -68,15 +67,15 @@ class UserServiceTest {
     @InjectMock
     private UserInstitutionService userInstitutionService;
 
+    @InjectMock
+    private UserInfoService userInfoService;
+
     @RestClient
     @InjectMock
     private UserApi userRegistryApi;
 
     @InjectMock
     private UserMapper userMapper;
-
-    @InjectMock
-    private UserUtils userUtils;
 
     @InjectMock
     private ProductService productService;
@@ -193,30 +192,69 @@ class UserServiceTest {
 
     @Test
     void testRetrieveBindingsOk() {
-        List<UserInstitution> userInstitutions = new ArrayList<>();
-        userInstitutions.add(userInstitution);
+        UserInfo userInfoResponse = new UserInfo();
+        userInfoResponse.setUserId("test-user");
 
-        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitutions));
-        when(userUtils.filterProduct(any(), any())).thenReturn(userInstitution);
+        UserInstitutionRole userInstitution = new UserInstitutionRole();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.ACTIVE);
 
-        UniAssertSubscriber<List<UserInstitution>> subscriber = userService
-                .retrieveBindings("test-institutionId", "test-user", null)
+        List<UserInstitutionRole> userInstitutionRoleResponses = new ArrayList<>();
+        userInstitutionRoleResponses.add(userInstitution);
+        userInfoResponse.setInstitutions(userInstitutionRoleResponses);
+
+        PanacheMock.mock(UserInfo.class);
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(userInfoResponse)));
+
+        UniAssertSubscriber<UserInfo> subscriber = userService
+                .retrieveBindings(null, "test-user", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        subscriber.assertItem(userInstitutions);
+        subscriber.assertItem(userInfoResponse);
     }
 
     @Test
     void testRetrieveBindingsFails() {
-        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
-
-        UniAssertSubscriber<List<UserInstitution>>  subscriber = userService
+        PanacheMock.mock(UserInfo.class);
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.empty()));
+        UniAssertSubscriber<UserInfo> subscriber = userService
                 .retrieveBindings("test-institutionId", "test-user", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
+
+    }
+
+    @Test
+    void testRetrieveBindingsFails2() {
+        UserInstitutionRole userInstitution = new UserInstitutionRole();
+        userInstitution.setInstitutionName("test-institutionId");
+        userInstitution.setStatus(OnboardedProductState.PENDING);
+
+        List<UserInstitutionRole> userInstitutionRoleResponses = new ArrayList<>();
+        userInstitutionRoleResponses.add(userInstitution);
+
+        UserInfo userInfoResponse = new UserInfo();
+        userInfoResponse.setUserId("test-user");
+        userInfoResponse.setInstitutions(userInstitutionRoleResponses);
+
+        PanacheMock.mock(UserInfo.class);
+        when(UserInfo.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(userInfoResponse)));
+
+        String[] states = {"ACTIVE"};
+
+        UniAssertSubscriber<UserInfo> subscriber = userService
+                .retrieveBindings("test-institutionId", "test-user", states)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+
     }
 
     @Test

@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
@@ -49,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final OnboardedProductMapper onboardedProductMapper;
     private final UserUtils userUtils;
     private final UserInstitutionService userInstitutionService;
+    private final UserInfoService userInfoService;
     private final UserInstitutionMapper userInstitutionMapper;
 
     private static final String WORK_CONTACTS = "workContacts";
@@ -141,13 +143,14 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().nullItem();
                 });
     }
-        @Override
-        public Uni<List<UserInstitutionResponse>> findAllByIds (List < String > userIds) {
-            var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
-            return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
-                    .collect()
-                    .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
-        }
+
+    @Override
+    public Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
+        return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                .collect()
+                .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+    }
 
     @Override
     public Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt) {
@@ -177,7 +180,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUniAndMerge(userInstitution -> userRegistryApi
                         .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId())
                         .map(userResource -> buildUsersNotificationResponse(userInstitution, userResource, productId)))
-                        .collect().in(ArrayList::new, List::addAll);
+                .collect().in(ArrayList::new, List::addAll);
     }
 
     private List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
@@ -185,30 +188,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<List<UserInstitution>> retrieveBindings(String institutionId, String userId, String[] states) {
+    public Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states) {
         String[] finalStates = states != null && states.length > 0 ? states : null;
-        List<OnboardedProductState> relationshipStates = Optional.ofNullable(finalStates)
-                .map(userUtils::convertStatesToOnboardedProductStates)
-                .orElse(null);
-
-        UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder()
-                .userId(userId)
-                .institutionId(institutionId)
-                .build();
-
-        OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder()
-                .status(relationshipStates)
-                .build();
-
-        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilter.constructMap(), onboardedProductFilter.constructMap()))
-                .map((list) -> {
-                    if (list == null || list.isEmpty()) {
-                        throw new ResourceNotFoundException("");
-                    }
-                    return list;
-                })
-                .map(userInstitutionList -> userInstitutionList.stream()
-                        .map(userInstitution -> userUtils.filterProduct(userInstitution, finalStates))
-                        .toList());
+        return UserInfo.findByIdOptional(userId)
+                .map(opt -> opt.map(UserInfo.class::cast)
+                        .map(userInfo -> {
+                            UserInfo filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
+                            if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
+                                throw new ResourceNotFoundException("");
+                            }
+                            return filteredUserInfo;
+                        })
+                        .orElseThrow(() -> new ResourceNotFoundException(""))
+                );
     }
 }
