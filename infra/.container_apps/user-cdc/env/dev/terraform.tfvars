@@ -28,6 +28,7 @@ key_vault = {
   resource_group_name = "selc-d-sec-rg"
   name                = "selc-d-kv"
   secrets_names = [
-    "mongodb-connection-string"
+    "mongodb-connection-string",
+    "user-cdc-appinsights-connection-string"
   ]
 }
