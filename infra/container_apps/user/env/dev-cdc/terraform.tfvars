@@ -14,8 +14,8 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu = 0.2
-  memory = "0.25Gi"
+  cpu = 0.25
+  memory = "0.5Gi"
 }
 
 app_settings = [
@@ -30,6 +30,6 @@ key_vault = {
   name                = "selc-d-kv"
   secrets_names = [
     "mongodb-connection-string",
-    "appinsights-connection-string"
+    # "appinsights-connection-string"
   ]
 }
