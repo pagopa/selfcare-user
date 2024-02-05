@@ -30,6 +30,6 @@ key_vault = {
   name                = "selc-d-kv"
   secrets_names = [
     "mongodb-connection-string",
-    "user-appinsights-connection-string"
+    "appinsights-connection-string"
   ]
 }
