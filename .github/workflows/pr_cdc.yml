@@ -28,3 +28,4 @@ jobs:
       target_branch: ${{ github.base_ref }}
       sonar_key: 'pagopa_selfcare-user'
       actor: ${{ github.actor }}
+      module: 'user-cdc'
