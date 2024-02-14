@@ -1,5 +1,6 @@
 prefix    = "selc"
 env_short = "u"
+is_pnpg   = true
 
 tags = {
   CreatedBy   = "Terraform"
@@ -21,9 +22,7 @@ app_settings = [
 
 ]
 
-
 secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string"
+    "jwt-public-key",
+    "mongodb-connection-string"
 ]
-

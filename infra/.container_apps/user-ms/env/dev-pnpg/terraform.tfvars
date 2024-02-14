@@ -1,9 +1,10 @@
 prefix    = "selc"
-env_short = "u"
+env_short = "d"
+is_pnpg   = true
 
 tags = {
   CreatedBy   = "Terraform"
-  Environment = "Uat"
+  Environment = "Dev"
   Owner       = "SelfCare"
   Source      = "https://github.com/pagopa/selfcare-user"
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
@@ -11,7 +12,7 @@ tags = {
 
 container_app = {
   min_replicas = 1
-  max_replicas = 2
+  max_replicas = 1
   scale_rules  = []
   cpu    = 0.5
   memory = "1Gi"
@@ -20,7 +21,6 @@ container_app = {
 app_settings = [
 
 ]
-
 
 secrets_names = [
   "jwt-public-key",
