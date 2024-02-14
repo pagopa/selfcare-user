@@ -5,6 +5,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -13,22 +14,21 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
@@ -36,6 +36,8 @@ class UserControllerTest {
 
     @InjectMock
     private UserService userService;
+    @InjectMock
+    private UserRegistryService userRegistryService;
 
     /**
      * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
@@ -305,7 +307,7 @@ class UserControllerTest {
                 .queryParam("page", 0)
                 .queryParam("size", 100)
                 .queryParam(productId, "productId")
-                .get("")
+                .get("/notification")
                 .then()
                 .statusCode(401);
     }
@@ -324,9 +326,68 @@ class UserControllerTest {
                 .queryParam("page", 0)
                 .queryParam("size", 100)
                 .queryParam(productId, "productId")
+                .get("/notification")
+                .then()
+                .statusCode(200);
+    }
+
+
+    /**
+     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     */
+    @Test
+    void testGetUserInstitutionsNotAuthorized() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get()
+                .then()
+                .statusCode(401);
+    }
+
+    /**
+     * Method under test: {@link InstitutionController#retrieveUsers(String, String, List, List, List, List))}
+     */
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetUserInstitutions() {
+        Map<String, Object> queryParam = new HashMap<>();
+        queryParam.put("institutionId", "Id");
+        queryParam.put("userId", "userId");
+        Mockito.when(userService.findPaginatedUserInstitutions("Id",  "userId", null, null, null, null, 0 , 100))
+                .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
+
+        given()
+                .when()
+                .queryParams(queryParam)
+                .contentType(ContentType.JSON)
                 .get("")
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    void testUpdateUserRegistryAndSendNotificationToQueueUnauthorized() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/test_user_id/user-registry?institutionId=institutionIdTest")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testUpdateUserRegistryAndSendNotificationToQueue() {
+        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
+        Mockito.when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(mutableUserFieldsDto)
+                .put("/test_user_id/user-registry?institutionId=institutionIdTest")
+                .then()
+                .statusCode(204);
     }
 
 }
