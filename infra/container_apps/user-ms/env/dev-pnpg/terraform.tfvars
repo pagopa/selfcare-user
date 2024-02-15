@@ -1,9 +1,10 @@
 prefix    = "selc"
-env_short = "u"
+env_short = "d"
+is_pnpg   = true
 
 tags = {
   CreatedBy   = "Terraform"
-  Environment = "Uat"
+  Environment = "Dev"
   Owner       = "SelfCare"
   Source      = "https://github.com/pagopa/selfcare-user"
   CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
@@ -18,16 +19,14 @@ container_app = {
 }
 
 app_settings = [
-  {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
-  }
+
 ]
 
 key_vault = {
-  resource_group_name = "selc-u-sec-rg"
-  name                = "selc-u-kv"
+  resource_group_name = "selc-d-sec-rg"
+  name                = "selc-d-kv"
   secrets_names = [
+    "jwt-public-key",
     "mongodb-connection-string",
     "appinsights-connection-string"
   ]

@@ -11,7 +11,7 @@ tags = {
 
 container_app = {
   min_replicas = 1
-  max_replicas = 1
+  max_replicas = 5
   scale_rules  = [
     {
       custom = {
@@ -26,22 +26,20 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu = 0.2
-  memory = "0.25Gi"
+  cpu    = 1.25
+  memory = "2.5Gi"
 }
 
 app_settings = [
-  {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
-  }
+
 ]
 
 key_vault = {
   resource_group_name = "selc-p-sec-rg"
   name                = "selc-p-kv"
   secrets_names = [
-    "mongodb-connection-string",
-    "appinsights-connection-string"
+    "jwt-public-key",
+    "appinsights-connection-string",
+    "mongodb-connection-string"
   ]
 }

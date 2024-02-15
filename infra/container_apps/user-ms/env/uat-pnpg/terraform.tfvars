@@ -1,5 +1,6 @@
 prefix    = "selc"
 env_short = "u"
+is_pnpg   = true
 
 tags = {
   CreatedBy   = "Terraform"
@@ -18,10 +19,7 @@ container_app = {
 }
 
 app_settings = [
-  {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
-  }
+
 ]
 
 key_vault = {
