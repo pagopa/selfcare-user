@@ -1,5 +1,6 @@
 prefix    = "selc"
 env_short = "d"
+app_name  = "user-ms"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -27,6 +28,6 @@ key_vault = {
   secrets_names = [
     "jwt-public-key",
     "mongodb-connection-string",
-    "appinsights-connection-string"
+    "appinsights-instrumentation-key"
   ]
 }
