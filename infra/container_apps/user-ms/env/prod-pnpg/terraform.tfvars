@@ -11,7 +11,7 @@ tags = {
 }
 
 container_app = {
-  min_replicas = 0
+  min_replicas = 1
   max_replicas = 5
   scale_rules  = [
     {
@@ -35,7 +35,11 @@ app_settings = [
 
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string"
-]
+key_vault = {
+  resource_group_name = "selc-p-sec-rg"
+  name                = "selc-p-kv"
+  secrets_names = [
+    "mongodb-connection-string",
+    "appinsights-connection-string"
+  ]
+}

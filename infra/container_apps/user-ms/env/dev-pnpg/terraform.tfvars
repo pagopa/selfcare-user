@@ -22,8 +22,12 @@ app_settings = [
 
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string"
-]
-
+key_vault = {
+  resource_group_name = "selc-d-sec-rg"
+  name                = "selc-d-kv"
+  secrets_names = [
+    "jwt-public-key",
+    "mongodb-connection-string",
+    "appinsights-connection-string"
+  ]
+}
