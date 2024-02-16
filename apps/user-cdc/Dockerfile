@@ -15,7 +15,7 @@ COPY --link ./apps/user-cdc/pom.xml .
 COPY ./apps/user-cdc/src/main/ ./src/main/
 
 WORKDIR /src
-RUN mvn --settings /home/runner/.m2/settings.xml --projects :user-cdc --also-make clean package -DskipTests
+RUN mvn --settings /.m2/settings.xml --projects :user-cdc --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk AS runtime
 
