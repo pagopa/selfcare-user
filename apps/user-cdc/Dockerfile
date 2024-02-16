@@ -14,8 +14,8 @@ WORKDIR /src/apps/user-cdc
 COPY --link ./apps/user-cdc/pom.xml .
 COPY ./apps/user-cdc/src/main/ ./src/main/
 
-WORKDIR /src
-RUN mvn --global-settings /.m2/settings.xml --projects :user-cdc --also-make clean package -DskipTests
+COPY ./.m2/settings.xml .
+RUN mvn --global-settings settings.xml --projects :user-cdc --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk AS runtime
 
