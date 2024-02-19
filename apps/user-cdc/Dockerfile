@@ -14,8 +14,20 @@ WORKDIR /src/apps/user-cdc
 COPY --link ./apps/user-cdc/pom.xml .
 COPY ./apps/user-cdc/src/main/ ./src/main/
 
-COPY ./.m2/settings.xml .
-RUN mvn --global-settings settings.xml --projects :user-cdc --also-make clean package -DskipTests
+RUN echo "  echo \"<servers>\"\n" \
+		 "  echo \"<server>\"\n" \
+		 "  echo \"<id>${repositoryId}</id>\"\n" \
+		 "  echo \"<username>${repo.login}</username>\"\n" \
+		 "  echo \"<password>${repo.pwd}</password>\"\n" \
+		 "  echo \"<server>\"\n" \
+		 "  echo \"<servers>\"\n" > settings.xml
+
+ARG REPO_ID
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+ENV REPO_ID=${REPO_ID} REPO_USERNAME=${REPO_USERNAME} REPO_PASSWORD=${REPO_PASSWORD}
+
+RUN mvn --global-settings settings.xml --projects :user-cdc -DrepositoryId=${REPO_ID} -Drepo.login=${REPO_USERNAME} -Drepo.pwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk AS runtime
 
