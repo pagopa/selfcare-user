@@ -12,8 +12,10 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -50,21 +52,21 @@ import static it.pagopa.selfcare.user.constant.CustomError.STATUS_IS_MANDATORY;
 import static it.pagopa.selfcare.user.constant.CustomError.USER_TO_UPDATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
 class UserServiceTest {
 
     @Inject
-    private UserService userService;
+    UserService userService;
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
-
+    @InjectMock
+    private  UserNotificationService userNotificationService;
     @InjectMock
     private UserInfoService userInfoService;
 
@@ -78,8 +80,8 @@ class UserServiceTest {
     @InjectMock
     private ProductService productService;
 
-    private static UserResource userResource;
-    private static UserInstitution userInstitution;
+    private static final UserResource userResource;
+    private static final UserInstitution userInstitution;
 
     static {
         userResource = new UserResource();
@@ -94,12 +96,13 @@ class UserServiceTest {
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
         userResource.setEmail(certifiedEmail);
-        userResource.setWorkContacts(Map.of("institutionId", workContactResource));
+        userResource.setWorkContacts(Map.of("userMailUuid", workContactResource));
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
         userInstitution.setUserId("userId");
         userInstitution.setInstitutionId("institutionId");
+        userInstitution.setUserMailUuid("userMailUuid");
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
@@ -114,7 +117,7 @@ class UserServiceTest {
                 .thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<List<String>> subscriber = userService
-                .getUsersEmails("institutionId", "productId")
+                .getUsersEmails("userMailUuid", "productId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -149,6 +152,8 @@ class UserServiceTest {
     void testRetrievePerson() {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId("test-user");
+        String userMailUuId = UUID.randomUUID().toString();
+        userInstitution.setUserMailUuid(userMailUuId);
 
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
@@ -157,6 +162,9 @@ class UserServiceTest {
         userResource.setEmail(CertifiableFieldResourceOfstring.builder().value("test@test.com").build());
         userResource.setName(CertifiableFieldResourceOfstring.builder().value("testName").build());
         userResource.setFamilyName(CertifiableFieldResourceOfstring.builder().value("testFamilyName").build());
+        WorkContactResource workContactResource = new WorkContactResource();
+        workContactResource.setEmail(CertifiableFieldResourceOfstring.builder().value("userMail").build());
+        userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
 
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
@@ -420,9 +428,67 @@ class UserServiceTest {
         when(userMapper.toUserNotification(any()))
                 .thenReturn(userNotificationResponse);
 
-        UniAssertSubscriber<List<UserNotificationToSend>> subscriber = userService
-                .findPaginatedUserNotificationToSend(10, 0, null)
+        userService.findPaginatedUserNotificationToSend(10, 0, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted();
+    }
+
+    @Test
+    void testUpdateUserStatus() {
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+
+        UserInstitution userInstitutionResponse = mock(UserInstitution.class);
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitutionResponse));
+
+        Product product = mock(Product.class);
+        when(productService.getProduct(any())).thenReturn(product);
+
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                        "userId", "institutionId", "productId", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().item(1L));
+
+
+        when(userNotificationService.sendEmailNotification(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(),
+                anyString(),
+                anyString())
+        ).thenReturn(Uni.createFrom().voidItem());
+
+        when(userNotificationService.sendKafkaNotification(
+                any(UserNotificationToSend.class),
+                any())
+        ).thenReturn(Uni.createFrom().nullItem());
+
+        LoggedUser loggedUser = LoggedUser.builder()
+                .familyName("surname")
+                .name("name")
+                .build();
+
+        userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+                 loggedUser)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
+
+        verify(userNotificationService, times(1)).sendEmailNotification(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(),
+                anyString(),
+                anyString()
+        );
+        verify(userNotificationService, times(1)).sendKafkaNotification(
+                any(UserNotificationToSend.class),
+                any()
+        );
     }
 }

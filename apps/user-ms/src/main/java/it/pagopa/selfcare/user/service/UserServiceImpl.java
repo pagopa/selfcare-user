@@ -3,7 +3,10 @@ package it.pagopa.selfcare.user.service;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -14,6 +17,7 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
+import it.pagopa.selfcare.user.model.notification.PrepareNotificationData;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,9 +41,9 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 import static it.pagopa.selfcare.user.constant.CustomError.USER_NOT_FOUND_ERROR;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
-@RequiredArgsConstructor
-@ApplicationScoped
 @Slf4j
+@ApplicationScoped
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     @RestClient
@@ -50,6 +54,10 @@ public class UserServiceImpl implements UserService {
     private final UserUtils userUtils;
     private final UserInstitutionService userInstitutionService;
     private final UserInstitutionMapper userInstitutionMapper;
+
+    private final UserNotificationService userNotificationService;
+
+    private final ProductService productService;
 
     private static final String WORK_CONTACTS = "workContacts";
 
@@ -155,7 +163,7 @@ public class UserServiceImpl implements UserService {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
         return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
                 .collect()
-                .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).collect(Collectors.toList()));
+                .asList().onItem().transform(userInstitutions -> userInstitutions.stream().map(userInstitutionMapper::toResponse).toList());
     }
 
     @Override
@@ -167,6 +175,49 @@ public class UserServiceImpl implements UserService {
                     }
                     return Uni.createFrom().nullItem();
                 });
+    }
+
+    @Override
+    public Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser) {
+        PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
+        return updateUserStatusWithOptionalFilter(userId, institutionId, productId, null, null, status)
+                .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
+                .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationData(builder, userId, institutionId))
+                .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
+                .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
+                .onItem().transformToUni(prepareNotificationData -> userNotificationService.sendEmailNotification(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), status, loggedUser.getName(), loggedUser.getFamilyName())
+                        .onFailure().recoverWithNull()
+                        .replaceWith(prepareNotificationData))
+                .onItem().transform(prepareNotificationData -> userUtils.buildUserNotificationToSend(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), productId, status))
+                .onItem().call(userNotificationToSend -> userNotificationService.sendKafkaNotification(userNotificationToSend, userId))
+                .onFailure().invoke(x -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", userId, institutionId, productId, x.getMessage(), x))
+                .replaceWithVoid();
+    }
+
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String productId) {
+        Product product = productService.getProduct(productId);
+        builder.product(product);
+        return Uni.createFrom().item(builder);
+    }
+
+
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserInstitutionAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String userId, String institutionId) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(userInstitutionFilters)
+                .onItemOrFailure().transformToUni((userInstitution, throwable) -> {
+                    if (throwable != null) {
+                        log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                        return Uni.createFrom().failure(new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+                    }
+                    builder.userInstitution(userInstitution);
+                    return Uni.createFrom().item(userInstitution);
+                })
+                .replaceWith(builder);
+    }
+
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder, String userId) {
+        return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
+                .onItem().transform(prepareNotificationDataBuilder::userResource);
     }
 
     @Override
