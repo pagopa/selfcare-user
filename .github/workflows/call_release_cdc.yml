@@ -23,7 +23,8 @@ jobs:
     runs-on: ubuntu-20.04
     environment: ${{ inputs.environment }}-cd
     permissions:
-      packages: write|read
+      contents: read
+      packages: write
 
     steps:
 
