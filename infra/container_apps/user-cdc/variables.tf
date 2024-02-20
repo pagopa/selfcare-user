@@ -67,3 +67,7 @@ variable "secrets_names" {
   type        = list(string)
   description = "KeyVault secrets to get values from"
 }
+
+
+
+
