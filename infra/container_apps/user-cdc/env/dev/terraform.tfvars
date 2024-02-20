@@ -1,4 +1,3 @@
-prefix    = "selc"
 env_short = "d"
 
 tags = {
