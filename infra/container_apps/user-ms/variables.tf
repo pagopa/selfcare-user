@@ -1,3 +1,9 @@
+variable "is_pnpg" {
+  type        = bool
+  default     = false
+  description = "(Optional) True if you want to apply changes to PNPG environment"
+}
+
 variable "prefix" {
   description = "Domain prefix"
   type        = string
@@ -24,18 +30,6 @@ variable "env_short" {
 variable "tags" {
   type = map(any)
 }
-
-variable "app_name" {
-  description = "App name"
-  type        = string
-  validation {
-    condition = (
-      length(var.app_name) <= 16
-    )
-    error_message = "Max length is 16 chars."
-  }
-}
-
 
 variable "container_app" {
   description = "Container App configuration"
@@ -68,11 +62,7 @@ variable "app_settings" {
   }))
 }
 
-variable "key_vault" {
-  description = "KeyVault data to get secrets values from"
-  type = object({
-    resource_group_name = string
-    name                = string
-    secrets_names       = set(string)
-  })
+variable "secrets_names" {
+  type        = list(string)
+  description = "KeyVault secrets to get values from"
 }

@@ -31,17 +31,6 @@ variable "tags" {
   type = map(any)
 }
 
-variable "app_name" {
-  description = "App name"
-  type        = string
-  validation {
-    condition = (
-      length(var.app_name) <= 16
-    )
-    error_message = "Max length is 16 chars."
-  }
-}
-
 
 variable "container_app" {
   description = "Container App configuration"
@@ -78,3 +67,7 @@ variable "secrets_names" {
   type        = list(string)
   description = "KeyVault secrets to get values from"
 }
+
+
+
+
