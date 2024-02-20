@@ -16,11 +16,13 @@ COPY ./apps/user-cdc/src/main/ ./src/main/
 
 RUN echo "<servers>\n" \
 		 "<server>\n" \
-		 "<id>$repositoryId</id>\n" \
-		 "<username>$repoLogin</username>\n" \
-		 "<password>$repoPwd</password>\n" \
+		 "<id>\${repositoryId}</id>\n" \
+		 "<username>\${repoLogin}</username>\n" \
+		 "<password>\${repoPwd}</password>\n" \
 		 "</server>\n" \
 		 "</servers>\n" > settings.xml
+
+RUN cat settings.xml
 
 ARG REPO_ID
 ARG REPO_USERNAME
