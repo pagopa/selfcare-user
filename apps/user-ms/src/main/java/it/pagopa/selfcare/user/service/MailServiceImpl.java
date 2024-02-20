@@ -4,6 +4,7 @@ import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -30,11 +31,15 @@ public class MailServiceImpl implements MailService {
         Mail mail = Mail
                 .withHtml(email, userMailSubjectPrefix + subject, content)
                 .setFrom(senderMail);
-        return Uni.createFrom().item(() -> {
+
+        return  Uni.createFrom().item(() -> {
                     mailer.send(mail);
                     return Uni.createFrom().voidItem();
                 })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onFailure().invoke(throwable -> log.error("Error during send mail to: {} -> exception: {}", email, throwable.getMessage(), throwable))
+                .onItem().invoke(() -> log.trace("Message sent successfully to: {}", email))
+                .onFailure().recoverWithNull()
                 .replaceWithVoid();
     }
 

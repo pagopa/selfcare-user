@@ -2,13 +2,12 @@ package it.pagopa.selfcare.user.service;
 
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
-
-import java.util.Map;
 
 @Slf4j
 @ApplicationScoped
@@ -59,15 +58,14 @@ public class AwsMailServiceImpl implements MailService {
 
         log.trace("Attempting to send an email through Amazon SES using the AWS SDK for Java...");
 
-        return Uni.createFrom().item(() -> sesClient.sendEmail(emailRequest))
-                .onFailure().recoverWithUni(throwable -> {
-                    log.error("Error during send mail with AWS SES to: {} -> exception: {}", email, throwable.getMessage(), throwable);
-                    return null;
-                })
-                .onItem().transformToUni(sendEmailResponse -> {
-                    log.trace("sendMessage end");
-                    return Uni.createFrom().voidItem();
-                });
+        return Uni.createFrom()
+                .item(() -> sesClient.sendEmail(emailRequest))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onFailure().invoke(throwable -> log.error("Error during send mail with AWS SES to: {} -> exception: {}", email, throwable.getMessage(), throwable))
+                .onItem().invoke(() -> log.trace("Message sent successfully to: {}", email))
+                .onFailure().recoverWithNull()
+                .replaceWithVoid();
+
     }
 }
 
