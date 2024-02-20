@@ -12,8 +12,8 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu = 0.25
-  memory = "0.5Gi"
+  cpu          = 0.25
+  memory       = "0.5Gi"
 }
 
 app_settings = [
@@ -25,7 +25,7 @@ app_settings = [
 
 
 secrets_names = [
-    "mongodb-connection-string",
-    "appinsights-instrumentation-key"
+  "mongodb-connection-string",
+  "appinsights-instrumentation-key"
 ]
 
