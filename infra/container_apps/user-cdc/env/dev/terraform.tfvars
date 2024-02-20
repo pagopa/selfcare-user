@@ -1,6 +1,5 @@
 prefix    = "selc"
 env_short = "d"
-app_name  = "user-cdc"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -25,11 +24,9 @@ app_settings = [
   }
 ]
 
-key_vault = {
-  resource_group_name = "selc-d-sec-rg"
-  name                = "selc-d-kv"
-  secrets_names = [
+
+secrets_names = [
     "mongodb-connection-string",
     "appinsights-instrumentation-key"
-  ]
-}
+]
+
