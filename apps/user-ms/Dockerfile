@@ -31,7 +31,7 @@ ARG REPO_USERNAME
 ARG REPO_PASSWORD
 ENV REPO_ID=${REPO_ID} REPO_USERNAME=${REPO_USERNAME} REPO_PASSWORD=${REPO_PASSWORD}
 
-RUN mvn --global-settings settings.xml --projects :user-cdc -DrepositoryId=${REPO_ID} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
+RUN mvn --global-settings settings.xml --projects :user-ms -DrepositoryId=${REPO_ID} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk AS runtime
 
