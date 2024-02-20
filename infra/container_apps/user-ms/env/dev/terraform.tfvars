@@ -1,6 +1,5 @@
 prefix    = "selc"
 env_short = "d"
-app_name  = "user-ms"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -22,12 +21,10 @@ app_settings = [
 
 ]
 
-key_vault = {
-  resource_group_name = "selc-d-sec-rg"
-  name                = "selc-d-kv"
-  secrets_names = [
+
+secrets_names = [
     "jwt-public-key",
     "mongodb-connection-string",
     "appinsights-instrumentation-key"
-  ]
-}
+]
+
