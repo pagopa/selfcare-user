@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.service;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
+import io.quarkus.mailer.reactive.ReactiveMailer;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
@@ -23,7 +24,7 @@ class MailServiceImplTest {
     MailService mailService;
 
     @Inject
-    Mailer mailer;
+    ReactiveMailer mailer;
 
     public static class MailerProfile implements QuarkusTestProfile {
         @Override
@@ -34,14 +35,12 @@ class MailServiceImplTest {
 
     @BeforeEach
     void startup() {
-        mailer = mock(Mailer.class);
+        mailer = mock(ReactiveMailer.class);
         this.mailService = new MailServiceImpl(mailer);
     }
 
     @Test
     void testSendMailNotification() {
-
-        Mockito.doNothing().when(mailer).send(any());
 
         mailService.sendMail("email", "content", "subject")
                 .subscribe()

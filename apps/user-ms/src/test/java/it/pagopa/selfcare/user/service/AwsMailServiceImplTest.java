@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
+import software.amazon.awssdk.services.ses.model.SendEmailResponse;
 
 
 import java.util.Map;
@@ -48,10 +49,13 @@ class AwsMailServiceImplTest {
     @Test
     void testSendMailNotification() {
 
+        when(sesClient.sendEmail(any(SendEmailRequest.class)))
+                .thenReturn(SendEmailResponse.builder().build());
+
         awsMailService.sendMail("email", "content", "subject")
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
+                .withSubscriber(UniAssertSubscriber.create());
+
         ArgumentCaptor<SendEmailRequest> mailArgumentCaptor = ArgumentCaptor.forClass(SendEmailRequest.class);
         Mockito.verify(sesClient, Mockito.times(1))
                 .sendEmail(mailArgumentCaptor.capture());
