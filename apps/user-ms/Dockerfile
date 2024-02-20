@@ -14,8 +14,24 @@ WORKDIR /src/apps/user-ms
 COPY --link ./apps/user-ms/pom.xml .
 COPY ./apps/user-ms/src/main/ ./src/main/
 
-WORKDIR /src
-RUN mvn --projects :user-ms --also-make clean package -DskipTests
+RUN echo "<settings>\n" \
+         "<servers>\n" \
+		 "<server>\n" \
+		 "<id>\${repositoryId}</id>\n" \
+		 "<username>\${repoLogin}</username>\n" \
+		 "<password>\${repoPwd}</password>\n" \
+		 "</server>\n" \
+		 "</servers>\n" \
+         "</settings>\n" > settings.xml
+
+RUN cat settings.xml
+
+ARG REPO_ID
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+ENV REPO_ID=${REPO_ID} REPO_USERNAME=${REPO_USERNAME} REPO_PASSWORD=${REPO_PASSWORD}
+
+RUN mvn --global-settings settings.xml --projects :user-cdc -DrepositoryId=${REPO_ID} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 FROM openjdk:17-jdk AS runtime
 
