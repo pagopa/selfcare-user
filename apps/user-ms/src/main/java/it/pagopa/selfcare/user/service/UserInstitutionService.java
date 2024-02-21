@@ -31,6 +31,8 @@ public interface UserInstitutionService {
 
     Uni<Long> updateUserCreatedAtByInstitutionAndProduct(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
+    Uni<Long> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail);
+
     Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 
 }

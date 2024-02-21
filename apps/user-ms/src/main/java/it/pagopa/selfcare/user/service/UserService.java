@@ -34,5 +34,8 @@ public interface UserService {
     Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId);
 
     Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds);
+
     Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
+
+    Uni<Void> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail);
 }

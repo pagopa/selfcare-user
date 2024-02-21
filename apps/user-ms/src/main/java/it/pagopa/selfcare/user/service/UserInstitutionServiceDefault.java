@@ -96,6 +96,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
+    public Uni<Long> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail) {
+        Map<String, Object> filtersMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.userMailUuid.name(), uuidEmail);
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filtersMap, USER_INSTITUTION_COLLECTION));
+    }
+
+    @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
         Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
         log.debug("Query: {}", query);

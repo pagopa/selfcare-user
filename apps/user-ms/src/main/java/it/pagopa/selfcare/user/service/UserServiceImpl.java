@@ -171,6 +171,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Uni<Void> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail) {
+        return userInstitutionService.updateUserInstitutionEmail(institutionId, userId, uuidEmail)
+                .onItem().transformToUni(aLong -> {
+                    if (aLong < 1) {
+                        return Uni.createFrom().failure(new ResourceNotFoundException(USERS_TO_UPDATE_NOT_FOUND.getMessage()));
+                    }
+                    return Uni.createFrom().nullItem();
+                });
+    }
+
+    @Override
     public Uni<List<UserNotificationToSend>> findPaginatedUserNotificationToSend(Integer size, Integer page, String productId) {
         Map<String, Object> queryParameter;
         if (StringUtils.isNotBlank(productId)) {

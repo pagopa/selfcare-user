@@ -11,7 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -20,7 +26,9 @@ import java.util.stream.Collectors;
 public class UserInfoServiceDefault implements UserInfoService {
 
     private final UserInfoMapper userInfoMapper;
+    private final UserService userService;
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+    private static final String EMAIL_UUID_PREFIX = "ID_MAIL#";
 
     @RestClient
     @Inject
@@ -35,18 +43,23 @@ public class UserInfoServiceDefault implements UserInfoService {
     @Override
     public Uni<Void> updateUserEmail(int page, int size) {
         Multi<UserInfo> userInfos = UserInfo.findAll().page(page, size).stream();
-        userInfos.onItem().transformToUni(userInfo -> userInstitution -> userRegistryApi
-                .findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
-                .map(userResource -> userResource.getWorkContacts()
-                        .values().stream().collect(Collectors.groupingBy(obj -> obj.getEmail().getValue()))
-                 )
-                .onItem().invoke(map -> userRegistryApi.updateUsingPATCH(userInfo.getUserId(), ))
-                .onItem().invoke(this::updateInstitution));
+        userInfos.onItem().transformToUni(userInfo ->
+                userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
+                .map(this::buildWorkContactsMap)
+                .invoke(map -> userRegistryApi.updateUsingPATCH(userInfo.getUserId(), MutableUserFieldsDto.builder().workContacts(map).build())));
         return Uni.createFrom().voidItem();
     }
 
-    private void updateInstitution() {
-
+    private Map<String, WorkContactResource> buildWorkContactsMap(UserResource userResource) {
+        var workContacts = userResource.getWorkContacts();
+        Map<String, List<WorkContactResource>> newMap = userResource.getWorkContacts()
+                .values().stream().collect(Collectors.groupingBy(obj -> obj.getEmail().getValue()));
+        newMap.forEach((key, value) -> {
+            String uuidEmail = EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString());
+            workContacts.put(uuidEmail, value.get(0));
+            userService.updateUserInstitutionEmail("", userResource.getId().toString(), uuidEmail);
+        });
+        return userResource.getWorkContacts();
     }
 
 }
