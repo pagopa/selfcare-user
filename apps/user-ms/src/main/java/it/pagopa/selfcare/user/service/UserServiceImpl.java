@@ -188,6 +188,16 @@ public class UserServiceImpl implements UserService {
         return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
     }
 
+    /**
+     * The updateUserProductStatus method in the UserServiceImpl class is responsible for updating the status of a user's product and sending notifications about this update.
+     * it calls the updateUserStatusWithOptionalFilter method to update the user's product status on UserInstitution collection.
+     * After the status update, the method retrieves the user's data from the user registry and adds it to the PrepareNotificationDataBuilder.
+     * Then, it retrieves the user's institution data from UserInstitituion Collection.
+     * After that, it retrieves the product data.
+     * Once all the necessary data is retrieved and added to the PrepareNotificationDataBuilder, which is used to build the data needed for sending notifications.
+     * Next, it sends an email notification about the status update.
+     * Then, it builds a UserNotificationToSend to send a Kafka notification about the status update.
+     */
     @Override
     public Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser) {
         PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
