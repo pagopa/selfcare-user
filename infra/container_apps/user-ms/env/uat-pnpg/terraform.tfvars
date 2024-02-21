@@ -1,4 +1,3 @@
-prefix    = "selc"
 env_short = "u"
 is_pnpg   = true
 
@@ -22,11 +21,8 @@ app_settings = [
 
 ]
 
-key_vault = {
-  resource_group_name = "selc-u-sec-rg"
-  name                = "selc-u-kv"
-  secrets_names = [
+secrets_names = [
     "mongodb-connection-string",
     "appinsights-connection-string"
-  ]
-}
+]
+
