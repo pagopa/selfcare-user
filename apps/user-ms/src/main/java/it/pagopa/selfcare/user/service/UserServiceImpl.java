@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.service;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -128,7 +129,7 @@ public class UserServiceImpl implements UserService {
                     return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
-                .map(userResource -> userMapper.toUserResponse(userResource, userInstitution.getUserMailUuid())))
+                        .map(userResource -> userMapper.toUserResponse(userResource, userInstitution.getUserMailUuid())))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
@@ -216,9 +217,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String productId) {
-        Product product = productService.getProduct(productId);
-        builder.product(product);
-        return Uni.createFrom().item(builder);
+        return Uni.createFrom().item(productService.getProduct(productId))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onItem().transform(builder::product);
     }
 
 

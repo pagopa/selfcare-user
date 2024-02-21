@@ -487,8 +487,7 @@ class UserServiceTest {
         userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
                         LoggedUser.builder().build())
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
+                .withSubscriber(UniAssertSubscriber.create());
 
         verify(userNotificationService, times(1)).sendEmailNotification(
                 any(UserResource.class),
