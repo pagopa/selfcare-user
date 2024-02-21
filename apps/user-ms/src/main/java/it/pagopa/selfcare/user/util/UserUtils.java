@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.*;
@@ -99,9 +100,9 @@ public class UserUtils {
     private UserToNotify buildUserToNotify(UserResource user, UserInstitution institution, OnboardedProductState status) {
         UserToNotify userToNotify = new UserToNotify();
         userToNotify.setUserId(institution.getUserId());
-        userToNotify.setName(user.getName() != null ? user.getName().getValue() : null);
-        userToNotify.setFamilyName(user.getFamilyName() != null ? user.getFamilyName().getValue() : null);
-        userToNotify.setEmail(user.getEmail() != null ? user.getEmail().getValue() : null);
+        userToNotify.setName(Optional.ofNullable(user.getName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setFamilyName(Optional.ofNullable(user.getFamilyName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setEmail(Optional.ofNullable(user.getEmail()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
         userToNotify.setRelationshipStatus(status);
         return userToNotify;
 
