@@ -85,7 +85,7 @@ public class UserController {
      * @param userId String
      * @return A uni UserDetailResponse
      */
-    @Operation(summary = "Retrieves user's information from pdv")
+    @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
     @GET
     @Path("/{id}/details")
     @Produces(MediaType.APPLICATION_JSON)
