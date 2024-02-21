@@ -29,8 +29,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import java.util.*;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
