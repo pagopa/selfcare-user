@@ -24,6 +24,7 @@ app_settings = [
 secrets_names = [
   "jwt-public-key",
   "mongodb-connection-string",
-  "appinsights-instrumentation-key"
+  "appinsights-instrumentation-key",
+
 ]
 
