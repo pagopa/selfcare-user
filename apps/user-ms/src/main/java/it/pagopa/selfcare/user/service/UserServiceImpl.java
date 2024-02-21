@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -168,6 +170,16 @@ public class UserServiceImpl implements UserService {
                     }
                     return Uni.createFrom().nullItem();
                 });
+    }
+
+    @Override
+    public Uni<UserResource> getUserById(String userId) {
+        return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId);
+    }
+
+    @Override
+    public Uni<UserResource> searchUserByFiscalCode(String fiscalCode) {
+        return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
     }
 
     @Override

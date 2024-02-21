@@ -10,6 +10,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
+import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -20,13 +21,17 @@ import it.pagopa.selfcare.user.service.UserService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
 
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @TestHTTPEndpoint(UserController.class)
@@ -37,6 +42,18 @@ class UserControllerTest {
     @InjectMock
     private UserRegistryService userRegistryService;
 
+    private static UserResource userResource;
+
+    static {
+        userResource = new UserResource();
+        userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
+        userResource.setName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "name"));
+        userResource.setFamilyName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "familyName"));
+        userResource.setFiscalCode("fiscalCode");
+        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
+
+    }
+
     /**
      * Method under test: {@link UserController#getUsersEmailByInstitutionAndProduct(String, String)}}
      */
@@ -44,7 +61,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUsersEmailByInstitution() {
 
-        Mockito.when(userService.getUsersEmails(anyString(), anyString()))
+        when(userService.getUsersEmails(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(List.of("test@test.it")));
 
         var institutionId = "institutionId";
@@ -102,7 +119,7 @@ class UserControllerTest {
         userResource.setName("name");
         userResource.setSurname("testFamilyName");
 
-        Mockito.when(userService.retrievePerson(any(), any(), any()))
+        when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
         given()
@@ -115,7 +132,7 @@ class UserControllerTest {
 
     @Test
     void testGetUserInfoNotAuthorized() {
-        Mockito.when(userService.retrievePerson(any(), any(), any()))
+        when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("test", "test")));
 
         given()
@@ -129,7 +146,7 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserInfoFails() {
-        Mockito.when(userService.retrievePerson(any(), any(), any()))
+        when(userService.retrievePerson(any(), any(), any()))
                 .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("test", "test")));
 
         given()
@@ -144,7 +161,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void updateUserStatus() {
 
-        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+        when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
                 .thenReturn(Uni.createFrom().nullItem());
 
         given()
@@ -160,9 +177,38 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void getUserDetailsById(){
+
+        when(userService.getUserById(any())).thenReturn(Uni.createFrom().item(userResource));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/test_user_id/details")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void searchUser(){
+        SearchUserDto dto = new SearchUserDto("fiscalCode");
+
+        when(userService.searchUserByFiscalCode(any())).thenReturn(Uni.createFrom().item(userResource));
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(dto)
+                .post("/search")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void updateUserStatusError() {
 
-        Mockito.when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
+        when(userService.updateUserStatusWithOptionalFilter("userId", null, "prod-pagopa", null, null, OnboardedProductState.ACTIVE))
                 .thenThrow(new ResourceNotFoundException("user non trovato"));
 
         given()
@@ -191,7 +237,7 @@ class UserControllerTest {
         var user = "user1";
         var institution = "institution1";
         var product = "product1";
-        Mockito.when(userService.deleteUserInstitutionProduct("user1","institution1", "product1"))
+        when(userService.deleteUserInstitutionProduct("user1","institution1", "product1"))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -221,7 +267,7 @@ class UserControllerTest {
         var institution = "institution123";
         var product = "prod-pagopa";
 
-        Mockito.when(userService.deleteUserInstitutionProduct("user123", "institution123", "prod-pagopa"))
+        when(userService.deleteUserInstitutionProduct("user123", "institution123", "prod-pagopa"))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
@@ -248,7 +294,7 @@ class UserControllerTest {
         userInstitutionRoleResponses.add(userInstitution);
         userInfoResponse.setInstitutions(userInstitutionRoleResponses);
 
-        Mockito.when(userService.retrieveBindings(any(), any(), any()))
+        when(userService.retrieveBindings(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(userInfoResponse));
 
         given()
@@ -284,7 +330,7 @@ class UserControllerTest {
     void findByIds(){
         String PATH_RETRIEVE_ALL_USERS_BY_IDS = "/ids";
         List<String> userIds = List.of("user1");
-        Mockito.when(userService.findAllByIds(any())).thenReturn(
+        when(userService.findAllByIds(any())).thenReturn(
                 Uni.createFrom().item(List.of(new UserInstitutionResponse())));
         given()
                 .when()
@@ -312,7 +358,7 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUsers() {
-        Mockito.when(userService.findPaginatedUserNotificationToSend(0, 100, "productId"))
+        when(userService.findPaginatedUserNotificationToSend(0, 100, "productId"))
                 .thenReturn(Uni.createFrom().item( List.of(new UserNotificationToSend())));
 
         var productId = "productId";
@@ -351,7 +397,7 @@ class UserControllerTest {
         Map<String, Object> queryParam = new HashMap<>();
         queryParam.put("institutionId", "Id");
         queryParam.put("userId", "userId");
-        Mockito.when(userService.findPaginatedUserInstitutions("Id",  "userId", null, null, null, null, 0 , 100))
+        when(userService.findPaginatedUserInstitutions("Id",  "userId", null, null, null, null, 0 , 100))
                 .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
 
         given()
@@ -377,7 +423,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testUpdateUserRegistryAndSendNotificationToQueue() {
         MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
-        Mockito.when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)
