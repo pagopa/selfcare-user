@@ -1,4 +1,3 @@
-prefix    = "selc"
 env_short = "u"
 is_pnpg   = true
 
@@ -14,19 +13,16 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu    = 0.5
-  memory = "1Gi"
+  cpu          = 0.5
+  memory       = "1Gi"
 }
 
 app_settings = [
 
 ]
 
-key_vault = {
-  resource_group_name = "selc-u-sec-rg"
-  name                = "selc-u-kv"
-  secrets_names = [
+secrets_names = [
     "mongodb-connection-string",
     "appinsights-connection-string"
-  ]
-}
+]
+

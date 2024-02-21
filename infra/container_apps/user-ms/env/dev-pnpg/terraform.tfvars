@@ -1,6 +1,4 @@
-prefix    = "selc"
 env_short = "d"
-app_name  = "user-ms"
 is_pnpg   = true
 
 tags = {
@@ -15,20 +13,34 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu    = 0.5
-  memory = "1Gi"
+  cpu          = 0.5
+  memory       = "1Gi"
 }
 
 app_settings = [
-
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "KAFKA_BROKER"
+    value = "selc-d-eventhub-ns.servicebus.windows.net:9093"
+  },
+  {
+    name  = "KAFKA_USER_TOPIC"
+    value = "sc-users"
+  },
+  {
+    name  = "KAFKA_SASL_MECHANISM"
+    value = "PLAIN"
+  }
 ]
 
-key_vault = {
-  resource_group_name = "selc-d-sec-rg"
-  name                = "selc-d-kv"
-  secrets_names = [
+secrets_names = [
     "jwt-public-key",
     "mongodb-connection-string",
-    "appinsights-instrumentation-key"
-  ]
-}
+    "appinsights-instrumentation-key",
+    "eventhub-SC-Users-selfcare-wo-connection-string",
+    "user-registry-api-key",
+]
+

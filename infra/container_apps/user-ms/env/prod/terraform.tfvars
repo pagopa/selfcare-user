@@ -1,4 +1,3 @@
-prefix    = "selc"
 env_short = "p"
 
 tags = {
@@ -12,7 +11,7 @@ tags = {
 container_app = {
   min_replicas = 1
   max_replicas = 5
-  scale_rules  = [
+  scale_rules = [
     {
       custom = {
         metadata = {
@@ -37,11 +36,7 @@ app_settings = [
   }
 ]
 
-key_vault = {
-  resource_group_name = "selc-p-sec-rg"
-  name                = "selc-p-kv"
-  secrets_names = [
+secrets_names = [
     "mongodb-connection-string",
     "appinsights-connection-string"
-  ]
-}
+]
