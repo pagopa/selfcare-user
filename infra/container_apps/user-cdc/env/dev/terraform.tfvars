@@ -1,6 +1,4 @@
-prefix    = "selc"
 env_short = "d"
-app_name  = "user-cdc"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -14,8 +12,8 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu = 0.25
-  memory = "0.5Gi"
+  cpu          = 0.25
+  memory       = "0.5Gi"
 }
 
 app_settings = [
@@ -25,11 +23,9 @@ app_settings = [
   }
 ]
 
-key_vault = {
-  resource_group_name = "selc-d-sec-rg"
-  name                = "selc-d-kv"
-  secrets_names = [
-    "mongodb-connection-string",
-    "appinsights-instrumentation-key"
-  ]
-}
+
+secrets_names = [
+  "mongodb-connection-string",
+  "appinsights-instrumentation-key"
+]
+
