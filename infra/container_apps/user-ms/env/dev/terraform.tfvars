@@ -40,6 +40,6 @@ secrets_names = [
   "mongodb-connection-string",
   "appinsights-instrumentation-key",
   "user-registry-api-key",
-  "eventhub-sc-users-selfcare-wo-connection-string"
+  "eventhub-sc-users-selfcare-wo-connection-string-lc"
 ]
 
