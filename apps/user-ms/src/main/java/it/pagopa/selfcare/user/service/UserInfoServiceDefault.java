@@ -1,11 +1,9 @@
 package it.pagopa.selfcare.user.service;
 
-import io.quarkus.panache.common.Parameters;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
-import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.mapper.UserInfoMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -50,6 +48,8 @@ public class UserInfoServiceDefault implements UserInfoService {
         return userInfos.onItem().transformToUni(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)
+                        .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
+                                MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build()).replaceWith(userResource))
                         .onItem().transformToUni(this::updateUserInstitution)
                         .onFailure()
                         .invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage(), throwable))
@@ -63,15 +63,15 @@ public class UserInfoServiceDefault implements UserInfoService {
                 .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        return userRegistryApi.updateUsingPATCH(userId, MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
-                .onItem().invoke(() -> userResource.getWorkContacts().forEach((key, value) -> {
-                    if (key.contains(EMAIL_UUID_PREFIX)) {
-                        String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(value.getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
-                        userService.updateUserInstitutionEmail(institutionId, userId, key);
+        return Multi.createFrom().items(userResource.getWorkContacts().entrySet().stream()).onItem()
+                .transformToUni(entry -> {
+                    if (entry.getKey().contains(EMAIL_UUID_PREFIX)) {
+                        String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
+                        return userService.updateUserInstitutionEmail(institutionId, userId, entry.getKey());
                     }
-                }))
-                .onFailure().invoke(throwable -> log.error("Impossible to update UserInstitution with userId {}", userId, throwable.getMessage(), throwable))
-                .replaceWith(Uni.createFrom().voidItem());
+                    return Uni.createFrom().voidItem();
+                })
+                .merge().toUni();
     }
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
