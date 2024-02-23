@@ -18,7 +18,9 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Slf4j
 @ApplicationScoped
@@ -41,25 +43,34 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     @Override
-    public Uni<Void> updateUserEmail(int page, int size) {
+    public Uni<Void> updateUsersEmails(int page, int size) {
         Multi<UserInfo> userInfos = UserInfo.findAll().page(page, size).stream();
-        userInfos.onItem().transformToUni(userInfo ->
+        return userInfos.onItem().invoke(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                 .map(this::buildWorkContactsMap)
-                .invoke(map -> userRegistryApi.updateUsingPATCH(userInfo.getUserId(), MutableUserFieldsDto.builder().workContacts(map).build())));
-        return Uni.createFrom().voidItem();
+                .invoke(userResource -> userRegistryApi.updateUsingPATCH(userInfo.getUserId(), MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
+                        .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage(), throwable)))
+                        .invoke(getUserResourceConsumer(userInfo)).replaceWith(Uni.createFrom().voidItem())
+                        .onFailure().invoke(throwable -> log.error("Impossible to update UserInstitution with userId {} and institutionId {}", userInfo.getUserId(), throwable.getMessage(), throwable)))
+                .onItem().ignoreAsUni();
     }
 
-    private Map<String, WorkContactResource> buildWorkContactsMap(UserResource userResource) {
-        var workContacts = userResource.getWorkContacts();
-        Map<String, List<WorkContactResource>> newMap = userResource.getWorkContacts()
-                .values().stream().collect(Collectors.groupingBy(obj -> obj.getEmail().getValue()));
-        newMap.forEach((key, value) -> {
-            String uuidEmail = EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString());
-            workContacts.put(uuidEmail, value.get(0));
-            userService.updateUserInstitutionEmail("", userResource.getId().toString(), uuidEmail);
-        });
-        return userResource.getWorkContacts();
+    private UserResource buildWorkContactsMap(UserResource userResource) {
+        Map<String, List<WorkContactResource>> newMap = userResource.getWorkContacts().values().stream().collect(groupingBy(obj -> obj.getEmail().getValue()));
+        newMap.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
+        return userResource;
+    }
+
+    private Consumer<UserResource> getUserResourceConsumer(UserInfo userInfo) {
+        return userResource -> {
+            var copiedMap = userResource.getWorkContacts();
+            userResource.getWorkContacts().forEach((key, value) -> {
+                if (key.contains(EMAIL_UUID_PREFIX)) {
+                    String institutionId = copiedMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(value.getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
+                    userService.updateUserInstitutionEmail(institutionId, userInfo.getUserId(), key);
+                }
+            });
+        };
     }
 
 }

@@ -17,12 +17,12 @@ public class UserInfoController {
 
     private final UserInfoService userInfoService;
 
-    @Operation(summary = "Retrieve all SC-User for DataLake filtered by optional productId")
+    @Operation(summary = "Update users' workContacts in PDV using as key a random uuid and storing it into UserInstitution collection")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Void> getUserInfo(@QueryParam(value = "page") @DefaultValue("0") Integer page,
-                                 @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        return userInfoService.updateUserEmail(size, page);
+    public Uni<Void> updateUsersEmails(@QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
+        return userInfoService.updateUsersEmails(size, page);
     }
 }

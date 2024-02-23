@@ -21,10 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -206,6 +203,21 @@ class UserInstitutionServiceTest {
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserCreatedAtByInstitutionAndProduct(institutionId, List.of(userId), productId, LocalDateTime.now())
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void updateUserInstitutionEmail() {
+        final String userId = "userId";
+        final String institutionId = "institutionId";
+        final String uuidEmail = UUID.randomUUID().toString();
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class)))
+                .thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserInstitutionEmail(institutionId, userId, uuidEmail)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
     }

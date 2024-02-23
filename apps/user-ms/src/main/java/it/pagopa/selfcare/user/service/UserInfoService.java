@@ -4,8 +4,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 
 public interface UserInfoService {
-
     Uni<UserInfoResponse> findById(String userId);
-    Uni<Void> updateUserEmail(int page, int size);
-
+    Uni<Void> updateUsersEmails(int page, int size);
 }
