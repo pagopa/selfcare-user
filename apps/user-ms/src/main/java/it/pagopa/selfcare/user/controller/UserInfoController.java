@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
-//@Authenticated
+@Authenticated
 @Path("/user-info")
 @RequiredArgsConstructor
 @Slf4j
@@ -17,7 +17,7 @@ public class UserInfoController {
 
     private final UserInfoService userInfoService;
 
-    @Operation(summary = "Update users' workContacts in PDV using as key a random uuid and storing it into UserInstitution collection")
+    @Operation(summary = "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

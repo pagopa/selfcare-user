@@ -408,6 +408,20 @@ class UserServiceTest {
     }
 
     @Test
+    void updateUserInstitutionEmailNotFound(){
+        String uuidEmail = UUID.randomUUID().toString();
+        when(userInstitutionService
+                .updateUserInstitutionEmail("institutionId", "userId", uuidEmail))
+                .thenReturn(Uni.createFrom().item(0L));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .updateUserInstitutionEmail("institutionId", "userId", uuidEmail)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+    }
+
+    @Test
     void findPaginatedUserNotificationToSend() {
         when(userInstitutionService.paginatedFindAllWithFilter(any(), any(), any()))
                 .thenReturn(Multi.createFrom().item(userInstitution));
