@@ -35,7 +35,7 @@ app_settings = [
   },
   {
     name  = "KAFKA_USERS_SELFCARE_WO_SASL_JAAS_CONFIG"
-    value = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$ConnectionString\" password=\"${locals.kafka_users_jaas_config}\";"
+    value = "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$ConnectionString\" password=\"KAFKA_PASSWORD\";"
   }
 ]
 
