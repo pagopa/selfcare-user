@@ -175,7 +175,7 @@ public class UserServiceImpl implements UserService {
         return userInstitutionService.updateUserInstitutionEmail(institutionId, userId, uuidEmail)
                 .onItem().transformToUni(aLong -> {
                     if (aLong < 1) {
-                        return Uni.createFrom().failure(new ResourceNotFoundException(USERS_TO_UPDATE_NOT_FOUND.getMessage()));
+                        log.error("No document for institutionId {} and userId {} was updated", institutionId, userId);
                     }
                     return Uni.createFrom().nullItem();
                 });
