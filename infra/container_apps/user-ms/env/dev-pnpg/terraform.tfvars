@@ -37,10 +37,14 @@ app_settings = [
 ]
 
 secrets_names = [
-    "jwt-public-key",
-    "mongodb-connection-string",
-    "appinsights-instrumentation-key",
-    "eventhub-SC-Users-selfcare-wo-connection-string",
-    "user-registry-api-key",
+  "jwt-public-key",
+  "mongodb-connection-string",
+  "appinsights-instrumentation-key",
+  "user-registry-api-key",
+  "aws-ses-access-key-id",
+  "aws-ses-secret-access-key",
+  "eventhub-sc-users-selfcare-wo-connection-string-lc",
+  "blob-storage-product-connection-string",
+  "blob-storage-contract-connection-string"
 ]
 
