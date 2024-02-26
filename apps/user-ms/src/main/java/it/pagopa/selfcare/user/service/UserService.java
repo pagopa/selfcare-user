@@ -4,11 +4,13 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,4 +40,10 @@ public interface UserService {
     Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
     Uni<Void> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail);
+
+    Uni<UserResource> getUserById(String userId);
+
+    Uni<UserResource> searchUserByFiscalCode(String fiscalCode);
+
+    Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser);
 }
