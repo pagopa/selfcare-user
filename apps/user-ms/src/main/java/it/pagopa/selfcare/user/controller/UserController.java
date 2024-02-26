@@ -1,25 +1,34 @@
 package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
+import io.quarkus.security.identity.CurrentIdentityAssociation;
+import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
+import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 
@@ -32,6 +41,8 @@ import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
+    @Inject
+    CurrentIdentityAssociation currentIdentityAssociation;
 
     private final UserService userService;
     private final UserMapper userMapper;
@@ -75,6 +86,28 @@ public class UserController {
                                                          @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
                 .map(userMapper::toUserProductsResponse);
+    }
+
+    /**
+     * getUserById function returns all the information of a user retrieved from pdv given the userId
+     * @param userId String
+     * @return A uni UserDetailResponse
+     */
+    @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
+    @GET
+    @Path("/{id}/details")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId) {
+        return userService.getUserById(userId).onItem().transform(userMapper::toUserResponse);
+    }
+
+    @Operation(summary = "Search user by fiscalCode")
+    @POST
+    @Path("/search")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto){
+        return userService.searchUserByFiscalCode(dto.getFiscalCode()).onItem().transform(userMapper::toUserResponse);
     }
 
     /**
@@ -126,7 +159,6 @@ public class UserController {
      * Retreive all the users given a list of userIds
      *
      * @param userIds List<String></String>
-     * @return
      */
     @Operation(
             summary = "Retrieve all users given their userIds"
@@ -161,24 +193,22 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserInstitutionResponse> retrievePaginatedAndFilteredUser(@QueryParam(value = "institutionId") String institutionId,
-                                                                       @QueryParam(value = "userId") String userId,
-                                                                       @QueryParam(value = "roles") List<PartyRole> roles,
-                                                                       @QueryParam(value = "states") List<String> states,
-                                                                       @QueryParam(value = "products") List<String> products,
-                                                                       @QueryParam(value = "productRoles") List<String> productRoles,
-                                                                       @QueryParam(value = "page") @DefaultValue("0") Integer page,
-                                                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
+                                                                           @QueryParam(value = "userId") String userId,
+                                                                           @QueryParam(value = "roles") List<PartyRole> roles,
+                                                                           @QueryParam(value = "states") List<String> states,
+                                                                           @QueryParam(value = "products") List<String> products,
+                                                                           @QueryParam(value = "productRoles") List<String> productRoles,
+                                                                           @QueryParam(value = "page") @DefaultValue("0") Integer page,
+                                                                           @QueryParam(value = "size") @DefaultValue("100") Integer size) {
         return userService.findPaginatedUserInstitutions(institutionId, userId, roles, states, products, productRoles, page, size);
     }
 
     /**
      * The updateUserRegistryAndSendNotification function is a service that sends notification when user data get's updated.
      *
-     * @param userId String
+     * @param userId        String
      * @param institutionId String
-     *
      * @return Uni&lt;response&gt;
-     *
      */
     @Operation(summary = "Service to update user in user-registry and send notification when user data gets updated")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
@@ -195,5 +225,51 @@ public class UserController {
                         .build());
     }
 
+    /**
+     * The updateUserProductStatus function is a service to update user product status.
+     *
+     * @param userId        String
+     * @param institutionId String
+     * @param productId     String
+     * @param status        OnboardedProductState
+     * @return Uni&lt;void&gt;
+     */
+    @Operation(summary = "Service to update user product status")
+    @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @PUT
+    @Path("/{id}/institution/{institutionId}/product/{productId}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Void> updateUserProductStatus(@PathParam("id") String userId,
+                                             @PathParam("institutionId") String institutionId,
+                                             @PathParam("productId") String productId,
+                                             @NotNull @QueryParam("status") OnboardedProductState status,
+                                             @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
+    }
+
+    private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
+        return currentIdentityAssociation.getDeferredIdentity()
+                .onItem().transformToUni(identity -> {
+                    if (ctx.getUserPrincipal() == null || !ctx.getUserPrincipal().getName().equals(identity.getPrincipal().getName())) {
+                        return Uni.createFrom().failure(new InternalServerErrorException("Principal and JsonWebToken names do not match"));
+                    }
+
+                    if (identity.getPrincipal() instanceof DefaultJWTCallerPrincipal jwtCallerPrincipal) {
+                        String uid = jwtCallerPrincipal.getClaim("uid");
+                        String familyName = jwtCallerPrincipal.getClaim("family_name");
+                        String name = jwtCallerPrincipal.getClaim("name");
+                        return Uni.createFrom().item(
+                                LoggedUser.builder()
+                                        .uid(uid)
+                                        .familyName(familyName)
+                                        .name(name)
+                                        .build()
+                        );
+                    }
+                    return Uni.createFrom().nullItem();
+                });
+    }
 }
 
