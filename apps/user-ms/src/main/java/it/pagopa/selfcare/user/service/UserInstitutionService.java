@@ -35,4 +35,7 @@ public interface UserInstitutionService {
 
     Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter);
 
+    Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId);
+
+    Uni<Void> persistOrUpdate(UserInstitution... userInstitution);
 }
