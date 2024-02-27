@@ -347,12 +347,12 @@ public class UserServiceImpl implements UserService {
     private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
             log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
-            return userInstitutionMapper.toEntity(userDto, userId, mailUuid);
+            return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
         }
 
         log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
         userInstitution.setUserMailUuid(mailUuid);
-        userInstitution.getProducts().add(onboardedProductMapper.toEntity(userDto.getProduct()));
+        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
         return userInstitution;
     }

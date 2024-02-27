@@ -25,12 +25,12 @@ public interface UserInstitutionMapper {
     @Mapping(source = "createUserDto.institutionDescription", target = "institutionDescription")
     @Mapping(source = "createUserDto.institutionRootName", target = "institutionRootName")
     @Mapping(source = "userMailUuid", target = "userMailUuid")
-    @Mapping(target = "products",  expression = "java(java.util.List.of(toOnboardedProduct(createUserDto.getProduct())))")
-    UserInstitution toEntity(CreateUserDto createUserDto, String userId, String userMailUuid);
+    @Mapping(target = "products",  expression = "java(java.util.List.of(toNewOnboardedProduct(createUserDto.getProduct())))")
+    UserInstitution toNewEntity(CreateUserDto createUserDto, String userId, String userMailUuid);
 
     @Mapping(target = "status",  expression = "java(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE)")
     @Mapping(target = "env",  expression = "java(it.pagopa.selfcare.onboarding.common.Env.ROOT)")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    OnboardedProduct toOnboardedProduct(CreateUserDto.Product product);
+    OnboardedProduct toNewOnboardedProduct(CreateUserDto.Product product);
 }

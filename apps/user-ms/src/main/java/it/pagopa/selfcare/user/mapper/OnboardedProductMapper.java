@@ -19,5 +19,5 @@ public interface OnboardedProductMapper {
     @Mapping(target = "env",  expression = "java(it.pagopa.selfcare.onboarding.common.Env.ROOT)")
     @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    OnboardedProduct toEntity(CreateUserDto.Product product);
+    OnboardedProduct toNewOnboardedProduct(CreateUserDto.Product product);
 }

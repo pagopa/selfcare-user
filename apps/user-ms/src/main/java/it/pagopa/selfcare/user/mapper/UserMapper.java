@@ -14,6 +14,7 @@ import org.openapi.quarkus.user_registry_json.model.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Mapper(componentModel = "cdi")
 public interface UserMapper {
@@ -28,10 +29,7 @@ public interface UserMapper {
 
     @Named("fromCertifiableString")
     default String fromCertifiableString(CertifiableFieldResourceOfstring certifiableFieldResourceOfstring) {
-        if(certifiableFieldResourceOfstring == null) {
-            return null;
-        }
-        return certifiableFieldResourceOfstring.getValue();
+        return Optional.ofNullable(certifiableFieldResourceOfstring).map(CertifiableFieldResourceOfstring::getValue).orElse(null);
     }
 
     UserDetailResponse toUserResponse(UserResource userResource);
@@ -80,17 +78,17 @@ public interface UserMapper {
 
     @Named("toCertifiableLocalDate")
     default CertifiableFieldResourceOfLocalDate toLocalTime(String time) {
-        var tmp = new CertifiableFieldResourceOfLocalDate();
-        tmp.setValue(LocalDate.parse(time));
-        tmp.setCertification(CertifiableFieldResourceOfLocalDate.CertificationEnum.NONE);
-        return tmp;
+        var certifiableFieldResourceOfLocalDate = new CertifiableFieldResourceOfLocalDate();
+        certifiableFieldResourceOfLocalDate.setValue(LocalDate.parse(time));
+        certifiableFieldResourceOfLocalDate.setCertification(CertifiableFieldResourceOfLocalDate.CertificationEnum.NONE);
+        return certifiableFieldResourceOfLocalDate;
     }
 
     @Named("toCertifiableString")
     default CertifiableFieldResourceOfstring toCertString(String value) {
-        var tmp = new CertifiableFieldResourceOfstring();
-        tmp.setValue(value);
-        tmp.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
-        return tmp;
+        var certifiableFieldResourceOfstring = new CertifiableFieldResourceOfstring();
+        certifiableFieldResourceOfstring.setValue(value);
+        certifiableFieldResourceOfstring.setCertification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
+        return certifiableFieldResourceOfstring;
     }
 }
