@@ -45,11 +45,5 @@ secrets_names = [
   "eventhub-sc-users-selfcare-wo-connection-string-lc",
   "blob-storage-product-connection-string",
   "blob-storage-contract-connection-string"
-  "aws-ses-access-key-id",
-  "aws-ses-secret-access-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc",
-  "blob-storage-product-connection-string",
-  "blob-storage-contract-connection-string"
-  "eventhub-sc-users-selfcare-wo-connection-string-lc"
 ]
 
