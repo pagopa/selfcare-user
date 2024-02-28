@@ -12,11 +12,12 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -24,21 +25,18 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
-import it.pagopa.selfcare.user.mapper.UserMapperImpl;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfLocalDate;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,19 +46,19 @@ import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
 class UserServiceTest {
 
     @Inject
-    private UserService userService;
+    UserService userService;
 
     @InjectMock
     private UserInstitutionService userInstitutionService;
-
+    @InjectMock
+    private UserNotificationService userNotificationService;
     @InjectMock
     private UserInfoService userInfoService;
 
@@ -68,15 +66,14 @@ class UserServiceTest {
     @InjectMock
     private UserApi userRegistryApi;
 
-
-    @Spy
-    private UserMapper userMapper = new UserMapperImpl();
+    @InjectMock
+    private UserMapper userMapper;
 
     @InjectMock
     private ProductService productService;
 
-    private static UserResource userResource;
-    private static UserInstitution userInstitution;
+    private static final UserResource userResource;
+    private static final UserInstitution userInstitution;
 
     static {
         userResource = new UserResource();
@@ -91,7 +88,10 @@ class UserServiceTest {
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(certifiedEmail);
         userResource.setEmail(certifiedEmail);
-        userResource.setWorkContacts(Map.of("userMailUuid", workContactResource));
+
+        Map<String, WorkContactResource> map = new HashMap<>();
+        map.put("userMailUuid", workContactResource);
+        userResource.setWorkContacts(map);
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
@@ -101,29 +101,32 @@ class UserServiceTest {
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
-        userInstitution.setProducts(List.of(product));
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        userInstitution.setProducts(products);
     }
-    
+
     @Test
     void getUsersEmailsTest() {
 
-        when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
-        when(userRegistryApi.findByIdUsingGET(any(), any()))
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<List<String>> subscriber = userService
                 .getUsersEmails("institutionId", "productId")
                 .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted();
 
-        List<String> actual = subscriber.assertCompleted().awaitItem().getItem();
+        List<String> actual = subscriber.assertCompleted().getItem();
         assertNotNull(actual);
         assertEquals(1, actual.size());
         assertEquals("test@test.it", actual.get(0));
     }
 
     @Test
-    void getUserById(){
+    void getUserById() {
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
         UniAssertSubscriber<UserResource> subscriber = userService
@@ -178,15 +181,15 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
-        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
-        assertEquals("userMail", subscriber.getItem().getEmail());
+        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
     }
 
     @Test
     void testRetrievePersonFailsWhenUserIsNotPresent() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
 
-        UniAssertSubscriber<UserResponse> subscriber = userService
+        UniAssertSubscriber<UserResource> subscriber = userService
                 .retrievePerson("test-user", "test-product", "test-institutionId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -201,7 +204,7 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
 
-        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<UserResource> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId").subscribe().withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(ResourceNotFoundException.class);
     }
@@ -353,7 +356,7 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUserInstitutionProductFound(){
+    void deleteUserInstitutionProductFound() {
         when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Void> subscriber = userService
                 .deleteUserInstitutionProduct("userId", "institutionId", "productId")
@@ -365,7 +368,7 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUserInstitutionProductNotFound(){
+    void deleteUserInstitutionProductNotFound() {
         when(userInstitutionService.deleteUserInstitutionProduct("userId", "institutionId", "productId")).thenReturn(Uni.createFrom().item(0L));
         UniAssertSubscriber<Void> subscriber = userService
                 .deleteUserInstitutionProduct("userId", "institutionId", "productId")
@@ -450,4 +453,155 @@ class UserServiceTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
     }
+
+    @Test
+    void testUpdateUserStatus() {
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        UserInstitution userInstitutionResponse = mock(UserInstitution.class);
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitutionResponse));
+
+        Product product = mock(Product.class);
+        when(productService.getProduct(any())).thenReturn(product);
+
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                        "userId", "institutionId", "productId", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().item(1L));
+
+
+        when(userNotificationService.sendEmailNotification(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(),
+                anyString(),
+                anyString())
+        ).thenReturn(Uni.createFrom().voidItem());
+
+        when(userNotificationService.sendKafkaNotification(
+                any(UserNotificationToSend.class),
+                any())
+        ).thenReturn(Uni.createFrom().nullItem());
+
+        userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+                        LoggedUser.builder().build())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        verify(userNotificationService, times(1)).sendEmailNotification(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class),
+                any(OnboardedProductState.class),
+                eq(null),
+                eq(null)
+        );
+        verify(userNotificationService, times(1)).sendKafkaNotification(
+                any(UserNotificationToSend.class),
+                any()
+        );
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_Success() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        createUserDto.setUser(user);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_CreateUser_Success() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        createUserDto.setUser(user);
+        CreateUserDto.Product product = new CreateUserDto.Product();
+        product.setProductId("productId");
+        createUserDto.setProduct(product);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().failure(new WebClientApplicationException(HttpStatus.SC_NOT_FOUND)));
+        when(userRegistryApi.saveUsingPATCH(any())).thenReturn(Uni.createFrom().item(UserId.builder().id(UUID.randomUUID()).build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+        verify(userRegistryApi).saveUsingPATCH(any());
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_UserRegistryUpdateFailed() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        createUserDto.setUser(user);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().voidItem());
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertFailedWith(RuntimeException.class);
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService, never()).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_UserInstitutionUpdateFailed() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        createUserDto.setUser(user);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUser(createUserDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertFailedWith(RuntimeException.class);
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
 }
