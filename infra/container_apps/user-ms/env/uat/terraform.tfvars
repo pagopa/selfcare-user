@@ -20,6 +20,10 @@ app_settings = [
   {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
     value = "false"
+  },
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
   }
 ]
 

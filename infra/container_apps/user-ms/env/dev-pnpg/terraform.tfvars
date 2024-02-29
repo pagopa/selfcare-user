@@ -21,18 +21,6 @@ app_settings = [
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
-  },
-  {
-    name  = "KAFKA_BROKER"
-    value = "selc-d-eventhub-ns.servicebus.windows.net:9093"
-  },
-  {
-    name  = "KAFKA_USER_TOPIC"
-    value = "sc-users"
-  },
-  {
-    name  = "KAFKA_SASL_MECHANISM"
-    value = "PLAIN"
   }
 ]
 
@@ -43,7 +31,6 @@ secrets_names = [
   "user-registry-api-key",
   "aws-ses-access-key-id",
   "aws-ses-secret-access-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc",
   "blob-storage-product-connection-string",
   "blob-storage-contract-connection-string"
 ]
