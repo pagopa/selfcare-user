@@ -20,6 +20,22 @@ app_settings = [
   {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
     value = "false"
+  },
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "KAFKA_BROKER"
+    value = "selc-u-eventhub-ns.servicebus.windows.net:9093"
+  },
+  {
+    name  = "KAFKA_USER_TOPIC"
+    value = "sc-users"
+  },
+  {
+    name  = "KAFKA_SASL_MECHANISM"
+    value = "PLAIN"
   }
 ]
 

@@ -18,7 +18,10 @@ container_app = {
 }
 
 app_settings = [
-
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+  }
 ]
 
 secrets_names = [
@@ -28,7 +31,6 @@ secrets_names = [
   "user-registry-api-key",
   "aws-ses-access-key-id",
   "aws-ses-secret-access-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc",
   "blob-storage-product-connection-string",
   "blob-storage-contract-connection-string"
 ]
