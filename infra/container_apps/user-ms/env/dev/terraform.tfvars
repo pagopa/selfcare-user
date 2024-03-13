@@ -40,6 +40,10 @@ secrets_names = [
   "mongodb-connection-string",
   "appinsights-instrumentation-key",
   "user-registry-api-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc"
+  "aws-ses-access-key-id",
+  "aws-ses-secret-access-key",
+  "eventhub-sc-users-selfcare-wo-connection-string-lc",
+  "blob-storage-product-connection-string",
+  "blob-storage-contract-connection-string"
 ]
 
