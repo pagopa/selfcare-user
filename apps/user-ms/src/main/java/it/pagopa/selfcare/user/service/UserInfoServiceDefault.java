@@ -49,7 +49,8 @@ public class UserInfoServiceDefault implements UserInfoService {
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)
                         .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
-                                MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build()).replaceWith(userResource))
+                                        MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
+                                .replaceWith(userResource))
                         .onItem().transformToUni(this::updateUserInstitution)
                         .onFailure()
                         .invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage(), throwable))
@@ -58,7 +59,7 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     private Uni<Void> updateUserInstitution(UserResource userResource) {
 
-        String userId = userResource.getId().toString();
+        final String userId = userResource.getId().toString();
         var filteredMap = userResource.getWorkContacts().entrySet().stream()
                 .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -66,7 +67,7 @@ public class UserInfoServiceDefault implements UserInfoService {
         return Multi.createFrom().items(userResource.getWorkContacts().entrySet().stream()).onItem()
                 .transformToUni(entry -> {
                     if (entry.getKey().contains(EMAIL_UUID_PREFIX)) {
-                        String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
+                        final String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
                         return userService.updateUserInstitutionEmail(institutionId, userId, entry.getKey());
                     }
                     return Uni.createFrom().voidItem();
