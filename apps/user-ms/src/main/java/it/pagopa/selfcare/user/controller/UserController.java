@@ -8,10 +8,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
-import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
@@ -260,6 +257,21 @@ public class UserController {
     public Uni<Response> createOrUpdate(@Valid CreateUserDto userDto) {
         return userService.createOrUpdateUser(userDto)
                 .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+    }
+
+    @Operation(summary = "The API retrieves users with optional filters in input as query params")
+    @GET
+    @Path(value = "/{userId}/institution/{institutionId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<UserDataResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
+                                                 @PathParam(value = "userId") String userId,
+                                                 @QueryParam(value = "personId") String personId,
+                                                 @QueryParam(value = "roles") List<String> roles,
+                                                 @QueryParam(value = "states") List<String> states,
+                                                 @QueryParam(value = "products") List<String> products,
+                                                 @QueryParam(value = "productRoles") List<String> productRoles) {
+
+        return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
