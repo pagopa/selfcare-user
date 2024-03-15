@@ -20,7 +20,7 @@ public class EventhubSasTokenAuthorization implements ClientRequestFilter {
     private final String keyName;
     private final String key;
 
-    public EventhubSasTokenAuthorization(@ConfigProperty(name = "rest-client.event-hub.url") URI resourceUri,
+    public EventhubSasTokenAuthorization(@ConfigProperty(name = "rest-client.event-hub.uri") URI resourceUri,
                                          @ConfigProperty(name = "eventhub.rest-client.keyName") String keyName,
                                          @ConfigProperty(name = "eventhub.rest-client.key") String key) {
         this.resourceUri = resourceUri;
@@ -29,7 +29,6 @@ public class EventhubSasTokenAuthorization implements ClientRequestFilter {
     }
     @Override
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
-        clientRequestContext.setUri(resourceUri);
         clientRequestContext.getHeaders().add("Authorization", GetSASToken(resourceUri.toString(), keyName, key));
 
     }

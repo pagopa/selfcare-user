@@ -37,10 +37,6 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     public static final String ERROR_DURING_SEND_DATA_LAKE_NOTIFICATION_FOR_USER = "error during send dataLake notification for user {}";
 
-//    @Inject
-//    @Channel("sc-users")
-//    MutinyEmitter<String> usersEmitter;
-
     @RestClient
     @Inject
     private EventHubRestClient eventHubRestClient;
@@ -68,8 +64,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     @Override
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
-        String message = convertNotificationToJson(userNotificationToSend);
-        return eventHubRestClient.sendMessage(message)
+        return eventHubRestClient.sendMessage(userNotificationToSend)
                 .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
                 .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
                 .replaceWith(userNotificationToSend);
