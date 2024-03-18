@@ -43,8 +43,12 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     @Override
-    public Uni<Void> updateUsersEmails(int page, int size) {
-        Multi<UserInfo> userInfos = UserInfo.findAll().page(page, size).stream();
+    public Uni<Void> updateUsersEmails(List<String> userIds, int page, int size) {
+        Multi<UserInfo> userInfos;
+        if(userIds.isEmpty())
+            userInfos = UserInfo.findAll().page(page, size).stream();
+        else
+            userInfos = UserInfo.find("userId in (:userIds)", Map.of("userIds", userIds)).page(page, size).stream();
         return userInfos.onItem().transformToUni(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)
@@ -76,6 +80,8 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
+        if(userResource.getWorkContacts().keySet().stream().anyMatch(s -> s.startsWith(EMAIL_UUID_PREFIX)))
+            return userResource;
         Map<String, List<WorkContactResource>> mapGroupedByEmail = userResource.getWorkContacts().values().stream().collect(groupingBy(obj -> obj.getEmail().getValue()));
         mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
         return userResource;

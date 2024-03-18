@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 
+import java.util.List;
+
+import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
+
 @Authenticated
 @Path("/user-info")
 @RequiredArgsConstructor
@@ -21,8 +25,9 @@ public class UserInfoController {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Void> updateUsersEmails(@QueryParam(value = "page") @DefaultValue("0") Integer page,
+    public Uni<Void> updateUsersEmails(@QueryParam(value = "userIds") List<String> userIds,
+                                       @QueryParam(value = "page") @DefaultValue("0") Integer page,
                                        @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        return userInfoService.updateUsersEmails(size, page);
+        return userInfoService.updateUsersEmails(formatQueryParameterList(userIds), size, page);
     }
 }

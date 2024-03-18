@@ -10,7 +10,10 @@ import it.pagopa.selfcare.user.service.UserInfoService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 
 @QuarkusTest
@@ -21,7 +24,7 @@ class UserInfoControllerTest {
     private UserInfoService userInfoService;
 
     /**
-     * Method under test: {@link UserInfoController#updateUsersEmails(Integer, Integer)}}
+     * Method under test: {@link UserInfoController#updateUsersEmails(List, Integer, Integer)}
      */
     @Test
     @TestSecurity(user = "userJwt")
@@ -29,7 +32,7 @@ class UserInfoControllerTest {
 
         int size = 1, page = 1;
 
-        Mockito.when(userInfoService.updateUsersEmails(anyInt(), anyInt()))
+        Mockito.when(userInfoService.updateUsersEmails(any(), anyInt(), anyInt()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         given()
@@ -41,7 +44,7 @@ class UserInfoControllerTest {
     }
 
     /**
-     * Method under test: {@link UserInfoController#updateUsersEmails(Integer, Integer)}}
+     * Method under test: {@link UserInfoController#updateUsersEmails(List, Integer, Integer)}
      */
     @Test
     void updateUsersEmailsNotAuthorized() {

@@ -21,6 +21,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -92,7 +93,7 @@ class UserInfoServiceTest {
         when(userService.updateUserInstitutionEmail(any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.accepted().build()));
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, "userId")).thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<Void> subscriber = userInfoService.updateUsersEmails(size, page)
+        UniAssertSubscriber<Void> subscriber = userInfoService.updateUsersEmails(List.of(), size, page)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         Assertions.assertNotNull(subscriber.assertCompleted().awaitItem());
     }
