@@ -107,8 +107,6 @@ public interface UserMapper {
     }
 
     OnboardedProductMapper productMapper = Mappers.getMapper(OnboardedProductMapper.class);
-    OnboardedProductMapper user = Mappers.getMapper(OnboardedProductMapper.class);
-
     @Mapping(target = "id", expression = "java(userInstitution.getId().toString())")
     @Mapping(target = "role", expression = "java(getMaxRole(userInstitution.getProducts()))")
     @Mapping(target = "status", expression = "java(getMaxStatus(userInstitution.getProducts()))")

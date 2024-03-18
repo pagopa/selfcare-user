@@ -259,6 +259,23 @@ public class UserController {
                 .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
     }
 
+    /**
+     * The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.
+     * At first it try to retrieve a UserInstitution document associated with a logged user (admin)
+     * If this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles
+     * and optional given personId, otherwise it do the same query using the logged user id instead of personId.
+     * After that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.
+     *
+     * @param institutionId The ID of the institution, passed as a path parameter in the URL.
+     * @param userId The ID of the user, passed as a path parameter in the URL.
+     * @param personId The ID of the person, passed as a query parameter in the URL.
+     * @param roles A list of roles, passed as a query parameter in the URL.
+     * @param states A list of states, passed as a query parameter in the URL.
+     * @param products A list of products, passed as a query parameter in the URL.
+     * @param productRoles A list of product roles, passed as a query parameter in the URL.
+     *
+     * @return A stream of UserDataResponse objects containing the requested user data.
+     */
     @Operation(summary = "The API retrieves users with optional filters in input as query params")
     @GET
     @Path(value = "/{userId}/institution/{institutionId}")

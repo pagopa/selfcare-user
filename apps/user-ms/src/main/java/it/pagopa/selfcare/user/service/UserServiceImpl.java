@@ -36,9 +36,12 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.PENDING;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
@@ -388,8 +391,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {
+        List<String> adminPartyRole = Arrays.stream(PartyRole.values()).filter(role -> role != PartyRole.OPERATOR).map(Enum::name).toList();
+        List<String> validStates = Stream.of(ACTIVE, PENDING).map(Enum::name).toList();
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userUuid).institutionId(institutionId).build().constructMap();
-        var productFilters = OnboardedProductFilter.builder().role(ADMIN_PARTY_ROLE).status(ONBOARDING_INFO_DEFAULT_RELATIONSHIP_STATES).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().role(adminPartyRole).status(validStates).build().constructMap();
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter);
     }
