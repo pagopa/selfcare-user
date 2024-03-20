@@ -18,14 +18,22 @@ container_app = {
 
 app_settings = [
   {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-cdc",
+  },
+  {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
     value = "false"
   }
 ]
 
 
-secrets_names = [
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+}
 

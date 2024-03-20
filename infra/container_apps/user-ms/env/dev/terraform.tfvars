@@ -18,6 +18,14 @@ container_app = {
 
 app_settings = [
   {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-ms",
+  },
+  {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
   },
@@ -31,16 +39,16 @@ app_settings = [
   }
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key",
-  "user-registry-api-key",
-  "aws-ses-access-key-id",
-  "aws-ses-secret-access-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc",
-  "blob-storage-product-connection-string",
-  "blob-storage-contract-connection-string",
-  "eventhub-sc-users-selfcare-wo-key-lc"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
+  "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
+  "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-CONNECTION-STRING-LC" = "eventhub-sc-users-selfcare-wo-connection-string-lc"
+  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
+  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
+}
 
