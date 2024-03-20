@@ -1,4 +1,5 @@
 env_short = "d"
+is_pnpg   = true
 
 tags = {
   CreatedBy   = "Terraform"

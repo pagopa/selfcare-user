@@ -64,7 +64,7 @@ variable "app_settings" {
 }
 
 variable "secrets_names" {
-  type        = list(string)
+  type        = map(string)
   description = "KeyVault secrets to get values from"
 }
 
