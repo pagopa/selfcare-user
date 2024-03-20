@@ -24,14 +24,14 @@ app_settings = [
   }
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key",
-  "user-registry-api-key",
-  "aws-ses-access-key-id",
-  "aws-ses-secret-access-key",
-  "blob-storage-product-connection-string",
-  "blob-storage-contract-connection-string"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
+  "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
+  "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
+  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
+}
 
