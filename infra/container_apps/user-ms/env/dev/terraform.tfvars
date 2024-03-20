@@ -18,6 +18,14 @@ container_app = {
 
 app_settings = [
   {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-ms",
+  },
+  {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
   },
