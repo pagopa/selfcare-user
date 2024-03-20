@@ -54,10 +54,11 @@ public class UserInfoServiceDefault implements UserInfoService {
                         .map(this::buildWorkContactsMap)
                         .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
                                         MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
-                                .replaceWith(userResource))
-                        .onItem().transformToUni(this::updateUserInstitution)
-                        .onFailure()
-                        .invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage(), throwable))
+                                .onFailure().invoke(t -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId()))
+                                .replaceWith(userResource)
+                                .onItem().transformToUni(this::updateUserInstitution)
+                                .onFailure()
+                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage())))
         ).merge().toUni();
     }
 
