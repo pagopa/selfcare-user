@@ -9,8 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.response.UserDataResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
@@ -44,6 +43,8 @@ class UserControllerTest {
 
     private static final UserResource userResource;
 
+    private static final UserDetailResponse userDetailResponse;
+
     static {
         userResource = new UserResource();
         userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
@@ -52,6 +53,12 @@ class UserControllerTest {
         userResource.setFiscalCode("fiscalCode");
         userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
 
+        userDetailResponse = new UserDetailResponse();
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", false));
+        userDetailResponse.setName(new CertifiableFieldResponse<>( "name", false));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", false));
+        userDetailResponse.setFiscalCode("fiscalCode");
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<>("email", false))));
     }
 
     /**
@@ -176,11 +183,12 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUserDetailsById(){
 
-        when(userService.getUserById(any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userService.getUserById(any(), any())).thenReturn(Uni.createFrom().item(userDetailResponse));
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
+                .param("institutionId", "institutionId")
                 .get("/test_user_id/details")
                 .then()
                 .statusCode(200);
@@ -190,12 +198,13 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void searchUser(){
         SearchUserDto dto = new SearchUserDto("fiscalCode");
-
-        when(userService.searchUserByFiscalCode(any())).thenReturn(Uni.createFrom().item(userResource));
+        final String institution = "institutionId";
+        when(userService.searchUserByFiscalCode(any(), anyString())).thenReturn(Uni.createFrom().item(userResource));
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .body(dto)
+                .param("institutionId", institution)
                 .post("/search")
                 .then()
                 .statusCode(200);

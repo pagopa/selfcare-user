@@ -17,6 +17,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -131,12 +132,12 @@ class UserServiceTest {
     void getUserById() {
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
-        UniAssertSubscriber<UserResource> subscriber = userService
-                .getUserById("userId")
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .getUserById("userId", "institutionId")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
+        UserDetailResponse actual = subscriber.assertCompleted().awaitItem().getItem();
         assertNotNull(actual);
         assertEquals(userResource.getId(), actual.getId());
     }
@@ -239,8 +240,9 @@ class UserServiceTest {
     @Test
     void searchUserByFiscalCode(){
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        final String institutionId = "institutionId";
         UniAssertSubscriber<UserResource> subscriber = userService
-                .searchUserByFiscalCode("userId")
+                .searchUserByFiscalCode("userId", institutionId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

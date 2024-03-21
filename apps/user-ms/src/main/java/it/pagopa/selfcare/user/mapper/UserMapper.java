@@ -4,8 +4,6 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.controller.response.product.InstitutionProducts;
-import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -17,7 +15,10 @@ import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
@@ -31,6 +32,8 @@ public interface UserMapper {
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
     @Mapping(target = "workContacts", expression = "java(toWorkContacts(userResource.getWorkContacts()))")
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
+    @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
+    UserDetailResponse toUserDetailResponse(UserResource userResource, String userMailUuid);
 
     default Map<String, String> toWorkContacts(Map<String, WorkContactResource> workContactResourceMap) {
         if (workContactResourceMap == null){
@@ -40,6 +43,7 @@ public interface UserMapper {
                 .filter(entry -> entry.getValue().getEmail() != null && entry.getValue().getEmail().getValue() != null)
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getEmail().getValue()));
     }
+
 
     @Named("fromCertifiableString")
     default String fromCertifiableString(CertifiableFieldResourceOfstring certifiableFieldResourceOfstring) {
@@ -54,6 +58,15 @@ public interface UserMapper {
             return map.get(userMailUuid).getEmail().getValue();
         }
         return null;
+    }
+
+
+    @Named("retrieveCertifiedMailFromWorkContacts")
+    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
+        if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
+            return new CertifiableFieldResponse<String>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
+        }
+        return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
     }
 
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);

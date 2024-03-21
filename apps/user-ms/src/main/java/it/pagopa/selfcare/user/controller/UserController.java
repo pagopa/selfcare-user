@@ -10,7 +10,6 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
-import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserRegistryService;
@@ -97,8 +96,9 @@ public class UserController {
     @GET
     @Path("/{id}/details")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId) {
-        return userService.getUserById(userId).onItem().transform(userMapper::toUserResponse);
+    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId,
+                                                      @QueryParam(value = "institutionId") String institutionId) {
+        return userService.getUserById(userId, institutionId);
     }
 
     @Operation(summary = "Search user by fiscalCode")
@@ -106,8 +106,9 @@ public class UserController {
     @Path("/search")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto){
-        return userService.searchUserByFiscalCode(dto.getFiscalCode()).onItem().transform(userMapper::toUserResponse);
+    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto,
+                                                          @QueryParam(value = "institutionId")String institutionId){
+        return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId).onItem().transform(userMapper::toUserResponse);
     }
 
     /**

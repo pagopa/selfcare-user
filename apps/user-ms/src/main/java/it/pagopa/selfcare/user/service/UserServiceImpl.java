@@ -8,6 +8,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -38,7 +39,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
+import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
 import static it.pagopa.selfcare.user.constant.OnboardedProductState.PENDING;
@@ -182,13 +183,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserResource> getUserById(String userId) {
-        return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId);
+    public Uni<UserDetailResponse> getUserById(String userId, String institutionId) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                .onItem().ifNull().failWith(() -> {
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
+                })
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()).map(userResource -> userMapper.toUserDetailResponse(userResource, userInstitution.getUserMailUuid())))
+                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     @Override
-    public Uni<UserResource> searchUserByFiscalCode(String fiscalCode) {
-        return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
+    public Uni<UserResource> searchUserByFiscalCode(String fiscalCode, String institutionId) {
+        Uni<UserResource> userResourceUni = userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userResourceUni.onItem().transform(UserResource::getId)).institutionId(institutionId).build().constructMap();
+        Uni<UserInstitution> userInstitutionUni = userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters));
+        userResourceUni = userResourceUni.map(userResource -> {
+            if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userInstitutionUni.map(UserInstitution::getUserMailUuid))){
+                 userResource.setEmail(userResource.getWorkContacts().get(userInstitutionUni.map(UserInstitution::getUserMailUuid)).getEmail());
+            }
+            return userResource;
+        });
+        return userResourceUni;
     }
 
     /**
@@ -287,7 +305,7 @@ public class UserServiceImpl implements UserService {
      */
      @Override
     public Uni<Void> createOrUpdateUser(CreateUserDto userDto) {
-        return searchUserByFiscalCode(userDto.getUser().getFiscalCode())
+        return searchUserByFiscalCode(userDto.getUser().getFiscalCode(), null)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitution(userResource, userDto))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))
@@ -379,7 +397,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
-                        this.getUserById(userInstitution.getUserId())
+                        userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
     }
 
