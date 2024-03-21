@@ -28,6 +28,6 @@ public class UserInfoController {
     public Uni<Void> updateUsersEmails(@QueryParam(value = "userIds") List<String> userIds,
                                        @QueryParam(value = "page") @DefaultValue("0") Integer page,
                                        @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        return userInfoService.updateUsersEmails(formatQueryParameterList(userIds), size, page);
+        return userInfoService.updateUsersEmails(formatQueryParameterList(userIds), page, size);
     }
 }

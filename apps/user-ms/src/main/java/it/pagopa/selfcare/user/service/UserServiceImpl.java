@@ -183,6 +183,8 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(aLong -> {
                     if (aLong < 1) {
                         log.error("No document for institutionId {} and userId {} was updated", institutionId, userId);
+                    }else{
+                        log.error("Document for institutionId {} and userId {} was updated", institutionId, userId);
                     }
                     return Uni.createFrom().nullItem();
                 });

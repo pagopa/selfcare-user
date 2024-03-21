@@ -17,6 +17,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -54,33 +55,41 @@ public class UserInfoServiceDefault implements UserInfoService {
                         .map(this::buildWorkContactsMap)
                         .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
                                         MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
-                                .onFailure().invoke(t -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId()))
-                                .replaceWith(userResource)
+                                .replaceWith(userResource))
+                                .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))
+                                .onFailure().recoverWithUni(Uni.createFrom().nullItem())
                                 .onItem().transformToUni(this::updateUserInstitution)
                                 .onFailure()
-                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))))
+                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))
+                        .replaceWithVoid())
                 .merge().toUni();
     }
 
     private Uni<Void> updateUserInstitution(UserResource userResource) {
 
-        final String userId = userResource.getId().toString();
-        var filteredMap = userResource.getWorkContacts().entrySet().stream()
-                .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if(Objects.nonNull(userResource)) {
+            final String userId = userResource.getId().toString();
+            var filteredMap = userResource.getWorkContacts().entrySet().stream()
+                    .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        return Multi.createFrom().items(userResource.getWorkContacts().entrySet().stream()).onItem()
-                .transformToUni(entry -> {
-                    if (entry.getKey().contains(EMAIL_UUID_PREFIX)) {
-                        final String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
-                        return userService.updateUserInstitutionEmail(institutionId, userId, entry.getKey());
-                    }
-                    return Uni.createFrom().voidItem();
-                })
-                .merge().toUni();
+            return Multi.createFrom().items(userResource.getWorkContacts().entrySet().stream()).onItem()
+                    .transformToUni(entry -> {
+                        if (entry.getKey().contains(EMAIL_UUID_PREFIX)) {
+                            final String institutionId = filteredMap.entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).findFirst().get();
+                            return userService.updateUserInstitutionEmail(institutionId, userId, entry.getKey());
+                        }
+                        return Uni.createFrom().voidItem();
+                    })
+                    .merge().toUni();
+        }
+
+        return Uni.createFrom().voidItem();
+
     }
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
+        log.info("Build work contact map");
         if(userResource.getWorkContacts().keySet().stream().anyMatch(s -> s.startsWith(EMAIL_UUID_PREFIX)))
             return userResource;
         Map<String, List<WorkContactResource>> mapGroupedByEmail = userResource.getWorkContacts().values().stream().collect(groupingBy(obj -> obj.getEmail().getValue()));
