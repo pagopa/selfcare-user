@@ -58,8 +58,8 @@ public class UserInfoServiceDefault implements UserInfoService {
                                 .replaceWith(userResource)
                                 .onItem().transformToUni(this::updateUserInstitution)
                                 .onFailure()
-                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage())))
-        ).merge().toUni();
+                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))))
+                .merge().toUni();
     }
 
     private Uni<Void> updateUserInstitution(UserResource userResource) {
