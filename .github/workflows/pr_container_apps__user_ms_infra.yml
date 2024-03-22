@@ -33,6 +33,7 @@ jobs:
   code_review_uat:
     uses: ./.github/workflows/call_code_review_infra.yml
     name: '[UAT] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: uat
@@ -43,6 +44,7 @@ jobs:
   code_review_prod:
     uses: ./.github/workflows/call_code_review_infra.yml
     name: '[PROD] Container Apps Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
       environment: prod
