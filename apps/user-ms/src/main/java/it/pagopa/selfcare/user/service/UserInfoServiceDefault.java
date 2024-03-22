@@ -44,12 +44,18 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     @Override
+    public Multi<UserInfoResponse> findById(List<String> userIds) {
+        Multi<UserInfo> userInfo = UserInfo.find("_id in ?1", userIds).stream();
+        return userInfo.onItem().transform(userInfoMapper::toResponse);
+    }
+
+    @Override
     public Uni<Void> updateUsersEmails(List<String> userIds, int page, int size) {
         Multi<UserInfo> userInfos;
         if(userIds.isEmpty())
             userInfos = UserInfo.findAll().page(page, size).stream();
         else
-            userInfos = UserInfo.find("userId in (:userIds)", Map.of("userIds", userIds)).stream();
+            userInfos = UserInfo.find("_id in ?1", userIds).stream();
         return userInfos.onItem().transformToUni(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)

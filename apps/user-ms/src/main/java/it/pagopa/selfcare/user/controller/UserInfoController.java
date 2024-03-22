@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.user.controller;
 
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.service.UserInfoService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -29,5 +31,14 @@ public class UserInfoController {
                                        @QueryParam(value = "page") @DefaultValue("0") Integer page,
                                        @QueryParam(value = "size") @DefaultValue("100") Integer size) {
         return userInfoService.updateUsersEmails(formatQueryParameterList(userIds), page, size);
+    }
+
+    @Operation(summary = "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection")
+    @GET
+    @Path("/test")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<UserInfoResponse> getUsers(@QueryParam(value = "userIds") List<String> userIds) {
+        return userInfoService.findById(formatQueryParameterList(userIds));
     }
 }
