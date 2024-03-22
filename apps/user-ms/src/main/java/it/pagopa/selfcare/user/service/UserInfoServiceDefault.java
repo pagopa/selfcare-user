@@ -49,7 +49,7 @@ public class UserInfoServiceDefault implements UserInfoService {
         if(userIds.isEmpty())
             userInfos = UserInfo.findAll().page(page, size).stream();
         else
-            userInfos = UserInfo.find("userId in (:userIds)", Map.of("userIds", userIds)).page(page, size).stream();
+            userInfos = UserInfo.find("userId in (:userIds)", Map.of("userIds", userIds)).stream();
         return userInfos.onItem().transformToUni(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)
@@ -82,6 +82,8 @@ public class UserInfoServiceDefault implements UserInfoService {
                         return Uni.createFrom().voidItem();
                     })
                     .merge().toUni();
+        } else {
+            log.info("User resource is null");
         }
 
         return Uni.createFrom().voidItem();
