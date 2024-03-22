@@ -257,7 +257,7 @@ public class UserController {
      * @param userId Sting
      * @param userDto CreateUserDto
      */
-    @Operation(summary = "Create user by userId - Using for addUserRole")
+    @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
     @POST
     @Path("/{userId}")
@@ -278,7 +278,7 @@ public class UserController {
      *
      * @param userDto CreateUserDto
      */
-    @Operation(summary = "Create user by tax code")
+    @Operation(summary = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.")
     @ResponseStatus(HttpStatus.SC_OK)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

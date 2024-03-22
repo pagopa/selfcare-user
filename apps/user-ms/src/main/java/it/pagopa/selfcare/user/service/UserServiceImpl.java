@@ -37,6 +37,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
@@ -64,6 +65,8 @@ public class UserServiceImpl implements UserService {
     private final ProductService productService;
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
+
+    Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
     private static final String WORK_CONTACTS = "workContacts";
 
@@ -307,7 +310,7 @@ public class UserServiceImpl implements UserService {
     private Uni<String> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(UserResource userResource, CreateUserDto userDto) {
         log.info("Updating user on userRegistry and userInstitution");
         String mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
-                .orElse(MAIL_ID_PREFIX + UUID.randomUUID());
+                .orElse(randomMailId.get());
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
         userResource.getWorkContacts().put(mailUuid, workContact);
@@ -335,7 +338,7 @@ public class UserServiceImpl implements UserService {
      */
     private Uni<String> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto) {
         log.info("Creating user on userRegistry and userInstitution");
-        String mailUuid = MAIL_ID_PREFIX + UUID.randomUUID();
+        String mailUuid = randomMailId.get();
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
 
