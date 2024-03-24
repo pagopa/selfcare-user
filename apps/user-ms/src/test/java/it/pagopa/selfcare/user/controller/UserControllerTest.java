@@ -54,6 +54,7 @@ class UserControllerTest {
         userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
 
         userDetailResponse = new UserDetailResponse();
+        userDetailResponse.setId(UUID.randomUUID().toString());
         userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", false));
         userDetailResponse.setName(new CertifiableFieldResponse<>( "name", false));
         userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", false));
@@ -183,29 +184,29 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUserDetailsById(){
 
-        when(userService.getUserById(any(), any(), anyString())).thenReturn(Uni.createFrom().item(userDetailResponse));
+        when(userService.getUserById(anyString(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(userDetailResponse));
+        final String institutionId = "institutionId";
+        final String fields = "name,familyName";
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .param("institutionId", "institutionId")
-                .get("/test_user_id/details")
+                .get("/test_user_id/details?institutionId="+institutionId+"&fields=" + fields)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
     @Test
     @TestSecurity(user = "userJwt")
     void searchUser(){
         SearchUserDto dto = new SearchUserDto("fiscalCode");
-        final String institution = "institutionId";
         when(userService.searchUserByFiscalCode(any(), anyString())).thenReturn(Uni.createFrom().item(userDetailResponse));
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .body(dto)
-                .param("institutionId", institution)
-                .post("/search")
+                .post("/search?institutionId=institutionId")
                 .then()
                 .statusCode(200);
     }

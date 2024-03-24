@@ -95,6 +95,7 @@ public class UserController {
     @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
     @GET
     @Path("/{id}/details")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId,
                                                       @QueryParam(value = "institutionId") String institutionId,
