@@ -183,30 +183,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserDetailResponse> getUserById(String userId, String institutionId) {
+    public Uni<UserDetailResponse> getUserById(String userId, String institutionId, String field) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
-
+        var fields = StringUtils.isBlank(field) ? USERS_WORKS_FIELD_LIST : field;
         return userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
                 .onItem().ifNull().failWith(() -> {
                     log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
                     return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
                 })
-                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()).map(userResource -> userMapper.toUserDetailResponse(userResource, userInstitution.getUserMailUuid())))
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(fields, userInstitution.getUserId())
+                        .map(userResource -> userMapper.toUserDetailResponse(userResource, userInstitution.getUserMailUuid())))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     @Override
-    public Uni<UserResource> searchUserByFiscalCode(String fiscalCode, String institutionId) {
+    public Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId) {
         Uni<UserResource> userResourceUni = userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
-        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userResourceUni.onItem().transform(UserResource::getId)).institutionId(institutionId).build().constructMap();
-        Uni<UserInstitution> userInstitutionUni = userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters));
-        userResourceUni = userResourceUni.map(userResource -> {
-            if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userInstitutionUni.map(UserInstitution::getUserMailUuid))){
-                 userResource.setEmail(userResource.getWorkContacts().get(userInstitutionUni.map(UserInstitution::getUserMailUuid)).getEmail());
-            }
-            return userResource;
-        });
-        return userResourceUni;
+        return userResourceUni
+                .onItem()
+                .transformToUni(userResource -> {
+                    var userInstitutionFilters = UserInstitutionFilter.builder().userId(userResource.getId().toString()).institutionId(institutionId).build().constructMap();
+                    Uni<UserInstitution> userInstitutionUni = userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters));
+                    return userInstitutionUni.map(userInstitution -> userMapper.toUserDetailResponse(userResource, userInstitution.getUserMailUuid()));
+                })
+                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage()), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     /**
@@ -303,9 +303,9 @@ public class UserServiceImpl implements UserService {
      * collection.
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
-     @Override
+    @Override
     public Uni<Void> createOrUpdateUser(CreateUserDto userDto) {
-        return searchUserByFiscalCode(userDto.getUser().getFiscalCode(), null)
+        return userRegistryApi.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitution(userResource, userDto))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))

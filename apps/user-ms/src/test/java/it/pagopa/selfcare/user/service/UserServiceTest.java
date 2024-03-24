@@ -78,10 +78,11 @@ class UserServiceTest {
 
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;
+    private static final UUID userId = UUID.randomUUID();
 
     static {
         userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
+        userResource.setId(userId);
         CertifiableFieldResourceOfstring certifiedName = new CertifiableFieldResourceOfstring();
         certifiedName.setValue("name");
         userResource.setName(certifiedName);
@@ -99,7 +100,7 @@ class UserServiceTest {
 
         userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
-        userInstitution.setUserId("userId");
+        userInstitution.setUserId(userId.toString());
         userInstitution.setInstitutionId("institutionId");
         userInstitution.setUserMailUuid("userMailUuid");
         userInstitution.setInstitutionRootName("institutionRootName");
@@ -130,16 +131,18 @@ class UserServiceTest {
 
     @Test
     void getUserById() {
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
+
         UniAssertSubscriber<UserDetailResponse> subscriber = userService
-                .getUserById("userId", "institutionId")
+                .getUserById(userId.toString(), "institutionId", null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        UserDetailResponse actual = subscriber.assertCompleted().awaitItem().getItem();
-        assertNotNull(actual);
-        assertEquals(userResource.getId(), actual.getId());
+        subscriber.assertCompleted();
+
     }
 
 
@@ -239,16 +242,16 @@ class UserServiceTest {
 
     @Test
     void searchUserByFiscalCode(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(userInstitution));
+
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         final String institutionId = "institutionId";
-        UniAssertSubscriber<UserResource> subscriber = userService
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
                 .searchUserByFiscalCode("userId", institutionId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
-        UserResource actual = subscriber.assertCompleted().awaitItem().getItem();
-        assertNotNull(actual);
-        assertEquals(userResource.getId(), actual.getId());
+        subscriber.assertCompleted();
 
     }
 

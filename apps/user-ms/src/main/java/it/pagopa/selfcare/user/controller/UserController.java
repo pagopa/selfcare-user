@@ -97,8 +97,9 @@ public class UserController {
     @Path("/{id}/details")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId,
-                                                      @QueryParam(value = "institutionId") String institutionId) {
-        return userService.getUserById(userId, institutionId);
+                                                      @QueryParam(value = "institutionId") String institutionId,
+                                                      @QueryParam(value = "field") String field) {
+        return userService.getUserById(userId, institutionId, field);
     }
 
     @Operation(summary = "Search user by fiscalCode")
@@ -108,7 +109,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto,
                                                           @QueryParam(value = "institutionId")String institutionId){
-        return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId).onItem().transform(userMapper::toUserResponse);
+        return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId);
     }
 
     /**

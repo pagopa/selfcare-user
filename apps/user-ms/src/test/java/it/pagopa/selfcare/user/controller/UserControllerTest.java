@@ -183,7 +183,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUserDetailsById(){
 
-        when(userService.getUserById(any(), any())).thenReturn(Uni.createFrom().item(userDetailResponse));
+        when(userService.getUserById(any(), any(), anyString())).thenReturn(Uni.createFrom().item(userDetailResponse));
 
         given()
                 .when()
@@ -199,7 +199,7 @@ class UserControllerTest {
     void searchUser(){
         SearchUserDto dto = new SearchUserDto("fiscalCode");
         final String institution = "institutionId";
-        when(userService.searchUserByFiscalCode(any(), anyString())).thenReturn(Uni.createFrom().item(userResource));
+        when(userService.searchUserByFiscalCode(any(), anyString())).thenReturn(Uni.createFrom().item(userDetailResponse));
         given()
                 .when()
                 .contentType(ContentType.JSON)

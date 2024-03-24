@@ -65,8 +65,10 @@ public interface UserMapper {
     default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
         if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
             return new CertifiableFieldResponse<String>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
+        } else if (null!=userResource.getEmail()) {
+            return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
         }
-        return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
+        return null;
     }
 
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
