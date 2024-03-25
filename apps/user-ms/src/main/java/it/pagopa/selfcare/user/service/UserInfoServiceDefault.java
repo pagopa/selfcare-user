@@ -45,8 +45,8 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     @Override
     public Multi<UserInfoResponse> findById(List<String> userIds) {
-        Multi<UserInfo> userInfo = UserInfo.find("_id in ?1", userIds).stream();
-        return userInfo.onItem().transform(userInfoMapper::toResponse);
+        Multi<UserInfo> userInfos = UserInfo.find("_id in ?1", userIds).stream();
+        return userInfos.onItem().transform(userInfoMapper::toResponse);
     }
 
     @Override
@@ -79,6 +79,32 @@ public class UserInfoServiceDefault implements UserInfoService {
                     .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+            return Multi.createFrom().items(filteredMap.entrySet().stream()).onItem()
+                    .transformToUni(entry -> {
+                            final String institutionId = entry.getKey();
+                            final String uuid = userResource.getWorkContacts().entrySet().stream().filter(el -> el.getValue().getEmail().getValue().equals(entry.getValue().getEmail().getValue())).map(Map.Entry::getKey).filter(el -> el.contains(EMAIL_UUID_PREFIX)).findFirst().get();
+                            if(!uuid.equals(institutionId))
+                                return userService.updateUserInstitutionEmail(institutionId, userId, uuid);
+                            return Uni.createFrom().voidItem();
+                    })
+                    .merge().toUni();
+        } else {
+            log.info("User resource is null");
+        }
+
+        return Uni.createFrom().voidItem();
+
+    }
+
+    /*
+    private Uni<Void> updateUserInstitution(UserResource userResource) {
+
+        if(Objects.nonNull(userResource)) {
+            final String userId = userResource.getId().toString();
+            var filteredMap = userResource.getWorkContacts().entrySet().stream()
+                    .filter(entry -> !entry.getKey().contains(EMAIL_UUID_PREFIX))
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
             return Multi.createFrom().items(userResource.getWorkContacts().entrySet().stream()).onItem()
                     .transformToUni(entry -> {
                         if (entry.getKey().contains(EMAIL_UUID_PREFIX)) {
@@ -94,7 +120,8 @@ public class UserInfoServiceDefault implements UserInfoService {
 
         return Uni.createFrom().voidItem();
 
-    }
+    }*/
+
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
         log.info("Build work contact map");
