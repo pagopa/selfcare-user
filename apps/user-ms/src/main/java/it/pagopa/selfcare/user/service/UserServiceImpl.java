@@ -308,8 +308,7 @@ public class UserServiceImpl implements UserService {
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
     @Override
-
-    public Uni<Void> createOrUpdateUser(CreateUserDto userDto) {
+    public Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto) {
         return userRegistryApi.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto))
