@@ -531,7 +531,12 @@ class UserServiceTest {
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
                 .thenReturn(Uni.createFrom().item(userResource));
-        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService
+                .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                        "userId", "institutionId", "productId", null, null, OnboardedProductState.ACTIVE))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("not found")));
+
         var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
                         LoggedUser.builder().build())
                 .subscribe()

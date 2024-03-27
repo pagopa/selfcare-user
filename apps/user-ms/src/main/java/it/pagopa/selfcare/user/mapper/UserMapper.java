@@ -15,10 +15,7 @@ import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
@@ -65,7 +62,7 @@ public interface UserMapper {
     default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
         if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
             return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
-        } else if (null!=userResource.getEmail()) {
+        } else if (Objects.nonNull(userResource.getEmail())) {
             return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
         }
         return null;

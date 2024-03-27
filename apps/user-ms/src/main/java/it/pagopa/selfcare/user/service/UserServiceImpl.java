@@ -187,9 +187,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserDetailResponse> getUserById(String userId, String institutionId, String field) {
+    public Uni<UserDetailResponse> getUserById(String userId, String institutionId, String fieldsToRetrieve) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
-        var fields = StringUtils.isBlank(field) ? USERS_WORKS_FIELD_LIST : field;
+        var fields = StringUtils.isBlank(fieldsToRetrieve) ? USERS_WORKS_FIELD_LIST : fieldsToRetrieve;
         return userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
                 .onItem().ifNull().failWith(() -> {
                     log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));

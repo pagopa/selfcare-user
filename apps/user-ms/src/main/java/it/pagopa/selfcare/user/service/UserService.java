@@ -42,7 +42,7 @@ public interface UserService {
 
     Uni<Void> updateUserProductCreatedAt(String institutionId, List<String> userIds, String productId, LocalDateTime createdAt);
 
-    Uni<UserDetailResponse> getUserById(String userId, String institutionId, String field);
+    Uni<UserDetailResponse> getUserById(String userId, String institutionId, String fieldsToRetrieve);
 
     Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId);
 
