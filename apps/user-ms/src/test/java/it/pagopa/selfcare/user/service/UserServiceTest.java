@@ -145,6 +145,16 @@ class UserServiceTest {
         subscriber.assertCompleted();
 
     }
+    @Test
+    void getUserByIdNotFound(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .getUserById(userId.toString(), "institutionId", null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+
+    }
 
 
     @Test
@@ -514,6 +524,21 @@ class UserServiceTest {
                 any(UserNotificationToSend.class),
                 any()
         );
+    }
+
+    @Test
+    void updateUserProductStatusNotFound(){
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+                        LoggedUser.builder().build())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+
     }
 
     @Test
