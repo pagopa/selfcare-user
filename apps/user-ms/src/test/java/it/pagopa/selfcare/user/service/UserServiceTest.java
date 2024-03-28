@@ -145,6 +145,16 @@ class UserServiceTest {
         subscriber.assertCompleted();
 
     }
+    @Test
+    void getUserByIdNotFound(){
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().nullItem());
+        UniAssertSubscriber<UserDetailResponse> subscriber = userService
+                .getUserById(userId.toString(), "institutionId", null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+
+    }
 
 
     @Test
