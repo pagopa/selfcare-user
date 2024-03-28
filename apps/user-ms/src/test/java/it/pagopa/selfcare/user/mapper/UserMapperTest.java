@@ -53,16 +53,6 @@ public class UserMapperTest {
 
     }
 
-    @Test
-    void retrieveCertifiedEmailFromWorkContacts_userEmail(){
-        final UserResource userResource = new UserResource();
-        final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        userResource.setEmail(email);
-        CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, null);
-
-        assertFalse(certifiedMail.isCertified());
-        assertEquals("email", certifiedMail.getValue());
-    }
 
     @Test
     void retrieveMailFromWorkContacts(){

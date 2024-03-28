@@ -15,7 +15,10 @@ import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
@@ -29,7 +32,10 @@ public interface UserMapper {
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
     @Mapping(target = "workContacts", expression = "java(toWorkContacts(userResource.getWorkContacts()))")
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
+
     @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
+    @Mapping(source = "userResource.familyName", target = "familyName", qualifiedByName = "toCertifiableFieldResponse")
+    @Mapping(source = "userResource.name", target = "name", qualifiedByName = "toCertifiableFieldResponse")
     UserDetailResponse toUserDetailResponse(UserResource userResource, String userMailUuid);
 
     default Map<String, String> toWorkContacts(Map<String, WorkContactResource> workContactResourceMap) {
@@ -62,12 +68,14 @@ public interface UserMapper {
     default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
         if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
             return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
-        } else if (Objects.nonNull(userResource.getEmail())) {
-            return new CertifiableFieldResponse<>(userResource.getEmail().getValue(), userResource.getEmail().getCertification());
         }
         return null;
     }
 
+    @Named("toCertifiableFieldResponse")
+    default CertifiableFieldResponse<String> toCertifiableFieldResponse(CertifiableFieldResourceOfstring resource){
+        return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(), r.getCertification())).orElse(null);
+    }
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
     @Mapping(source = "user.birthDate", target = "birthDate", qualifiedByName = "toCertifiableLocalDate")
