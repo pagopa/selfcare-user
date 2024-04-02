@@ -1061,7 +1061,7 @@
             "type" : "string"
           },
           "certified" : {
-            "type" : "boolean"
+            "$ref" : "#/components/schemas/CertificationEnum"
           }
         }
       },

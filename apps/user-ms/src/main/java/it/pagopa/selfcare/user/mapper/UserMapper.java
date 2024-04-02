@@ -15,10 +15,7 @@ import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
@@ -36,6 +33,7 @@ public interface UserMapper {
     @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
     @Mapping(source = "userResource.familyName", target = "familyName", qualifiedByName = "toCertifiableFieldResponse")
     @Mapping(source = "userResource.name", target = "name", qualifiedByName = "toCertifiableFieldResponse")
+    @Mapping(target = "workContacts", expression = "java(toWorkContactResponse(userResource.getWorkContacts()))")
     UserDetailResponse toUserDetailResponse(UserResource userResource, String userMailUuid);
 
     default Map<String, String> toWorkContacts(Map<String, WorkContactResource> workContactResourceMap) {
@@ -54,6 +52,19 @@ public interface UserMapper {
     }
 
     UserDetailResponse toUserResponse(UserResource userResource);
+
+    @Named("toWorkContactResponse")
+    default Map<String, WorkContactResponse> toWorkContactResponse(Map<String, WorkContactResource> workContactResourceMap){
+        Map<String, WorkContactResponse> resourceMap = new HashMap<>();
+        if (workContactResourceMap != null && !workContactResourceMap.isEmpty()) {
+            workContactResourceMap.forEach((key, value) -> {
+                WorkContactResponse workContact = new WorkContactResponse();
+                workContact.setEmail(toCertifiableFieldResponse(value.getEmail()));
+                resourceMap.put(key, workContact);
+            });
+        }
+        return resourceMap;
+    }
 
     @Named("retrieveMailFromWorkContacts")
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){

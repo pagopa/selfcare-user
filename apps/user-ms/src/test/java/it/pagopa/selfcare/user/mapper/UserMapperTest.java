@@ -10,7 +10,8 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
 public class UserMapperTest {
@@ -27,7 +28,7 @@ public class UserMapperTest {
 
         CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, "email");
 
-        assertFalse(certifiedMail.isCertified());
+        assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE,certifiedMail.getCertified());
         assertEquals("email", certifiedMail.getValue());
     }
 

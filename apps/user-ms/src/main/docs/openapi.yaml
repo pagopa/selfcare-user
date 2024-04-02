@@ -740,7 +740,7 @@ components:
         value:
           type: string
         certified:
-          type: boolean
+          $ref: '#/components/schemas/CertificationEnum'
     CertificationEnum:
       enum:
       - NONE
