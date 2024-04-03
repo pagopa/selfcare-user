@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CreateUserDto {
 
@@ -19,6 +21,7 @@ public class CreateUserDto {
 
     private String institutionDescription;
     private String institutionRootName;
+    private Boolean hasToSendEmail = Boolean.TRUE;
 
     @Data
     public static class User {
@@ -47,6 +50,6 @@ public class CreateUserDto {
         private PartyRole role;
 
         private String tokenId;
-        private String productRole;
+        private List<String> productRoles;
     }
 }
