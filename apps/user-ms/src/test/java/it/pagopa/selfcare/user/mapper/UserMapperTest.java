@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.mapper;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.user.controller.response.CertifiableFieldResponse;
+import it.pagopa.selfcare.user.controller.response.WorkContactResponse;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -10,8 +11,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 public class UserMapperTest {
@@ -93,5 +93,32 @@ public class UserMapperTest {
         String mailFromWorkContact = userMapper.retrieveMailFromWorkContacts(workContactResourceMap, "notPresent");
 
         assertNull(mailFromWorkContact);
+    }
+
+    @Test
+    void toWorkContactResponseMap(){
+        final Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
+        final WorkContactResource workContactResource = new WorkContactResource();
+        final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
+        workContactResource.setEmail(email);
+        workContactResourceMap.put("email", workContactResource);
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(workContactResourceMap);
+
+        assertEquals(email.getValue(), responseMap.get("email").getEmail().getValue());
+    }
+
+    @Test
+    void toWorkContactResponseMap_nullMap(){
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(null);
+        assertTrue(responseMap.isEmpty());
+    }
+
+    @Test
+    void toWorkContactResponseMap_empty(){
+        final Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
+
+        Map<String, WorkContactResponse> responseMap = userMapper.toWorkContactResponse(workContactResourceMap);
+        assertTrue(responseMap.isEmpty());
+
     }
 }
