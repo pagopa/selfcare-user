@@ -326,8 +326,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.getHasToSendEmail(), loggedUser, prepareNotificationData))
                 .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
                 .collect().first()
-                .map(userNotificationSent -> userNotificationSent.getUser().getUserId())
-                .onFailure().invoke(exception -> log.error("Error during send notifications: {} ", exception.getMessage(), exception));
+                .map(userNotificationSent -> userNotificationSent.getUser().getUserId());
     }
 
     /**
@@ -430,7 +429,8 @@ public class UserServiceImpl implements UserService {
                 .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
                 .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.isHasToSendEmail(), loggedUser, prepareNotificationData))
                 .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
-                .collect().asList().replaceWithVoid();
+                .collect().first()
+                .replaceWithVoid();
 
     }
 

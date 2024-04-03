@@ -249,6 +249,8 @@ class UserServiceTest {
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(userInfoResponse)));
+        when(userUtils.filterInstitutionRoles(any(), any(), any()))
+                .thenReturn(userInfoResponse);
 
         UniAssertSubscriber<UserInfo> subscriber = userService
                 .retrieveBindings(null, "test-user", null)
@@ -317,7 +319,8 @@ class UserServiceTest {
         PanacheMock.mock(UserInfo.class);
         when(UserInfo.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(userInfoResponse)));
-
+        when(userUtils.filterInstitutionRoles(any(), any(), any()))
+                .thenReturn(new UserInfo());
         String[] states = {"ACTIVE"};
 
         UniAssertSubscriber<UserInfo> subscriber = userService
@@ -526,6 +529,8 @@ class UserServiceTest {
                 any())
         ).thenReturn(Uni.createFrom().nullItem());
 
+        when(userUtils.buildUserNotificationToSend(any(), any(), any(), any())).thenReturn(new UserNotificationToSend());
+
         var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
                         LoggedUser.builder().build())
                 .subscribe()
@@ -573,29 +578,42 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
-        CreateUserDto.Product product = new  CreateUserDto.Product();
-        product.setProductId("productId");
+        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        createUserProduct.setProductId("productId");
         createUserDto.setUser(user);
-        createUserDto.setProduct(product);
+        createUserDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
 
         // Mock external dependencies
         when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
-        when(productService.getProduct(any())).thenReturn(new Product());
+        when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
-        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().nullItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         // Call the method
         UniAssertSubscriber<String> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertCompleted();
+        subscriber.awaitItem().assertItem(userId.toString());
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
+        verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendKafkaNotification(any(), any());
     }
 
     @Test
@@ -635,9 +653,12 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertCompleted();
+        subscriber.awaitItem().assertItem(userId.toString());
         verify(userRegistryApi).saveUsingPATCH(any());
+        verify(userRegistryApi).findByIdUsingGET(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+        verify(userNotificationService).sendKafkaNotification(any(), any());
     }
 
     @Test
@@ -695,19 +716,36 @@ class UserServiceTest {
         // Prepare test data
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("productId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
 
         // Mock external dependencies
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(userInstitution));
         when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
 
         // Call the method
         UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertCompleted();
+        subscriber.awaitItem().assertCompleted();
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
         verify(userInstitutionService).persistOrUpdate(any());
     }
