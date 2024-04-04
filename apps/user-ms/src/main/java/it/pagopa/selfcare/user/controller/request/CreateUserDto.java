@@ -27,14 +27,11 @@ public class CreateUserDto {
     public static class User {
         private String birthDate;
 
-        @NotEmpty(message = "email is required")
         private String familyName;
+        private String name;
 
         @NotEmpty(message = "fiscalCode is required")
         private String fiscalCode;
-
-        @NotEmpty(message = "name is required")
-        private String name;
 
         @NotEmpty(message = "email is required")
         private String institutionEmail;
