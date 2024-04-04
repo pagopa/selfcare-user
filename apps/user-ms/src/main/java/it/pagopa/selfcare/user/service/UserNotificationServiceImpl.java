@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.unchecked.Unchecked;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
-import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
@@ -51,7 +50,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     private final Configuration freemarkerConfig;
 
 
-    public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, ObjectMapper objectMapper, MailService mailService, ProductService productService, UserInstitutionService userInstitutionService) {
+    public UserNotificationServiceImpl(Configuration freemarkerConfig, CloudTemplateLoader cloudTemplateLoader, ObjectMapper objectMapper, MailService mailService) {
         this.mailService = mailService;
         this.freemarkerConfig = freemarkerConfig;
         freemarkerConfig.setTemplateLoader(cloudTemplateLoader);
@@ -94,13 +93,21 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         log.debug("sendCreateNotification start");
         log.debug("sendCreateNotification institution = {}, productTitle = {}, email = {}", institutionDescription, product.getTitle(), userInstitution.getUserMailUuid());
 
+        String email = retrieveMail(userResource, userInstitution);
+        String templateName = roleLabels.size() > 1 ? CREATE_TEMPLATE_MULTIPLE_ROLE : CREATE_TEMPLATE_SINGLE_ROLE;
+        Map<String, String> dataModel = buildCreateEmailDataModel(loggedUser, product, institutionDescription, roleLabels);
+
+        return this.sendEmailNotification(email, templateName, CREATE_SUBJECT, dataModel)
+                .onItem().invoke(() -> log.debug("sendCreateNotification end"));
+    }
+
+    private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> roleLabels) {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put("requesterName", loggedUser.getName());
         dataModel.put("requesterSurname", loggedUser.getFamilyName());
 
         dataModel.put("productName", product.getTitle());
         dataModel.put("institutionName", institutionDescription);
-        String email = retrieveMail(userResource, userInstitution);
         if (roleLabels.size() > 1) {
             String roleLabel = roleLabels.stream()
                     .limit(roleLabels.size() - 1L)
@@ -108,17 +115,13 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
             dataModel.put("productRoles", roleLabel);
             dataModel.put("lastProductRole", roleLabels.get(roleLabels.size() - 1));
-
-            return this.sendEmailNotification(email, CREATE_TEMPLATE_MULTIPLE_ROLE, CREATE_SUBJECT, dataModel)
-                    .onItem().invoke(() -> log.debug("sendCreateNotification end"));
         } else {
             String roleLabel = roleLabels.get(0);
             dataModel.put("productRole", roleLabel);
-            return this.sendEmailNotification(email, CREATE_TEMPLATE_SINGLE_ROLE, CREATE_SUBJECT, dataModel)
-                    .onItem().invoke(() -> log.debug("sendCreateNotification end"));
         }
-    }
 
+        return dataModel;
+    }
     private Map<String, String> buildEmailDataModel(UserInstitution institution, Product product, String loggedUserName, String loggedUserSurname) {
         Optional<OnboardedProduct> productDb = institution.getProducts().stream().filter(p -> StringUtils.equals(p.getProductId(), product.getId())).findFirst();
 
@@ -140,17 +143,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private Uni<Void> buildDataModelAndSendEmail(org.openapi.quarkus.user_registry_json.model.UserResource user, UserInstitution institution, Product product, String templateName, String subject, String loggedUserName, String loggedUserSurname) {
-        return Uni.createFrom().voidItem().onItem().transformToUni(Unchecked.function(x -> {
-            String email = retrieveMail(user, institution);
-            Map<String, String> dataModel = buildEmailDataModel(institution, product, loggedUserName, loggedUserSurname);
-            return Uni.createFrom().item(getContent(templateName, dataModel))
-                    .onItem().transformToUni(content -> this.sendEmailNotification(templateName, subject, email, dataModel));
-        }));
+        String email = retrieveMail(user, institution);
+        Map<String, String> dataModel = buildEmailDataModel(institution, product, loggedUserName, loggedUserSurname);
+        return this.sendEmailNotification(templateName, subject, email, dataModel);
     }
+
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {
-        return Uni.createFrom().voidItem().onItem().transformToUni(Unchecked.function(x -> Uni.createFrom()
-                .item(getContent(templateName, dataModel))
-                .onItem().transformToUni(content -> mailService.sendMail(email, content.toString(), subject))));
+        return Uni.createFrom().item(getContent(templateName, dataModel))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onItem().transformToUni(content -> mailService.sendMail(email, content.toString(), subject));
     }
 
     private StringWriter getContent(String templateName, Map<String, String> dataModel) {
