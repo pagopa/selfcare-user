@@ -38,8 +38,19 @@ app_settings = [
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
     value = "user-ms",
+  },
+  {
+    name  = "EVENT_HUB_BASE_PATH"
+    value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
+  },
+  {
+    name = "SHARED_ACCESS_KEY_NAME"
+    value = "selfcare-wo"
+  },
+  {
+    name = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
+    value = "string"
   }
-
 ]
 
 secrets_names = {
