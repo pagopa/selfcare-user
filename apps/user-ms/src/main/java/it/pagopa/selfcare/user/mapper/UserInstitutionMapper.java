@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.mapper;
 
+import it.pagopa.selfcare.user.constant.CollectionUtil;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -9,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,52 +46,45 @@ public interface UserInstitutionMapper {
 
 
     default List<OnboardedProduct> toNewOnboardedProduct(CreateUserDto.Product product) {
-        if (product.getProductRoles().isEmpty()) {
+        if (product == null || CollectionUtils.isNullOrEmpty(product.getProductRoles())) {
             return new ArrayList<>();
         }
-
-        LocalDateTime now = java.time.LocalDateTime.now();
         return product.getProductRoles().stream()
                 .map(role -> {
-                    OnboardedProduct onboardedProduct = new OnboardedProduct();
-
+                    OnboardedProduct onboardedProduct = buildOnboardedProduct();
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
                     onboardedProduct.setRole(product.getRole());
-
-                    onboardedProduct.setStatus(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE);
-                    onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
-                    onboardedProduct.setCreatedAt(now);
-                    onboardedProduct.setUpdatedAt(now);
-
                     return onboardedProduct;
                 })
                 .collect(Collectors.toList());
     }
 
     default List<OnboardedProduct> toNewOnboardedProductFromAddUserRole(AddUserRoleDto.Product product) {
-        if (product.getProductRoles().isEmpty()) {
+        if (product == null || CollectionUtils.isNullOrEmpty(product.getProductRoles())){
             return new ArrayList<>();
         }
 
-        LocalDateTime now = java.time.LocalDateTime.now();
         return product.getProductRoles().stream()
                 .map(role -> {
-                    OnboardedProduct onboardedProduct = new OnboardedProduct();
-
+                    OnboardedProduct onboardedProduct = buildOnboardedProduct();
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
                     onboardedProduct.setRole(product.getRole());
-
-                    onboardedProduct.setStatus(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE);
-                    onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
-                    onboardedProduct.setCreatedAt(now);
-                    onboardedProduct.setUpdatedAt(now);
-
                     return onboardedProduct;
                 })
                 .collect(Collectors.toList());
+    }
+
+    default OnboardedProduct buildOnboardedProduct(){
+        LocalDateTime now = java.time.LocalDateTime.now();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE);
+        onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
+        onboardedProduct.setCreatedAt(now);
+        onboardedProduct.setUpdatedAt(now);
+        return onboardedProduct;
     }
 }
