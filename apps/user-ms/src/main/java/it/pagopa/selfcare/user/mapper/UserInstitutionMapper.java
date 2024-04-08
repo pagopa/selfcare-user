@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.mapper;
 
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
@@ -33,8 +34,41 @@ public interface UserInstitutionMapper {
     @Mapping(target = "products", expression = "java(toNewOnboardedProduct(createUserDto.getProduct()))")
     UserInstitution toNewEntity(CreateUserDto createUserDto, String userId, String userMailUuid);
 
+    @Mapping(source = "userId", target = "userId")
+    @Mapping(source = "addUserRoleDto.institutionId", target = "institutionId")
+    @Mapping(source = "addUserRoleDto.institutionDescription", target = "institutionDescription")
+    @Mapping(source = "addUserRoleDto.institutionRootName", target = "institutionRootName")
+    @Mapping(source = "addUserRoleDto.userMailUuid", target = "userMailUuid")
+    @Mapping(target = "products", expression = "java(toNewOnboardedProductFromAddUserRole(addUserRoleDto.getProduct()))")
+    UserInstitution toNewEntity(AddUserRoleDto addUserRoleDto, String userId);
+
 
     default List<OnboardedProduct> toNewOnboardedProduct(CreateUserDto.Product product) {
+        if (product.getProductRoles().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        LocalDateTime now = java.time.LocalDateTime.now();
+        return product.getProductRoles().stream()
+                .map(role -> {
+                    OnboardedProduct onboardedProduct = new OnboardedProduct();
+
+                    onboardedProduct.setProductId(product.getProductId());
+                    onboardedProduct.setTokenId(product.getTokenId());
+                    onboardedProduct.setProductRole(role);
+                    onboardedProduct.setRole(product.getRole());
+
+                    onboardedProduct.setStatus(it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE);
+                    onboardedProduct.setEnv(it.pagopa.selfcare.onboarding.common.Env.ROOT);
+                    onboardedProduct.setCreatedAt(now);
+                    onboardedProduct.setUpdatedAt(now);
+
+                    return onboardedProduct;
+                })
+                .collect(Collectors.toList());
+    }
+
+    default List<OnboardedProduct> toNewOnboardedProductFromAddUserRole(AddUserRoleDto.Product product) {
         if (product.getProductRoles().isEmpty()) {
             return new ArrayList<>();
         }
