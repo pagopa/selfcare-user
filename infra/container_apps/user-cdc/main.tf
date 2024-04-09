@@ -13,16 +13,16 @@ module "container_app_user_cdc" {
 
   is_pnpg = var.is_pnpg
 
-  env_short          = var.env_short
-  container_app      = var.container_app
-  container_app_name = "user-cdc"
+  env_short                      = var.env_short
+  container_app                  = var.container_app
+  container_app_name             = "user-cdc"
   container_app_environment_name = local.container_app_environment_name
-  image_name         = "selfcare-user-cdc"
-  image_tag          = var.image_tag
-  app_settings       = var.app_settings
-  secrets_names      = var.secrets_names
-  workload_profile_name   = var.workload_profile_name
-  
+  image_name                     = "selfcare-user-cdc"
+  image_tag                      = var.image_tag
+  app_settings                   = var.app_settings
+  secrets_names                  = var.secrets_names
+  workload_profile_name          = var.workload_profile_name
+
   probes = [
     {
       httpGet = {

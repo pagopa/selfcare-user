@@ -1,8 +1,8 @@
 locals {
-  prefix         = "selc"
-  domain         = "pnpg"
-  location_short = "weu"
-  pnpg_suffix    = var.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
+  prefix                         = "selc"
+  domain                         = "pnpg"
+  location_short                 = "weu"
+  pnpg_suffix                    = var.is_pnpg == true ? "-${local.location_short}-${local.domain}" : ""
   container_app_environment_name = "${local.project}${local.pnpg_suffix}-cae-cp"
 
   mongo_db = {

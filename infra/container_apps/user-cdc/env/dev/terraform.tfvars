@@ -25,8 +25,8 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu          = 0.25
-  memory       = "0.5Gi"
+  cpu    = 0.25
+  memory = "0.5Gi"
 }
 
 app_settings = [
@@ -46,7 +46,7 @@ app_settings = [
 
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
 }
 
