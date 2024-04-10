@@ -74,4 +74,10 @@ variable "workload_profile_name" {
   default     = null
 }
 
+variable "cae_name" {
+  type        = string
+  description = "Container App Environment name"
+  default     = "cae-cp"
+}
+
 

@@ -1,6 +1,7 @@
 prefix    = "selc"
 env_short = "u"
 is_pnpg   = true
+cae_name  = "cae"
 
 tags = {
   CreatedBy   = "Terraform"
