@@ -40,7 +40,7 @@ app_settings = [
   },
   {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
+    value = "true"
   }
 ]
 
