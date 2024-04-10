@@ -28,7 +28,6 @@ import static java.util.Arrays.asList;
 @Startup
 @Slf4j
 @ApplicationScoped
-@IfBuildProperty(name = "user-cdc.mongodb.watch.enabled", stringValue = "true")
 public class UserInstitutionCdcService {
 
     private static final String COLLECTION_NAME = "userInstitutions";
