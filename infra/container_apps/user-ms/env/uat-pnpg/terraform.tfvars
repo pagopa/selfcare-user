@@ -1,5 +1,7 @@
-env_short = "u"
-is_pnpg   = true
+env_short             = "u"
+is_pnpg               = true
+cae_name              = "cae"
+workload_profile_name = "Consumption"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -35,11 +37,11 @@ app_settings = [
     value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
   },
   {
-    name = "SHARED_ACCESS_KEY_NAME"
+    name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
   {
-    name = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
+    name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
   }
 ]

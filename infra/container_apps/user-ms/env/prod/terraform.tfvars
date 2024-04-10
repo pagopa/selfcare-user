@@ -45,14 +45,14 @@ app_settings = [
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-  "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-  "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-  "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
-  "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
+  "JWT-PUBLIC-KEY"                                     = "jwt-public-key"
+  "MONGODB-CONNECTION-STRING"                          = "mongodb-connection-string"
+  "USER-REGISTRY-API-KEY"                              = "user-registry-api-key"
+  "AWS-SES-ACCESS-KEY-ID"                              = "aws-ses-access-key-id"
+  "AWS-SES-SECRET-ACCESS-KEY"                          = "aws-ses-secret-access-key"
   "EVENTHUB-SC-USERS-SELFCARE-WO-CONNECTION-STRING-LC" = "eventhub-sc-users-selfcare-wo-connection-string-lc"
-  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
-  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
+  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"             = "blob-storage-product-connection-string"
+  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING"            = "blob-storage-contract-connection-string"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"               = "eventhub-sc-users-selfcare-wo-key-lc"
 }

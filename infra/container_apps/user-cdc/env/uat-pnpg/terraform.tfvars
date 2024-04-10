@@ -1,6 +1,8 @@
-prefix    = "selc"
-env_short = "u"
-is_pnpg   = true
+prefix                = "selc"
+env_short             = "u"
+is_pnpg               = true
+cae_name              = "cae"
+workload_profile_name = "Consumption"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -34,6 +36,6 @@ app_settings = [
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
 }

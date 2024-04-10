@@ -12,9 +12,9 @@ tags = {
 container_app = {
   min_replicas = 1
   max_replicas = 1
-  scale_rules = []
-  cpu    = 1.25
-  memory = "2.5Gi"
+  scale_rules  = []
+  cpu          = 1.25
+  memory       = "2.5Gi"
 }
 
 app_settings = [
@@ -33,7 +33,7 @@ app_settings = [
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
 }
 

@@ -72,3 +72,15 @@ variable "cosmosdb_mongodb_throughput" {
   description = "The throughput of the MongoDB database (RU/s). Must be set in increments of 100. The minimum value is 400. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply."
   default     = 1000
 }
+
+variable "workload_profile_name" {
+  type        = string
+  description = "Workload Profile name to use"
+  default     = null
+}
+
+variable "cae_name" {
+  type        = string
+  description = "Container App Environment name"
+  default     = "cae-cp"
+}
