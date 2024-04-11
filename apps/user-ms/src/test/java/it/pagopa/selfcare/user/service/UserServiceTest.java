@@ -887,9 +887,13 @@ class UserServiceTest {
         OnboardedProduct prodIo = new OnboardedProduct();
         prodIo.setProductId("prod-io");
         prodIo.setStatus(OnboardedProductState.ACTIVE);
+        prodIo.setRole(MANAGER);
+        prodIo.setProductRole("test-productRole");
         OnboardedProduct prodPagoPa = new OnboardedProduct();
         prodPagoPa.setProductId("prod-pagopa");
         prodPagoPa.setStatus(OnboardedProductState.ACTIVE);
+        prodPagoPa.setRole(MANAGER);
+        prodPagoPa.setProductRole("test-productRole");
         userInstitution.setUserId(userUuid);
         userInstitution.setInstitutionId(institutionId);
         List<OnboardedProduct> productsList = new ArrayList<>();
