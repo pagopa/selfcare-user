@@ -872,6 +872,58 @@ class UserServiceTest {
     }
 
     @Test
+    void testRetrieveUsersDataRemovingProductsWhenFiltersAreNotMet() {
+        // Prepare test data
+        String institutionId = "test-institution";
+        String personId = "test-person";
+        List<String> roles = Collections.singletonList("test-role");
+        List<String> states = Collections.singletonList(OnboardedProductState.ACTIVE.name());
+        List<String> products = Collections.singletonList("prod-io");
+        List<String> productRoles = Collections.singletonList("test-productRole");
+        String userUuid = "test-userUuid";
+
+        UserInstitution userInstitution = new UserInstitution();
+
+        OnboardedProduct prodIo = new OnboardedProduct();
+        prodIo.setProductId("prod-io");
+        prodIo.setStatus(OnboardedProductState.ACTIVE);
+        OnboardedProduct prodPagoPa = new OnboardedProduct();
+        prodPagoPa.setProductId("prod-pagopa");
+        prodPagoPa.setStatus(OnboardedProductState.ACTIVE);
+        userInstitution.setUserId(userUuid);
+        userInstitution.setInstitutionId(institutionId);
+        List<OnboardedProduct> productsList = new ArrayList<>();
+        productsList.add(prodIo);
+        productsList.add(prodPagoPa);
+        userInstitution.setProducts(productsList);
+
+        UserResource userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+
+        // Mock external dependencies
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+
+        // Call the method
+        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+                .subscribe().withSubscriber(AssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted().getItems().forEach(actual -> {
+            assertNotNull(actual);
+            assertEquals(1, actual.getProducts().size());
+            assertEquals("prod-io", actual.getProducts().get(0).getProductId());
+            assertEquals(institutionId, "test-institution");
+        });
+
+        // Verify the interactions
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(anyMap());
+        verify(userInstitutionService).findAllWithFilter(any());
+        verify(userRegistryApi).findByIdUsingGET(any(), any());
+    }
+
+    @Test
     void testRetrieveUsersDataWithNoAdminRole() {
         // Prepare test data
         String institutionId = "test-institution";
