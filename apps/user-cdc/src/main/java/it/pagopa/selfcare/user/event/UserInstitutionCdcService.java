@@ -11,6 +11,7 @@ import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -20,6 +21,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Executors;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -74,7 +76,9 @@ public class UserInstitutionCdcService {
         List<Bson> pipeline = Arrays.asList(match, project);
 
         Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
-        publisher.subscribe().with(this::consumerUserInstitutionRepositoryEvent);
+        publisher
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .subscribe().with(this::consumerUserInstitutionRepositoryEvent);
 
         log.info("Completed initOrderStream ... ");
     }
@@ -94,6 +98,8 @@ public class UserInstitutionCdcService {
 
         userInstitutionRepository.updateUser(document.getFullDocument())
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
+
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .subscribe().with(
                         result -> {
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
