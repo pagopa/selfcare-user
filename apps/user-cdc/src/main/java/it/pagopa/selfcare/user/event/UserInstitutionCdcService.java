@@ -65,6 +65,7 @@ public class UserInstitutionCdcService {
     }
 
     private void initOrderStream() {
+        log.info("Starting initOrderStream ... ");
         ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
         ChangeStreamOptions options = new ChangeStreamOptions().fullDocument(FullDocument.UPDATE_LOOKUP);
 
@@ -74,6 +75,8 @@ public class UserInstitutionCdcService {
 
         Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
         publisher.subscribe().with(this::consumerUserInstitutionRepositoryEvent);
+
+        log.info("Completed initOrderStream ... ");
     }
 
     private ReactiveMongoCollection<UserInstitution> getCollection() {
@@ -87,16 +90,18 @@ public class UserInstitutionCdcService {
         assert document.getFullDocument() != null;
         assert document.getDocumentKey() != null;
 
+        log.info("Starting consumerUserInstitutionRepositoryEvent ... ");
+
         userInstitutionRepository.updateUser(document.getFullDocument())
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
                 .subscribe().with(
                         result -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "TRUE", USERINSTITUTION_SUCCESS_MECTRICS);
                         },
                         failure -> {
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                             log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
                         });
     }
 
