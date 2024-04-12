@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class UserInfo extends ReactivePanacheMongoEntityBase {
 
     @BsonId
+    @BsonProperty("_id")
     private String userId;
     private List<UserInstitutionRole> institutions;
 
