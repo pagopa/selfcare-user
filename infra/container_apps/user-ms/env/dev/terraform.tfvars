@@ -49,6 +49,10 @@ app_settings = [
   {
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
+  },
+  {
+    name  = "MAIL-CONNECTOR-TYPE"
+    value = "aws"
   }
 ]
 
