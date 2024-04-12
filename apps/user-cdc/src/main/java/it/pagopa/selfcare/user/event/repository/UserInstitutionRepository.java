@@ -36,7 +36,22 @@ public class UserInstitutionRepository {
                                 return deleteInstitutionOrAllUserInfo(opt.get(), userInstitution);
                             }
                         })
-                        .orElse(Uni.createFrom().voidItem()));
+                        .orElse(createNewUserInfo(userInstitution)));
+    }
+
+    private Uni<Void> createNewUserInfo(UserInstitution userInstitution) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(userInstitution.getUserId());
+        userInfo.setInstitutions(new ArrayList<>());
+        if(!CollectionUtils.isEmpty(userInstitution.getProducts())){
+            userInstitution.getProducts().forEach(product -> {
+                if (VALID_PRODUCT_STATE.contains(product.getStatus())) {
+                    PartyRole role = product.getRole();
+                    userInfo.getInstitutions().add(userMapper.toUserInstitutionRole(userInstitution, role, product.getStatus()));
+                }
+            });
+        }
+        return UserInfo.persistOrUpdate(userInfo).replaceWith(Uni.createFrom().voidItem());
     }
 
     private Uni<Void> deleteInstitutionOrAllUserInfo(ReactivePanacheMongoEntityBase entityBase, UserInstitution userInstitution) {
