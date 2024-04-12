@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.event.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -15,7 +16,7 @@ import java.util.List;
 @Data
 @MongoEntity(collection = "userInfo")
 @FieldNameConstants(asEnum = true)
-public class UserInfo extends ReactivePanacheMongoEntity {
+public class UserInfo extends ReactivePanacheMongoEntityBase {
 
     @BsonId
     @BsonProperty("_id")
