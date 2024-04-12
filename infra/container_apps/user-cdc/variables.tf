@@ -80,4 +80,10 @@ variable "cae_name" {
   default     = "cae-cp"
 }
 
+variable "suffix_increment" {
+  type        = string
+  description = "Suffix increment Container App Environment name"
+  default     = ""
+}
+
 
