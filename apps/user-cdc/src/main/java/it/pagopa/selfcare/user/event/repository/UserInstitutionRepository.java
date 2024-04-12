@@ -60,13 +60,9 @@ public class UserInstitutionRepository {
                     if (userInfo.getInstitutions().stream()
                             .anyMatch(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()))) {
 
-                        List<UserInstitutionRole> roleList = userInfo.getInstitutions().stream()
-                                .filter(userInstitutionRole -> userInstitutionRole.getInstitutionId()
-                                        .equalsIgnoreCase(userInstitution.getInstitutionId())).toList();
+                        userInfo.getInstitutions().removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()));
 
-                        userInfo.setInstitutions(roleList);
-
-                        if (roleList.isEmpty()) {
+                        if (CollectionUtils.isEmpty(userInfo.getInstitutions())) {
                             return UserInfo.deleteById(userInstitution.getUserId()).replaceWith(Uni.createFrom().voidItem());
                         } else {
                             return UserInfo.persistOrUpdate(userInfo);
