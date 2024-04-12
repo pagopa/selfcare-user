@@ -53,7 +53,11 @@ app_settings = [
   {
     name  = "MAIL-CONNECTOR-TYPE"
     value = "aws"
-  }
+  },
+ {
+   name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+   value = true
+ }
 ]
 
 secrets_names = {
