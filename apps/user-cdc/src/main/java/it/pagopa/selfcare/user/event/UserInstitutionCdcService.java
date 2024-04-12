@@ -5,13 +5,11 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.mongodb.ChangeStreamOptions;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -20,8 +18,10 @@ import org.bson.conversions.Bson;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.Executors;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
@@ -77,7 +77,6 @@ public class UserInstitutionCdcService {
 
         Multi<ChangeStreamDocument<UserInstitution>> publisher = dataCollection.watch(pipeline, UserInstitution.class, options);
         publisher
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .subscribe().with(this::consumerUserInstitutionRepositoryEvent);
 
         log.info("Completed initOrderStream ... ");
@@ -98,8 +97,6 @@ public class UserInstitutionCdcService {
 
         userInstitutionRepository.updateUser(document.getFullDocument())
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
-
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .subscribe().with(
                         result -> {
                             log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
