@@ -41,7 +41,11 @@ app_settings = [
   {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
     value = "false"
-  }
+  },
+    {
+      name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+      value = true
+    }
 ]
 
 secrets_names = {
