@@ -13,8 +13,8 @@ container_app = {
   min_replicas = 1
   max_replicas = 1
   scale_rules  = []
-  cpu          = 1.25
-  memory       = "2.5Gi"
+  cpu          = 1
+  memory       = "2Gi"
 }
 
 app_settings = [
