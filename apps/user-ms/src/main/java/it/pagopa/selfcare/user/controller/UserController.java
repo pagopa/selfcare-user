@@ -7,15 +7,13 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserResponse;
-import it.pagopa.selfcare.user.controller.response.UsersNotificationResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
-import it.pagopa.selfcare.user.controller.response.product.UserProductsResponse;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import jakarta.inject.Inject;
@@ -81,27 +79,31 @@ public class UserController {
 
     @Operation(summary = "Retrieves products info and role which the user is enabled")
     @GET
-    @Path("/{userId}/products")
+    @Path("/{userId}/institutions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserProductsResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
-                                                         @QueryParam(value = "institutionId") String institutionId,
-                                                         @QueryParam(value = "states") String[] states) {
+    public Uni<UserInfoResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
+                                                     @QueryParam(value = "institutionId") String institutionId,
+                                                     @QueryParam(value = "states") String[] states) {
         return userService.retrieveBindings(institutionId, userId, states)
-                .map(userMapper::toUserProductsResponse);
+                .map(userMapper::toUserInfoResponse);
     }
 
     /**
      * getUserById function returns all the information of a user retrieved from pdv given the userId
+     *
      * @param userId String
      * @return A uni UserDetailResponse
      */
     @Operation(summary = "Retrieves user's information from pdv: name, familyName, email, fiscalCode and workContacts")
     @GET
     @Path("/{id}/details")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId) {
-        return userService.getUserById(userId).onItem().transform(userMapper::toUserResponse);
+    public Uni<UserDetailResponse> getUserDetailsById(@PathParam(value = "id") String userId,
+                                                      @QueryParam(value = "institutionId") String institutionId,
+                                                      @QueryParam(value = "field") String field) {
+        return userService.getUserById(userId, institutionId, field);
     }
 
     @Operation(summary = "Search user by fiscalCode")
@@ -109,8 +111,9 @@ public class UserController {
     @Path("/search")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto){
-        return userService.searchUserByFiscalCode(dto.getFiscalCode()).onItem().transform(userMapper::toUserResponse);
+    public Uni<UserDetailResponse> searchUserByFiscalCode(@RequestBody SearchUserDto dto,
+                                                          @QueryParam(value = "institutionId") String institutionId) {
+        return userService.searchUserByFiscalCode(dto.getFiscalCode(), institutionId);
     }
 
     /**
@@ -221,8 +224,8 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> updateUserRegistryAndSendNotification(@PathParam(value = "id") String userId,
                                                                @QueryParam(value = "institutionId") String institutionId,
-                                                               MutableUserFieldsDto userDto) {
-        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(userDto, userId, institutionId)
+                                                               UpdateUserRequest updateUserRequest) {
+        return userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, userId, institutionId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
@@ -252,14 +255,77 @@ public class UserController {
                 .onItem().transformToUni(loggedUser -> userService.updateUserProductStatus(userId, institutionId, productId, status, loggedUser));
     }
 
-    @Operation(summary = "Create or Update user")
+
+    /**
+     * The createOrUpdateByUserId function is used to update existing user adding userRole.
+     *
+     * @param userId  Sting
+     * @param userDto CreateUserDto
+     */
+    @Operation(summary = "The createOrUpdateByUserId function is used to update existing user adding userRole.")
     @ResponseStatus(HttpStatus.SC_NO_CONTENT)
+    @POST
+    @Path("/{userId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
+                                                @Valid AddUserRoleDto userDto,
+                                                @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser))
+                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+
+    }
+
+    /**
+     * The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.
+     * The function takes in a CreateUserDto object, which contains the following fields:
+     * - fiscalCode (String): The tax code of the user. This field is required and must be unique for each user.
+     * - email (String): The email address of the user. This field is optional and can be null or empty string if not provided by caller.
+     * - phoneNumber (String): The phone number of the user, including country code prefix (+39). This field is optional and can be null or empty string if not provided by
+     *
+     * @param userDto CreateUserDto
+     */
+    @Operation(summary = "The createOrUpdateByFiscalCode function is used to create a new user or update an existing one.")
+    @ResponseStatus(HttpStatus.SC_OK)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> createOrUpdate(@Valid CreateUserDto userDto) {
-        return userService.createOrUpdateUser(userDto)
-                .map(ignore -> Response.status(HttpStatus.SC_NO_CONTENT).build());
+    public Uni<String> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
+                                                  @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser));
+    }
+
+    /**
+     * The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.
+     *
+     * @param institutionId The ID of the institution, passed as a path parameter in the URL.
+     * @param userId        The ID of the user, passed as a path parameter in the URL.
+     * @param personId      The ID of the person, passed as a query parameter in the URL.
+     * @param roles         A list of roles, passed as a query parameter in the URL.
+     * @param states        A list of states, passed as a query parameter in the URL.
+     * @param products      A list of products, passed as a query parameter in the URL.
+     * @param productRoles  A list of product roles, passed as a query parameter in the URL.
+     * @return A stream of UserDataResponse objects containing the requested user data.
+     */
+    @Operation(summary = "The retrieveUsers function is used to retrieve a list of users from the UserInstitution collection and userRegistry.\n" +
+            "At first it try to retrieve a UserInstitution document associated with a logged user (admin)\n" +
+            "If this userInstitution object is not null, so user has AdminRole, it try to retriew the userInstitutions filtered by given institutionId, roles, states, products and productRoles\n" +
+            "and optional given personId, otherwise it do the same query using the logged user id instead of personId.\n" +
+            "After that it retrieve personal user data, foreach userId retrieved, from userRegistry and return a stream of UserDataResponse objects containing the requested user data.")
+    @GET
+    @Path(value = "/{userId}/institution/{institutionId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<UserDataResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
+                                                 @PathParam(value = "userId") String userId,
+                                                 @QueryParam(value = "personId") String personId,
+                                                 @QueryParam(value = "roles") List<String> roles,
+                                                 @QueryParam(value = "states") List<String> states,
+                                                 @QueryParam(value = "products") List<String> products,
+                                                 @QueryParam(value = "productRoles") List<String> productRoles) {
+
+        return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {

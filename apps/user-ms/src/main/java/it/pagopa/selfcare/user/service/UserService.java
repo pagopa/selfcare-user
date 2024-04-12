@@ -42,10 +42,15 @@ public interface UserService {
     Uni<Void> updateUserInstitutionEmail(String institutionId, String userId, String uuidEmail);
 
     Uni<UserResource> getUserById(String userId);
+    Uni<UserDetailResponse> getUserById(String userId, String institutionId, String fieldsToRetrieve);
 
-    Uni<UserResource> searchUserByFiscalCode(String fiscalCode);
+    Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId);
 
     Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, LoggedUser loggedUser);
 
-    Uni<Void> createOrUpdateUser(CreateUserDto userDto);
+    Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
+
+    Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
+
+    Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
 }

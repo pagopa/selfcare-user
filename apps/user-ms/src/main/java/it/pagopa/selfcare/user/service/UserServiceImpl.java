@@ -6,7 +6,11 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.constant.QueueEvent;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.response.UserDataResponse;
+import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -32,12 +36,17 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.constant.OnboardedProductState.PENDING;
 import static it.pagopa.selfcare.user.util.GeneralUtils.formatQueryParameterList;
 import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION;
 
@@ -59,6 +68,8 @@ public class UserServiceImpl implements UserService {
     private final ProductService productService;
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
+
+    Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
     private static final String WORK_CONTACTS = "workContacts";
 
@@ -189,15 +200,39 @@ public class UserServiceImpl implements UserService {
                     return Uni.createFrom().nullItem();
                 });
     }
-    
+
     @Override
-    public Uni<UserResource> getUserById(String userId) {
-        return userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId);
+    public Uni<UserDetailResponse> getUserById(String userId, String institutionId, String fieldsToRetrieve) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        var fields = StringUtils.isBlank(fieldsToRetrieve) ? USERS_WORKS_FIELD_LIST : fieldsToRetrieve;
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                .onItem().ifNull().continueWith(() -> {
+                    log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
+                    return new UserInstitution();
+                })
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(fields, userId)
+                        .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId).map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
+                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     @Override
-    public Uni<UserResource> searchUserByFiscalCode(String fiscalCode) {
-        return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode));
+    public Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId) {
+        Uni<UserResource> userResourceUni = userRegistryApi.searchUsingPOST(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, new UserSearchDto(fiscalCode))
+                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException("User not found", USER_NOT_FOUND_ERROR.getCode()));
+
+        return userResourceUni
+                .onItem()
+                .transformToUni(userResource -> {
+                    var userInstitutionFilters = UserInstitutionFilter.builder().userId(userResource.getId().toString()).institutionId(institutionId).build().constructMap();
+                    Uni<String> userMailUuid = userInstitutionService.retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters))
+                            .onItem().ifNull().continueWith(() -> {
+                                log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userResource.getId()));
+                                return new UserInstitution();
+                            })
+                            .map(UserInstitution::getUserMailUuid);
+                    return userMailUuid.map(mailId -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId).map(ignored -> mailId).orElse(null)));
+                })
+                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage()), USER_NOT_FOUND_ERROR.getCode()));
     }
 
     /**
@@ -285,22 +320,27 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * The createOrUpdateUser method is a method that either creates a new user or updates an existing one based on the provided CreateUserDto object.
+     * The createOrUpdateUserByFiscalCode method is a method that either creates a new user or updates an existing one based on the provided CreateUserDto object.
      * The method starts by calling the searchUsingPOST method on the userRegistryApi object, this is an asynchronous operation that searches for a user in the user registry.
      * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
      * This is a way of transforming one type of exception into another.
      * If the search operation is successful, it call method to Update user on userRegistry and UserInstitution collection.
      * In case of previously fail with ResourceNotFoundException, it recovers by calling the method to create new User on userRegsitry and UserInstitution
      * collection.
+     * In both cases at the end of persistence it sends an email and events on kafka
      * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
      */
-     @Override
-    public Uni<Void> createOrUpdateUser(CreateUserDto userDto) {
-        return searchUserByFiscalCode(userDto.getUser().getFiscalCode())
+    @Override
+    public Uni<String> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser) {
+        return userRegistryApi.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
-                .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitution(userResource, userDto))
+                .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto))
-                .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
+                .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception))
+                .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.getHasToSendEmail(), loggedUser, prepareNotificationData))
+                .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
+                .collect().first()
+                .map(userNotificationSent -> userNotificationSent.getUser().getUserId());
     }
 
     /**
@@ -312,10 +352,10 @@ public class UserServiceImpl implements UserService {
      * Once the userInstitution model is updated or created, attempts to persist the user institution.
      * If any of the operations fail, the method logs an error message and returns a Uni that emits a failure.
      */
-    private Uni<Void> updateUserOnUserRegistryAndUserInstitution(UserResource userResource, CreateUserDto userDto) {
+    private Uni<PrepareNotificationData> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(UserResource userResource, CreateUserDto userDto) {
         log.info("Updating user on userRegistry and userInstitution");
         String mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
-                .orElse(MAIL_ID_PREFIX + UUID.randomUUID());
+                .orElse(randomMailId.get());
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
         userResource.getWorkContacts().put(mailUuid, workContact);
@@ -326,7 +366,10 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(response -> userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId()))
                 .onItem().transform(userInstitution -> updateOrCreateUserInstitution(userDto, mailUuid, userInstitution, userResource.getId().toString()))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
-                .onItem().transformToUni(userInstitution -> userInstitutionService.persistOrUpdate(userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .map(userInstitution -> PrepareNotificationData.builder().userResource(userResource).userInstitution(userInstitution).queueEvent(QueueEvent.UPDATE))
+                .onItem().transformToUni(prepareNotificationDataBuilder -> retrieveProductAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userDto.getProduct().getProductId()))
+                .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
                 .onItem().invoke(() -> log.info("UserInstitution persisted"))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
@@ -340,19 +383,22 @@ public class UserServiceImpl implements UserService {
      * It then updates or creates the userinstitution model and it attempts to persist the user institution.
      * If any of the operations fail, the method logs an error message and returns a Uni that emits a failure.
      */
-    private Uni<Void> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto) {
+    private Uni<PrepareNotificationData> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto) {
         log.info("Creating user on userRegistry and userInstitution");
-        String mailUuid = MAIL_ID_PREFIX + UUID.randomUUID();
+        String mailUuid = randomMailId.get();
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
-
         return userRegistryApi.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
                 .onFailure().invoke(exception -> log.error("Error during create user on userRegistry: {} ", exception.getMessage(), exception))
                 .onItem().invoke(userResource -> log.info("User created with id {}", userResource.getId()))
-                .onItem().transform(userId -> userId.getId().toString())
+                .onItem().transform(userResource -> userResource.getId().toString())
                 .onItem().transform(userId -> updateOrCreateUserInstitution(userDto, mailUuid, null, userId))
                 .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
-                .onItem().transformToUni(userInstitution -> userInstitutionService.persistOrUpdate(userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                    .map(resource -> PrepareNotificationData.builder().userResource(resource).userInstitution(userInstitution).queueEvent(QueueEvent.ADD)))
+                .onItem().transformToUni(prepareNotificationDataBuilder -> retrieveProductAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userDto.getProduct().getProductId()))
+                .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
                 .onItem().invoke(() -> log.info("UserInstitution persisted"))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
@@ -368,5 +414,111 @@ public class UserServiceImpl implements UserService {
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
         return userInstitution;
+    }
+
+    /**
+     * The createOrUpdateUserByUserId method is a method that either add to existingUser a new user Role.
+     * The method starts by calling the findByIdUsingGET method on the userRegistryApi object,
+     * If the search operation fails with a UserNotFoundException, it recovers by returning a Uni that fails with a ResourceNotFoundException.
+     * If the search operation is successful, it call method to Update user on UserInstitution collection.
+     * Finally, if any operation fails, it logs an error message and returns a Uni that emits a failure.
+     */
+    @Override
+    public Uni<Void> createOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
+        return userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
+                .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
+                .onItem().transformToUni(userResource -> updateUserInstitutionByUserId(userResource, userDto, loggedUser))
+                .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
+    }
+
+    private Uni<Void> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto, LoggedUser loggedUser) {
+        return userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId())
+                .onItem().transform(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
+                .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
+                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
+                .onItem().invoke(() -> log.info("UserInstitution persisted"))
+                .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception))
+                .map(userInstitution -> PrepareNotificationData.builder().userResource(userResource).userInstitution(userInstitution).queueEvent(QueueEvent.UPDATE))
+                .onItem().transformToUni(prepareNotificationDataBuilder -> retrieveProductAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userDto.getProduct().getProductId()))
+                .map(PrepareNotificationData.PrepareNotificationDataBuilder::build)
+                .onItem().transformToUni(prepareNotificationData -> sendNotificationsAndReturnData(userDto.getInstitutionDescription(), userDto.getProduct().getProductRoles(), userDto.isHasToSendEmail(), loggedUser, prepareNotificationData))
+                .onItem().transformToMulti(this::buildAndSendKafkaNotifications)
+                .collect().first()
+                .replaceWithVoid();
+
+    }
+
+    private UserInstitution updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
+        if (userInstitution == null) {
+            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            return userInstitutionMapper.toNewEntity(userDto, userId);
+        }
+        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+        return userInstitution;
+    }
+
+    /**
+     * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.
+     * The function takes in an userId, institutionId, personId, roles, states, products and productRoles as parameters.
+     * It then calls the retrieveAdminUserInstitution function with these parameters which retrieves an UserInstitution document associated with an logged user (admin)
+     * If this userInstitution object is not null it transform the item into either the personId or if this is null into just the uuid of that particular user (userUuid).
+     * After this, the retrieveFilteredUserInstitutions method retrieves user institutions based on a variety of filters, including the previously retrieved
+     * user ID, institution ID, roles, states, products, and product roles.
+     * The function then retrieves the users by ID from userRegistry and maps for each element the userInstitution and userResource to a UserDataResponse object.
+     */
+    @Override
+    public Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userUuid) {
+        return retrieveAdminUserInstitution(institutionId, userUuid)
+                .onItem().ifNotNull().invoke(userInstitution -> log.info("admin userInstitution found: {}", userInstitution))
+                .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)
+                .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
+                .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
+                .onItem().invoke(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
+                .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
+                .onItem().transformToUniAndMerge(userInstitution ->
+                        userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                                .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+    }
+
+    private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
+        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
+            userInstitution.getProducts().removeIf(product ->
+                    (!CollectionUtils.isNullOrEmpty(states) && !states.contains(product.getStatus().name())) ||
+                    (!CollectionUtils.isNullOrEmpty(products) && !products.contains(product.getProductId())) ||
+                    (!CollectionUtils.isNullOrEmpty(roles) && !roles.contains(product.getRole().name())) ||
+                    (!CollectionUtils.isNullOrEmpty(productRoles) && !productRoles.contains(product.getProductRole()))
+            );
+        }
+    }
+
+    private Multi<UserInstitution> retrieveFilteredUserInstitutions(String user, String institutionId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+        var institutionFilters = UserInstitutionFilter.builder().userId(user).institutionId(institutionId).build().constructMap();
+        var prodFilter = OnboardedProductFilter.builder().role(roles).status(states).productRole(productRoles).productId(products).build().constructMap();
+        var queryParam = userUtils.retrieveMapForFilter(institutionFilters, prodFilter);
+        return userInstitutionService.findAllWithFilter(queryParam);
+    }
+
+    private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {
+        List<String> adminPartyRole = Arrays.stream(PartyRole.values()).filter(role -> role != PartyRole.OPERATOR).map(Enum::name).toList();
+        List<String> validStates = Stream.of(ACTIVE, PENDING).map(Enum::name).toList();
+        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userUuid).institutionId(institutionId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().role(adminPartyRole).status(validStates).build().constructMap();
+        Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
+        return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter);
+    }
+
+    private Uni<PrepareNotificationData> sendNotificationsAndReturnData(String institutionDescription, List<String> roleLabels, Boolean hasToSendEmail, LoggedUser loggedUser, PrepareNotificationData prepareNotificationData) {
+        if (hasToSendEmail) {
+            return userNotificationService.sendCreateUserNotification(institutionDescription, roleLabels, prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), loggedUser)
+                    .replaceWith(prepareNotificationData);
+        } else {
+            return Uni.createFrom().item(prepareNotificationData);
+        }
+    }
+
+    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(PrepareNotificationData prepareNotificationData) {
+        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), prepareNotificationData.getQueueEvent()))
+                .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
     }
 }

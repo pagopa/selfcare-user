@@ -9,41 +9,63 @@ tags = {
 }
 
 container_app = {
-  min_replicas = 1
+  min_replicas = 0
   max_replicas = 1
-  scale_rules  = []
-  cpu          = 0.5
-  memory       = "1Gi"
+  scale_rules = [
+    {
+      custom = {
+        metadata = {
+          "desiredReplicas" = "1"
+          "start"           = "0 8 * * MON-FRI"
+          "end"             = "0 19 * * MON-FRI"
+          "timezone"        = "Europe/Rome"
+        }
+        type = "cron"
+      }
+      name = "cron-scale-rule"
+    }
+  ]
+  cpu    = 0.5
+  memory = "1Gi"
 }
 
 app_settings = [
+  {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-ms",
+  },
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
   },
   {
-    name  = "KAFKA_BROKER"
-    value = "selc-d-eventhub-ns.servicebus.windows.net:9093"
+    name  = "EVENT_HUB_BASE_PATH"
+    value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
   },
   {
-    name  = "KAFKA_USER_TOPIC"
-    value = "sc-users"
+    name  = "SHARED_ACCESS_KEY_NAME"
+    value = "selfcare-wo"
   },
   {
-    name  = "KAFKA_SASL_MECHANISM"
-    value = "PLAIN"
+    name  = "MAIL-CONNECTOR-TYPE"
+    value = "aws"
   }
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key",
-  "user-registry-api-key",
-  "aws-ses-access-key-id",
-  "aws-ses-secret-access-key",
-  "eventhub-sc-users-selfcare-wo-connection-string-lc",
-  "blob-storage-product-connection-string",
-  "blob-storage-contract-connection-string"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
+  "JWT-PUBLIC-KEY"                                     = "jwt-public-key"
+  "MONGODB-CONNECTION-STRING"                          = "mongodb-connection-string"
+  "USER-REGISTRY-API-KEY"                              = "user-registry-api-key"
+  "AWS-SES-ACCESS-KEY-ID"                              = "aws-ses-access-key-id"
+  "AWS-SES-SECRET-ACCESS-KEY"                          = "aws-ses-secret-access-key"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-CONNECTION-STRING-LC" = "eventhub-sc-users-selfcare-wo-connection-string-lc"
+  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"             = "blob-storage-product-connection-string"
+  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING"            = "blob-storage-contract-connection-string"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"               = "eventhub-sc-users-selfcare-wo-key-lc"
+}
 

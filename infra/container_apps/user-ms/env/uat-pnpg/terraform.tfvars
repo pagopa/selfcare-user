@@ -1,5 +1,7 @@
-env_short = "u"
-is_pnpg   = true
+env_short        = "u"
+is_pnpg          = true
+suffix_increment = "-001"
+cae_name         = "cae-001"
 
 tags = {
   CreatedBy   = "Terraform"
@@ -19,19 +21,39 @@ container_app = {
 
 app_settings = [
   {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-ms",
+  },
+  {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "EVENT_HUB_BASE_PATH"
+    value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
+  },
+  {
+    name  = "SHARED_ACCESS_KEY_NAME"
+    value = "selfcare-wo"
+  },
+  {
+    name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
+    value = "string"
   }
 ]
 
-secrets_names = [
-  "jwt-public-key",
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key",
-  "user-registry-api-key",
-  "aws-ses-access-key-id",
-  "aws-ses-secret-access-key",
-  "blob-storage-product-connection-string",
-  "blob-storage-contract-connection-string"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
+  "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
+  "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+  "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
+  "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
+}
 

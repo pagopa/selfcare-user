@@ -8,13 +8,16 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
@@ -43,6 +46,8 @@ class UserControllerTest {
 
     private static final UserResource userResource;
 
+    private static final UserDetailResponse userDetailResponse;
+
     static {
         userResource = new UserResource();
         userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
@@ -51,6 +56,13 @@ class UserControllerTest {
         userResource.setFiscalCode("fiscalCode");
         userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
 
+        userDetailResponse = new UserDetailResponse();
+        userDetailResponse.setId(UUID.randomUUID().toString());
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setFiscalCode("fiscalCode");
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE))));
     }
 
     /**
@@ -175,27 +187,29 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUserDetailsById(){
 
-        when(userService.getUserById(any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userService.getUserById(anyString(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(userDetailResponse));
+        final String institutionId = "institutionId";
+        final String fields = "name,familyName";
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .get("/test_user_id/details")
+                .get("/test_user_id/details?institutionId="+institutionId+"&fields=" + fields)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
     @Test
     @TestSecurity(user = "userJwt")
     void searchUser(){
         SearchUserDto dto = new SearchUserDto("fiscalCode");
-
-        when(userService.searchUserByFiscalCode(any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userService.searchUserByFiscalCode(any(), anyString())).thenReturn(Uni.createFrom().item(userDetailResponse));
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .body(dto)
-                .post("/search")
+                .post("/search?institutionId=institutionId")
                 .then()
                 .statusCode(200);
     }
@@ -297,7 +311,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("userId", "test-user-id")
-                .get("/{userId}/products")
+                .get("/{userId}/institutions")
                 .then()
                 .statusCode(200);
 
@@ -312,7 +326,7 @@ class UserControllerTest {
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("userId", "test-user-id")
-                .get("/{userId}/products")
+                .get("/{userId}/institutions")
                 .then()
                 .statusCode(401);
 
@@ -418,12 +432,12 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testUpdateUserRegistryAndSendNotificationToQueue() {
-        MutableUserFieldsDto mutableUserFieldsDto = new MutableUserFieldsDto();
-        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(mutableUserFieldsDto, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        when(userRegistryService.updateUserRegistryAndSendNotificationToQueue(updateUserRequest, "test_user_id", "institutionIdTest")).thenReturn(Uni.createFrom().nullItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)
-                .body(mutableUserFieldsDto)
+                .body(updateUserRequest)
                 .put("/test_user_id/user-registry?institutionId=institutionIdTest")
                 .then()
                 .statusCode(204);
@@ -487,13 +501,12 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
-    void testCreateOrUpdateUser() {
+    void testCreateOrUpdateUserByFiscalCode() {
         // Prepare test data
         CreateUserDto userDto = buildCreateUserDto();
 
-
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -503,18 +516,18 @@ class UserControllerTest {
                 .body(userDto)
                 .post("/")
                 .then()
-                .statusCode(204);
+                .statusCode(200);
     }
 
     @Test
     @TestSecurity(user = "userJwt")
-    void testCreateOrUpdateUserWithInvalidBody() {
+    void testCreateOrUpdateUserWithInvalidBodyByFiscalCode() {
         // Prepare test data
         CreateUserDto userDto = new CreateUserDto();
         // Set userDto properties
 
         // Mock the userService.createOrUpdateUser method
-        when(userService.createOrUpdateUser(any(CreateUserDto.class)))
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any(LoggedUser.class)))
                 .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
@@ -528,20 +541,61 @@ class UserControllerTest {
     }
 
     @Test
-    void testCreateOrUpdateUserNotAuthorized() {
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserByUserId() {
         // Prepare test data
-        CreateUserDto userDto = new CreateUserDto();
-        // Set userDto properties
+        CreateUserDto userDto = buildCreateUserDto();
+
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
+                .thenReturn(Uni.createFrom().nullItem());
 
         // Perform the API call
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .body(userDto)
-                .post("/")
+                .post("/userId")
                 .then()
-                .statusCode(401);
+                .statusCode(204);
     }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserWithInvalidBodyByUserId() {
+        // Prepare test data
+        CreateUserDto userDto = new CreateUserDto();
+        // Set userDto properties
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(LoggedUser.class)))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/userId")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void retrieveUsers() {
+        when(userService.retrieveUsersData("test_institutionId",  null, null, null, null, null, "test_userId"))
+                .thenReturn(Multi.createFrom().items(new UserDataResponse()));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .get("/test_userId/institution/test_institutionId")
+                .then()
+                .statusCode(200);
+    }
+
 
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();
@@ -559,7 +613,7 @@ class UserControllerTest {
         product.setProductId("productId");
         product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
         product.setTokenId("tokenId");
-        product.setProductRole("productRole");
+        product.setProductRoles(Collections.singletonList("productRole"));
         userDto.setProduct(product);
         return userDto;
     }

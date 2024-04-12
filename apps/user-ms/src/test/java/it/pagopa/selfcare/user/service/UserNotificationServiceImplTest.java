@@ -1,38 +1,38 @@
 package it.pagopa.selfcare.user.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
-import io.smallrye.reactive.messaging.memory.InMemoryConnector;
-import io.smallrye.reactive.messaging.memory.InMemorySink;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.user.client.eventhub.EventHubRestClient;
+import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import org.junit.jupiter.api.Assertions;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -44,9 +44,9 @@ class UserNotificationServiceImplTest {
     @InjectMock
     private MailService mailService;
 
-    @Inject
-    @Any
-    InMemoryConnector connector;
+    @RestClient
+    @InjectMock
+    private EventHubRestClient eventHubRestClient;
 
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;
@@ -100,13 +100,19 @@ class UserNotificationServiceImplTest {
     }
 
     @Test
-    void testSendMailNotification() {
+    void testSendMailNotification() throws IOException {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, new ObjectMapper(), mailService);
         when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
 
-        userNotificationService.sendEmailNotification(
+        userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -116,8 +122,8 @@ class UserNotificationServiceImplTest {
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
-        userNotificationService.sendEmailNotification(
+                .awaitItem().assertCompleted();
+        userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -127,8 +133,8 @@ class UserNotificationServiceImplTest {
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
-        userNotificationService.sendEmailNotification(
+                .awaitItem().assertCompleted();
+        userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -138,8 +144,8 @@ class UserNotificationServiceImplTest {
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
-        userNotificationService.sendEmailNotification(
+                .awaitItem().assertCompleted();
+        userNotificationServiceImpl.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -149,25 +155,54 @@ class UserNotificationServiceImplTest {
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .assertCompleted();
+                .awaitItem().assertCompleted();
         verify(mailService, times(3)).sendMail(anyString(), anyString(), anyString());
     }
 
     @Test
     void testSendKafkaNotification(){
-        InMemorySink<String> usersOut = connector.sink("sc-users");
         UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
         userNotificationToSend.setId("userId");
+
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().voidItem());
 
         UniAssertSubscriber<UserNotificationToSend> subscriber = userNotificationService.sendKafkaNotification(
                 userNotificationToSend,
                 "userId"
         ).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
+        verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
 
-        await().<List<? extends Message<String>>>until(usersOut::received, t -> t.size() == 1);
+    }
+    @Test
+    void testSendCreateUserNotification() throws IOException {
+        String loggedUserName = "loggedUserName";
+        String loggedUserSurname = "loggedUserSurname";
+        LoggedUser loggedUser = LoggedUser.builder()
+                .name(loggedUserName)
+                .familyName(loggedUserSurname)
+                .build();
 
-        String queuedMessage = usersOut.received().get(0).getPayload();
-        Assertions.assertTrue(queuedMessage.contains("userId"));
+        Configuration freemarkerConfig = mock(Configuration.class);
+        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
+        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
+        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+
+        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, new ObjectMapper(), mailService);
+
+        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        List<String> roleLabels = List.of("label");
+        userNotificationServiceImpl.sendCreateUserNotification(
+                        userInstitution.getInstitutionDescription(),
+                        roleLabels,
+                        userResource,
+                        userInstitution,
+                        product,
+                        loggedUser
+                )
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
     }
 }

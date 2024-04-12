@@ -9,23 +9,44 @@ tags = {
 }
 
 container_app = {
-  min_replicas = 1
+  min_replicas = 0
   max_replicas = 1
-  scale_rules  = []
-  cpu          = 0.25
-  memory       = "0.5Gi"
+  scale_rules = [
+    {
+      custom = {
+        metadata = {
+          "desiredReplicas" = "1"
+          "start"           = "0 8 * * MON-FRI"
+          "end"             = "0 19 * * MON-FRI"
+          "timezone"        = "Europe/Rome"
+        }
+        type = "cron"
+      }
+      name = "cron-scale-rule"
+    }
+  ]
+  cpu    = 0.5
+  memory = "1Gi"
 }
 
 app_settings = [
   {
+    name  = "JAVA_TOOL_OPTIONS"
+    value = "-javaagent:applicationinsights-agent.jar",
+  },
+  {
+    name  = "APPLICATIONINSIGHTS_ROLE_NAME"
+    value = "user-cdc",
+  },
+  {
     name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
+    value = "true"
   }
 ]
 
 
-secrets_names = [
-  "mongodb-connection-string",
-  "appinsights-instrumentation-key"
-]
+secrets_names = {
+  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+}
 

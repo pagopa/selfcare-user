@@ -64,10 +64,26 @@ variable "app_settings" {
 }
 
 variable "secrets_names" {
-  type        = list(string)
+  type        = map(string)
   description = "KeyVault secrets to get values from"
 }
 
+variable "workload_profile_name" {
+  type        = string
+  description = "Workload Profile name to use"
+  default     = null
+}
 
+variable "cae_name" {
+  type        = string
+  description = "Container App Environment name"
+  default     = "cae-cp"
+}
+
+variable "suffix_increment" {
+  type        = string
+  description = "Suffix increment Container App Environment name"
+  default     = ""
+}
 
 
