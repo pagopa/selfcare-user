@@ -114,6 +114,7 @@ class UserServiceTest {
         userInstitution.setInstitutionRootName("institutionRootName");
         OnboardedProduct product = new OnboardedProduct();
         product.setProductId("test");
+        product.setStatus(OnboardedProductState.ACTIVE);
         List<OnboardedProduct> products = new ArrayList<>();
         products.add(product);
         userInstitution.setProducts(products);
@@ -693,6 +694,9 @@ class UserServiceTest {
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
+        createUserProduct.setProductId("productId");
+        createUserDto.setProduct(createUserProduct);
         createUserDto.setUser(user);
         LoggedUser loggedUser = LoggedUser.builder().build();
 
@@ -709,6 +713,78 @@ class UserServiceTest {
         // Verify the result
         subscriber.assertFailedWith(RuntimeException.class);
         verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_ProductAlreadyOnboarded() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(userInstitution));
+
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertFailedWith(InvalidRequestException.class, "User already has this product");
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_ProductAlreadyOnboardedButDeleted() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        userInstitution.getProducts().get(0).setStatus(OnboardedProductState.DELETED);
+
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any(), (QueueEvent) any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any(), any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+
+
+        // Call the method
+        UniAssertSubscriber<Void> subscriber = userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.awaitItem().assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
         verify(userInstitutionService).persistOrUpdate(any());
     }
 
@@ -795,6 +871,9 @@ class UserServiceTest {
         // Prepare test data
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product createUserProduct = new AddUserRoleDto.Product();
+        createUserProduct.setProductId("productId");
+        addUserRoleDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
 
         // Mock external dependencies

@@ -396,6 +396,10 @@ public class UserServiceImpl implements UserService {
             return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
         }
 
+        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts()) && userInstitution.getProducts().stream().anyMatch(product -> product.getProductId().equals(userDto.getProduct().getProductId()) &&
+                product.getStatus().equals(ACTIVE))) {
+            throw new InvalidRequestException("User already has this product");
+        }
         log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
         userInstitution.setUserMailUuid(mailUuid);
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
@@ -441,6 +445,11 @@ public class UserServiceImpl implements UserService {
             return userInstitutionMapper.toNewEntity(userDto, userId);
         }
         log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts()) &&
+                userInstitution.getProducts().stream().anyMatch(product -> product.getProductId().equals(userDto.getProduct().getProductId()) &&
+                product.getStatus().equals(ACTIVE))) {
+            throw new InvalidRequestException("User already has this product");
+        }
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
         return userInstitution;
     }
