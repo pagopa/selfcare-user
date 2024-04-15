@@ -431,24 +431,11 @@ public class UserServiceImpl implements UserService {
             log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
             return userInstitutionMapper.toNewEntity(userDto, userId);
         }
-        List<String> productRoleAlreadyOnboarded = new ArrayList<>();
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
-            for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
-                if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
-                        userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()) && onboardedProduct.getStatus().equals(ACTIVE)){
-                        productRoleAlreadyOnboarded.add(onboardedProduct.getProductRole());
-                }
-            }
-        }
-        List<String> productRoleToAdd = new ArrayList<>(userDto.getProduct().getProductRoles());
-        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
-        userDto.getProduct().setProductRoles(productRoleToAdd);
 
-        if (userDto.getProduct().getProductRoles().isEmpty()) {
-            throw new InvalidRequestException(String.format("User already has this roles on Product %s",userDto.getProduct().getProductId()));
-        }
+        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        userDto.getProduct().setProductRoles(productRoleToAdd);
 
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
         return userInstitution;
@@ -460,31 +447,37 @@ public class UserServiceImpl implements UserService {
             return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
         }
 
-        List<String> productRoleAlreadyOnboarded = new ArrayList<>();
-
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
-            for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
-                if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
-                        userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()) && onboardedProduct.getStatus().equals(ACTIVE)){
-                    productRoleAlreadyOnboarded.add(onboardedProduct.getProductRole());
-                }
-            }
-        }
-        List<String> productRoleToAdd = new ArrayList<>(userDto.getProduct().getProductRoles());
-        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
+
+        List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
-        if (userDto.getProduct().getProductRoles().isEmpty()) {
-            throw new InvalidRequestException(String.format("User already has this roles on Product %s",userDto.getProduct().getProductId()));
-        }
-
-        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
         userInstitution.setUserMailUuid(mailUuid);
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
         return userInstitution;
     }
+
+    private List<String> checkAlreadyOnboardedProdcutRole(String productId, List<String> productRole,  UserInstitution userInstitution) {
+        List<String> productRoleAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
+                .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .map(OnboardedProduct::getProductRole)
+                .toList();
+
+
+        List<String> productRoleToAdd = new ArrayList<>(productRole);
+        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
+
+        if (productRoleToAdd.isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has this roles on Product %s", productId));
+        }
+        return productRoleToAdd;
+    }
+
 
     /**
      * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.
