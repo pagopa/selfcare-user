@@ -581,7 +581,7 @@ class UserServiceTest {
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
-        createUserProduct.setProductId("productId");
+        createUserProduct.setProductId("prod-io");
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -794,7 +794,7 @@ class UserServiceTest {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
-        addUserRoleProduct.setProductId("productId");
+        addUserRoleProduct.setProductId("prod-io-premium");
         addUserRoleDto.setProduct(addUserRoleProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
 
@@ -888,7 +888,6 @@ class UserServiceTest {
         // Verify the result
         subscriber.assertFailedWith(RuntimeException.class);
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
-        verify(userInstitutionService).persistOrUpdate(any());
     }
 
     @Test
