@@ -13,6 +13,7 @@ import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -390,23 +391,6 @@ public class UserServiceImpl implements UserService {
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception));
     }
 
-    private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
-        if (userInstitution == null) {
-            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
-            return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
-        }
-
-        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts()) && userInstitution.getProducts().stream().anyMatch(product -> product.getProductId().equals(userDto.getProduct().getProductId()) &&
-                product.getStatus().equals(ACTIVE))) {
-            throw new InvalidRequestException("User already has this product");
-        }
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
-        userInstitution.setUserMailUuid(mailUuid);
-        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
-
-        return userInstitution;
-    }
-
     /**
      * The createOrUpdateUserByUserId method is a method that either add to existingUser a new user Role.
      * The method starts by calling the findByIdUsingGET method on the userRegistryApi object,
@@ -444,13 +428,58 @@ public class UserServiceImpl implements UserService {
             log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
             return userInstitutionMapper.toNewEntity(userDto, userId);
         }
+        List<String> productRoleAlreadyOnboarded = new ArrayList<>();
+
         log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
-        if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts()) &&
-                userInstitution.getProducts().stream().anyMatch(product -> product.getProductId().equals(userDto.getProduct().getProductId()) &&
-                product.getStatus().equals(ACTIVE))) {
-            throw new InvalidRequestException("User already has this product");
+        if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
+            for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
+                if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
+                        userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()) && onboardedProduct.getStatus().equals(ACTIVE)){
+                        productRoleAlreadyOnboarded.add(onboardedProduct.getProductRole());
+                }
+            }
         }
+        List<String> productRoleToAdd = new ArrayList<>(userDto.getProduct().getProductRoles());
+        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
+        userDto.getProduct().setProductRoles(productRoleToAdd);
+
+        if (userDto.getProduct().getProductRoles().isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has this roles on Product %s",userDto.getProduct().getProductId()));
+        }
+
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+        return userInstitution;
+    }
+
+    private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
+        if (userInstitution == null) {
+            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
+        }
+
+        List<String> productRoleAlreadyOnboarded = new ArrayList<>();
+
+        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
+            for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
+                if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
+                        userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()) && onboardedProduct.getStatus().equals(ACTIVE)){
+                    productRoleAlreadyOnboarded.add(onboardedProduct.getProductRole());
+                }
+            }
+        }
+        List<String> productRoleToAdd = new ArrayList<>(userDto.getProduct().getProductRoles());
+        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
+        userDto.getProduct().setProductRoles(productRoleToAdd);
+
+        if (userDto.getProduct().getProductRoles().isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has this roles on Product %s",userDto.getProduct().getProductId()));
+        }
+
+        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        userInstitution.setUserMailUuid(mailUuid);
+        userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
+
         return userInstitution;
     }
 
