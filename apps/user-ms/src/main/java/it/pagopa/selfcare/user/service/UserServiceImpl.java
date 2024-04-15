@@ -78,6 +78,9 @@ public class UserServiceImpl implements UserService {
 
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
+    private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
+    private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
+
     /**
      * The updateUserStatus function updates the status of a user's onboarded product.
      */
@@ -425,12 +428,12 @@ public class UserServiceImpl implements UserService {
 
     private UserInstitution updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
-            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
             return userInstitutionMapper.toNewEntity(userDto, userId);
         }
         List<String> productRoleAlreadyOnboarded = new ArrayList<>();
 
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
         if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
             for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
                 if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
@@ -453,13 +456,13 @@ public class UserServiceImpl implements UserService {
 
     private UserInstitution updateOrCreateUserInstitution(CreateUserDto userDto, String mailUuid, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
-            log.info("UserInstitution with userId: {} and institutionId: {} not found", userId, userDto.getInstitutionId());
+            log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
             return userInstitutionMapper.toNewEntity(userDto, userId, mailUuid);
         }
 
         List<String> productRoleAlreadyOnboarded = new ArrayList<>();
 
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
         if (!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
             for (OnboardedProduct onboardedProduct : userInstitution.getProducts()) {
                 if(onboardedProduct.getProductId().equals(userDto.getProduct().getProductId()) &&
@@ -476,7 +479,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidRequestException(String.format("User already has this roles on Product %s",userDto.getProduct().getProductId()));
         }
 
-        log.info("UserInstitution with userId: {} and institutionId: {} found", userId, userDto.getInstitutionId());
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
         userInstitution.setUserMailUuid(mailUuid);
         userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct()));
 
