@@ -44,13 +44,13 @@ app_settings = [
     value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
   },
   {
-    name  = "SHARED_ACCESS_KEY_NAME"
-    value = "selfcare-wo"
-  },
-  {
     name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
-  }
+  },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-p-product"
+    }
 ]
 
 secrets_names = {

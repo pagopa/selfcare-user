@@ -39,12 +39,16 @@ app_settings = [
     value = "user-ms",
   },
   {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
+    name  = "SHARED_ACCESS_KEY_NAME"
+    value = "selfcare-wo"
   },
     {
       name  = "USER_MS_EVENTHUB_USERS_ENABLED"
       value = true
+    },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-p-product"
     }
 ]
 

@@ -43,7 +43,11 @@ app_settings = [
   {
     name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
-  }
+  },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-u-product"
+    }
 ]
 
 secrets_names = {
