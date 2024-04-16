@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.user.service;
 
+import com.mongodb.client.model.Sorts;
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
@@ -15,11 +18,10 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
+import software.amazon.awssdk.utils.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -51,21 +53,87 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     @Override
-    public Uni<Void> updateUsersFromInstitutions(int page, int size) {
-        Multi<UserInstitution> userInfos = UserInstitution.find("{ userMailUuid: { $exists: false } }").page(page, size).stream();
-        return userInfos.onItem().transformToUni(userInfo ->
-                        userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
-                                .map(this::buildWorkContactsMap)
-                                .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
-                                                MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
-                                        .replaceWith(userResource))
-                                .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))
-                                .onFailure().recoverWithUni(Uni.createFrom().nullItem())
-                                .onItem().transformToUni(this::updateUserInstitution)
-                                .onFailure()
-                                .invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", userInfo.getUserId(), throwable.getMessage()))
-                                .replaceWithVoid())
+    public Uni<Void> updateUsersFromInstitutions(int page, int size, String userId) {
+        List<UserInstitution> userInstitutions = new ArrayList<>();
+        return retrieveUserInstitution(page, size, userInstitutions, userId)
+                .onItem().transform(userInstitutions1 -> userInstitutions.stream().collect(groupingBy(UserInstitution::getUserId)))
+                .onItem().transformToMulti(userInstitutionsMap -> Multi.createFrom().iterable(userInstitutionsMap.entrySet().stream().toList()))
+                .onItem().transformToUniAndMerge(entry -> userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, entry.getKey())
+                        .map(this::buildWorkContactsMap)
+                        .onItem().transformToUni(userResource -> userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
+                                        MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
+                                .replaceWith(userResource))
+                        .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
+                        .onItem().transformToUni(userResource -> updateUserInstitutions(userResource, entry.getValue()))
+                        .onFailure().invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
+                        .onFailure().recoverWithNull())
+                .toUni().replaceWithVoid();
+    }
+
+    private Uni<Void> updateUserInstitutions(UserResource userResource, List<UserInstitution> value) {
+        return Multi.createFrom().iterable(value)
+                .onItem().transformToUni(userInstitution -> {
+                    var filteredMap = userResource.getWorkContacts().entrySet().stream()
+                            .filter(entry -> entry.getKey().contains(EMAIL_UUID_PREFIX))
+                            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                    var institutionMail = userResource.getWorkContacts().entrySet().stream()
+                            .filter(entry -> entry.getKey().equalsIgnoreCase(userInstitution.getInstitutionId()))
+                            .findFirst()
+                            .map(stringWorkContactResourceEntry -> stringWorkContactResourceEntry.getValue().getEmail().getValue())
+                            .orElse("");
+
+                    if (!CollectionUtils.isNullOrEmpty(filteredMap)) {
+                        return filteredMap.entrySet().stream()
+                                .filter(entry -> entry.getValue().getEmail().getValue().equalsIgnoreCase(institutionMail))
+                                .findFirst()
+                                .map(stringWorkContactResourceEntry -> {
+                                    userInstitution.setUserMailUuid(stringWorkContactResourceEntry.getKey());
+                                    return UserInstitution.persistOrUpdate(userInstitution);
+                                })
+                                .orElseThrow(() -> new RuntimeException(String.format("User mail for institutionId %s and UserId %s not found in workContacts", userInstitution.getInstitutionId(), userInstitution.getUserId())))
+                                .onFailure().recoverWithUni(() -> {
+                                    log.error("User mail for institutionId {} not found in workContacts", userInstitution.getInstitutionId());
+                                    return Uni.createFrom().nullItem();
+                                });
+                    }
+                    return Uni.createFrom().nullItem();
+                })
                 .merge().toUni();
+    }
+
+    private Uni<List<UserInstitution>> retrieveUserInstitution(int page, int size, List<UserInstitution> userInstitutions, String userId) {
+        if (page == 4) {
+            return Uni.createFrom().item(userInstitutions);
+        }
+
+        Uni<List<UserInstitution>> uniUserInstitutions;
+        ReactivePanacheQuery<ReactivePanacheMongoEntityBase> entityBase;
+
+        if (StringUtils.isNotBlank(userId)) {
+            entityBase = UserInstitution.find(UserInstitution.Fields.userId.name(), userId)
+                    .page(page, size);
+            uniUserInstitutions = entityBase.list();
+        } else {
+            entityBase = UserInstitution.find("{ userMailUuid: { $exists: false } }", Sorts.ascending("_id"))
+                    .page(page, size);
+            uniUserInstitutions = entityBase.list();
+        }
+
+        return uniUserInstitutions
+                .onItem().transformToMulti(userInstitutions1 -> Multi.createFrom().iterable(userInstitutions1))
+                .onItem().transform(userInstitution -> {
+                    userInstitutions.add(userInstitution);
+                    return userInstitution;
+                })
+                .collect().asList().replaceWith(entityBase)
+                .onItem().transformToUni(ReactivePanacheQuery::hasNextPage)
+                .onItem().transformToUni(aBoolean -> {
+                    if (aBoolean) {
+                        return retrieveUserInstitution(page + 1, size, userInstitutions, userId);
+                    }
+                    return Uni.createFrom().item(userInstitutions);
+                });
     }
 
     @Override
@@ -127,10 +195,19 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
         log.info("Build work contact map");
-        if(userResource.getWorkContacts().keySet().stream().anyMatch(s -> s.startsWith(EMAIL_UUID_PREFIX)))
+        if (userResource.getWorkContacts().keySet().stream().anyMatch(s -> s.startsWith(EMAIL_UUID_PREFIX)))
             return userResource;
-        Map<String, List<WorkContactResource>> mapGroupedByEmail = userResource.getWorkContacts().values().stream().collect(groupingBy(obj -> obj.getEmail().getValue()));
+
+        Map<String, List<WorkContactResource>> mapGroupedByEmail;
+        if (CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+            mapGroupedByEmail = new HashMap<>();
+        } else {
+            mapGroupedByEmail = userResource.getWorkContacts().values().stream()
+                    .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
+                    .collect(groupingBy(obj -> obj.getEmail().getValue()));
+        }
         mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
+
         return userResource;
     }
 

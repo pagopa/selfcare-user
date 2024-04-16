@@ -39,8 +39,9 @@ public class UserInfoController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> updateUsersEmails(@QueryParam(value = "page") @DefaultValue("0") Integer page,
-                                       @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        return userInfoService.updateUsersFromInstitutions(page, size);
+                                       @QueryParam(value = "size") @DefaultValue("500") Integer size,
+                                       @QueryParam(value = "userId") String userId) {
+        return userInfoService.updateUsersFromInstitutions(page, size, userId);
     }
 
     @Operation(summary = "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection")
