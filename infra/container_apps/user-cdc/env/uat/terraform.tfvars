@@ -1,6 +1,5 @@
 prefix           = "selc"
 env_short        = "u"
-is_pnpg          = true
 suffix_increment = "-001"
 cae_name         = "cae-001"
 
