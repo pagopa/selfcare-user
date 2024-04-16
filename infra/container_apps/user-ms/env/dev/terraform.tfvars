@@ -50,10 +50,6 @@ app_settings = [
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
-  {
-    name  = "MAIL-CONNECTOR-TYPE"
-    value = "aws"
-  },
  {
    name  = "USER_MS_EVENTHUB_USERS_ENABLED"
    value = true

@@ -28,10 +28,6 @@ app_settings = [
     value = "user-ms",
   },
   {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
-  },
-  {
     name  = "USER_REGISTRY_URL"
     value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
   },
@@ -46,6 +42,10 @@ app_settings = [
     {
       name  = "USER_MS_EVENTHUB_USERS_ENABLED"
       value = true
+    },
+    {
+      name  = "STORAGE_CONTAINER_PRODUCT"
+      value = "selc-u-product"
     }
 
 ]
