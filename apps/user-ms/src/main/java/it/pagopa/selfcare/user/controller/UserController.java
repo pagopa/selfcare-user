@@ -328,6 +328,14 @@ public class UserController {
         return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
+    @Operation(summary = "This function is used to retrieve a list of count users for each product.")
+    @GET
+    @Path(value = "/{count")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<QueryCountResponse> countUsers() {
+        return userService.countUsers();
+    }
+
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
         return currentIdentityAssociation.getDeferredIdentity()
                 .onItem().transformToUni(identity -> {

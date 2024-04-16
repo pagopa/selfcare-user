@@ -9,10 +9,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.response.UserDataResponse;
-import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -541,5 +538,10 @@ public class UserServiceImpl implements UserService {
     private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(PrepareNotificationData prepareNotificationData) {
         return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), prepareNotificationData.getQueueEvent()))
                 .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
+    }
+
+    @Override
+    public Uni<List<QueryCountResponse>> countUsers() {
+        return userInstitutionService.countUsers();
     }
 }

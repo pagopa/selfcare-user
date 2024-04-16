@@ -1,10 +1,14 @@
 package it.pagopa.selfcare.user.service;
 
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.UnwindOptions;
+import io.quarkus.mongodb.AggregateOptions;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
+import it.pagopa.selfcare.user.controller.response.QueryCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -20,6 +24,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,5 +157,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     public ReactivePanacheQuery<UserInstitution> runUserInstitutionFindQuery(Document query, Document sort) {
         return UserInstitution.find(query, sort);
+    }
+
+    @Override
+    public Uni<List<QueryCountResponse>> countUsers() {
+        UserInstitution.mongoCollection().aggregate(Arrays.asList(
+                Unwind.from
+        ))
+        return null;
     }
 }
