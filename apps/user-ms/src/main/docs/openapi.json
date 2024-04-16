@@ -1,14 +1,14 @@
 {
   "openapi" : "3.0.3",
   "info" : {
-    "title" : "user-ms API",
+    "title" : "User API (development)",
     "version" : "1.0.0"
   },
   "servers" : [ {
-    "url" : "http://localhost:8080",
+    "url" : "http://localhost:8081",
     "description" : "Auto generated value"
   }, {
-    "url" : "http://0.0.0.0:8080",
+    "url" : "http://0.0.0.0:8081",
     "description" : "Auto generated value"
   } ],
   "paths" : {
@@ -217,6 +217,129 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/UserProductResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/user-info" : {
+      "get" : {
+        "tags" : [ "User Info Controller" ],
+        "summary" : "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : "0",
+            "type" : "integer"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : "100",
+            "type" : "integer"
+          }
+        }, {
+          "name" : "userIds",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/user-info/institutions" : {
+      "get" : {
+        "tags" : [ "User Info Controller" ],
+        "summary" : "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : "0",
+            "type" : "integer"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "format" : "int32",
+            "default" : "100",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/user-info/test" : {
+      "get" : {
+        "tags" : [ "User Info Controller" ],
+        "summary" : "Update users' workContacts in PDV using a random uuid as key and storing it into UserInstitution collection",
+        "parameters" : [ {
+          "name" : "userIds",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserInfoResponse"
                   }
                 }
               }
