@@ -22,6 +22,7 @@ import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 @Slf4j
 @ApplicationScoped
 public class CdcLifecycle {
+    
     @ConfigProperty(name = "user-cdc.storage.connection-string") String storageConnectionString;
     @ConfigProperty(name = "user-cdc.table.name") String tableName;
 
