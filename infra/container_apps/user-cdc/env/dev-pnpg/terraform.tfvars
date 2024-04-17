@@ -49,5 +49,6 @@ app_settings = [
 secrets_names = {
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
 }
 
