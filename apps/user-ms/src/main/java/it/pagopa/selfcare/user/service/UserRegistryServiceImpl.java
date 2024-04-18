@@ -16,14 +16,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
-import org.openapi.quarkus.user_registry_json.model.MutableUserFieldsDto;
+import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.user_registry_json.model.UserResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Flow;
-
-import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 
 @ApplicationScoped
@@ -74,6 +72,13 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     }
 
     private Uni<String> checkEmail(UserResource userResource, UpdateUserRequest userDto) {
+
+        if(CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+            log.debug("WorkContacts is empty");
+            String idMail = "ID_MAIL#" + UUID.randomUUID();
+            return userRegistryApi.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userDto, idMail)).replaceWith(idMail);
+        }
+
         return userResource.getWorkContacts().entrySet().stream()
                 .filter(entry -> entry.getValue() != null && entry.getValue().getEmail() != null && StringUtils.isNotBlank(entry.getValue().getEmail().getValue())
                         && entry.getValue().getEmail().getValue().equalsIgnoreCase(userDto.getEmail()) && entry.getKey().startsWith("ID_MAIL#"))

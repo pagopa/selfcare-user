@@ -345,11 +345,23 @@ public class UserServiceImpl implements UserService {
      */
     private Uni<PrepareNotificationData> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(UserResource userResource, CreateUserDto userDto) {
         log.info("Updating user on userRegistry and userInstitution");
-        String mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
-                .orElse(randomMailId.get());
+        String mailUuid;
+        if(!CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+          mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
+                    .orElse(randomMailId.get());
+        }else {
+            mailUuid = randomMailId.get();
+        }
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
-        userResource.getWorkContacts().put(mailUuid, workContact);
+        if(CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())){
+            Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
+            workContactResourceMap.put(mailUuid, workContact);
+            userResource.setWorkContacts(workContactResourceMap);
+        }else{
+            userResource.getWorkContacts().put(mailUuid, workContact);
+        }
+
 
         return userRegistryApi.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userResource))
                 .onFailure().invoke(exception -> log.error("Error during update user on userRegistry: {} ", exception.getMessage(), exception))

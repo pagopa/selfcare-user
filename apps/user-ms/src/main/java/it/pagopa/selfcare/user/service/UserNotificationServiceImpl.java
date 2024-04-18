@@ -24,6 +24,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -159,7 +160,10 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        WorkContactResource certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
+        WorkContactResource certEmail = null;
+        if(!CollectionUtils.isNullOrEmpty(user.getWorkContacts())){
+            certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
+        }
         String email;
         if (certEmail == null || certEmail.getEmail() == null || StringUtils.isBlank(certEmail.getEmail().getValue())) {
             throw new InvalidRequestException("Missing mail for userId: " + user.getId());
