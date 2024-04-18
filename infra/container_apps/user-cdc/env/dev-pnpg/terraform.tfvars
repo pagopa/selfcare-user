@@ -26,8 +26,8 @@ container_app = {
       name = "cron-scale-rule"
     }
   ]
-  cpu    = 0.5
-  memory = "1Gi"
+  cpu    = 1
+  memory = "2Gi"
 }
 
 app_settings = [
