@@ -138,6 +138,17 @@ public class UserInstitutionCdcService {
                         });
     }
 
+    private void updateLastResumeToken(BsonDocument resumeToken) {
+        // Table CdCStartAt will be updated with the last resume token
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(CDC_START_AT_PROPERTY, resumeToken.toJson());
+
+        TableEntity tableEntity = new TableEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY)
+                .setProperties(properties);
+        tableClient.upsertEntity(tableEntity);
+
+    }
+
     private void constructMapAndTrackEvent(String documentKey, String success, String... metrics) {
         Map<String, String> propertiesMap = new HashMap<>();
         propertiesMap.put("documentKey", documentKey);
