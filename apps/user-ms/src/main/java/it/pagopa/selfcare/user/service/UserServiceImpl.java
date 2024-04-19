@@ -345,13 +345,9 @@ public class UserServiceImpl implements UserService {
      */
     private Uni<PrepareNotificationData> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(UserResource userResource, CreateUserDto userDto) {
         log.info("Updating user on userRegistry and userInstitution");
-        String mailUuid;
-        if(!CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
-          mailUuid = userUtils.getMailUuidFromMail(userResource.getWorkContacts(), userDto.getUser().getInstitutionEmail())
-                    .orElse(randomMailId.get());
-        }else {
-            mailUuid = randomMailId.get();
-        }
+        String mailUuid = Optional.ofNullable(userResource.getWorkContacts())
+                .flatMap(contacts -> userUtils.getMailUuidFromMail(contacts, userDto.getUser().getInstitutionEmail()))
+                .orElseGet(randomMailId);
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
         if(CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())){

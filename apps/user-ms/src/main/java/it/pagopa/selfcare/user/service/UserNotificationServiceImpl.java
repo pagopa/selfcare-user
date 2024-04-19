@@ -160,16 +160,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        WorkContactResource certEmail = null;
-        if(!CollectionUtils.isNullOrEmpty(user.getWorkContacts())){
-            certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
-        }
-        String email;
-        if (certEmail == null || certEmail.getEmail() == null || StringUtils.isBlank(certEmail.getEmail().getValue())) {
-            throw new InvalidRequestException("Missing mail for userId: " + user.getId());
-        } else {
-            email = certEmail.getEmail().getValue();
-        }
-        return email;
+        return Optional.ofNullable(user.getWorkContacts())
+                .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
+                .map(WorkContactResource::getEmail)
+                .map(CertifiableFieldResourceOfstring::getValue)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
     }
 }
