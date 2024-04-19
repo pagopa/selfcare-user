@@ -109,10 +109,16 @@ public class UserServiceImpl implements UserService {
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions.onItem()
                 .transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
-                        .map(userResource -> Objects.nonNull(userResource.getWorkContacts()) && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
-                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null)).merge()
-                .filter(workContactResource -> Objects.nonNull(workContactResource) && StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
-                .map(workContactResource -> workContactResource.getEmail().getValue())
+                        .filter(userResource -> Objects.nonNull(userResource.getWorkContacts())
+                                && StringUtils.isNotBlank(userInstitution.getUserMailUuid()))
+                        .map(userResource -> Optional.ofNullable(userResource.getWorkContacts().get(userInstitution.getUserMailUuid()))
+                                .map(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
+                                .orElse(null)).merge())
+                        .map(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
+                                .map(CertifiableFieldResourceOfstring::getValue)
+                                .orElse(null))
+                        .orElse(null))
+                .filter(Objects::nonNull)
                 .collect().asList();
 
     }
@@ -202,7 +208,8 @@ public class UserServiceImpl implements UserService {
                     return new UserInstitution();
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(fields, userId)
-                        .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId).map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
+                        .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId)
+                                .map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 

@@ -26,10 +26,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
@@ -159,13 +156,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        WorkContactResource certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
-        String email;
-        if (certEmail == null || certEmail.getEmail() == null || StringUtils.isBlank(certEmail.getEmail().getValue())) {
-            throw new InvalidRequestException("Missing mail for userId: " + user.getId());
-        } else {
-            email = certEmail.getEmail().getValue();
+        String mail = null;
+        if (StringUtils.isNotBlank(institution.getUserMailUuid())) {
+            mail = Optional.ofNullable(user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null))
+                    .filter(certMail -> Objects.nonNull(certMail.getEmail()))
+                    .filter(workContactResource -> StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
+                    .map(workContactResource -> workContactResource.getEmail().getValue())
+                    .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
+
         }
-        return email;
+        return mail;
     }
 }
