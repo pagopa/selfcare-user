@@ -71,6 +71,10 @@ public class UserInfoServiceDefault implements UserInfoService {
     }
 
     private Uni<Void> updateUserInstitutions(UserResource userResource, List<UserInstitution> value) {
+        if(CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+            return Uni.createFrom().voidItem();
+        }
+
         return Multi.createFrom().iterable(value)
                 .onItem().transformToUni(userInstitution -> {
                     var filteredMap = userResource.getWorkContacts().entrySet().stream()
@@ -195,19 +199,16 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     private UserResource buildWorkContactsMap(UserResource userResource) {
         log.info("Build work contact map");
-        if (userResource.getWorkContacts().keySet().stream().anyMatch(s -> s.startsWith(EMAIL_UUID_PREFIX)))
-            return userResource;
 
         Map<String, List<WorkContactResource>> mapGroupedByEmail;
-        if (CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
-            mapGroupedByEmail = new HashMap<>();
-        } else {
-            mapGroupedByEmail = userResource.getWorkContacts().values().stream()
-                    .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
-                    .collect(groupingBy(obj -> obj.getEmail().getValue()));
+        if (!CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+            if (userResource.getWorkContacts().keySet().stream().noneMatch(s -> s.startsWith(EMAIL_UUID_PREFIX))) {
+                mapGroupedByEmail = userResource.getWorkContacts().values().stream()
+                        .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
+                        .collect(groupingBy(obj -> obj.getEmail().getValue()));
+                mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
+            }
         }
-        mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
-
         return userResource;
     }
 
