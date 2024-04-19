@@ -22,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
 import java.util.*;
@@ -156,15 +158,22 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        String mail = null;
-        if (StringUtils.isNotBlank(institution.getUserMailUuid())) {
-            mail = Optional.ofNullable(user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null))
-                    .filter(certMail -> Objects.nonNull(certMail.getEmail()))
-                    .filter(workContactResource -> StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
-                    .map(workContactResource -> workContactResource.getEmail().getValue())
-                    .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
-
-        }
-        return mail;
+        return Optional.ofNullable(user.getWorkContacts())
+                .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
+                .map(WorkContactResource::getEmail)
+                .map(CertifiableFieldResourceOfstring::getValue)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
     }
+
+    String mail = null;
+        if (StringUtils.isNotBlank(institution.getUserMailUuid())) {
+        mail = Optional.ofNullable(user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null))
+                .filter(certMail -> Objects.nonNull(certMail.getEmail()))
+                .filter(workContactResource -> StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
+                .map(workContactResource -> workContactResource.getEmail().getValue())
+                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
+
+    }
+        return mail;
 }
