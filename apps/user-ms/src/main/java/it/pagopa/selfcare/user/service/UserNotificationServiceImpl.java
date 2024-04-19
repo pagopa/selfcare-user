@@ -158,22 +158,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        return Optional.ofNullable(user.getWorkContacts())
-                .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
-                .map(WorkContactResource::getEmail)
-                .map(CertifiableFieldResourceOfstring::getValue)
-                .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
-    }
-
-    String mail = null;
+        String mail = null;
         if (StringUtils.isNotBlank(institution.getUserMailUuid())) {
-        mail = Optional.ofNullable(user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null))
-                .filter(certMail -> Objects.nonNull(certMail.getEmail()))
-                .filter(workContactResource -> StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
-                .map(workContactResource -> workContactResource.getEmail().getValue())
-                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
-
-    }
+            return Optional.ofNullable(user.getWorkContacts())
+                    .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
+                    .map(WorkContactResource::getEmail)
+                    .map(CertifiableFieldResourceOfstring::getValue)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
+        }
         return mail;
+    }
 }
