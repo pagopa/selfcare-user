@@ -49,7 +49,11 @@ app_settings = [
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
       value = "selc-p-product"
-    }
+    },
+  {
+    name  = "USER_REGISTRY_URL"
+    value = "https://api.pdv.pagopa.it/user-registry/v1"
+  }
 ]
 
 secrets_names = {
