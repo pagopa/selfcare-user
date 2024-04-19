@@ -60,13 +60,16 @@ public class UserInfoServiceDefault implements UserInfoService {
                 .onItem().transformToMulti(userInstitutionsMap -> Multi.createFrom().iterable(userInstitutionsMap.entrySet().stream().toList()))
                 .onItem().transformToUniAndMerge(entry -> userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, entry.getKey())
                         .map(this::buildWorkContactsMap)
-                        .onItem().transformToUni(userResource -> userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
+                        .onItem().transformToUni(opt -> opt.isEmpty()
+                                ? Uni.createFrom().nullItem()
+                                : Uni.createFrom().item(opt.get()))
+                        .onItem().ifNotNull()
+                            .transformToUni(userResource -> userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
                                         MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
-                                .replaceWith(userResource))
-                        .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
-                        .onItem().transformToUni(userResource -> updateUserInstitutions(userResource, entry.getValue()))
-                        .onFailure().invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
-                        .onFailure().recoverWithNull())
+                                .onFailure().invoke(throwable -> log.error("Impossible to complete PDV patch for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
+                                .onItem().transformToUni(ignore -> updateUserInstitutions(userResource, entry.getValue()))
+                                .onFailure().invoke(throwable -> log.error("Impossible to update UserInstitution for user {}. Error: {} ", entry.getKey(), throwable.getMessage()))
+                                .onFailure().recoverWithNull()))
                 .toUni().replaceWithVoid();
     }
 
@@ -84,6 +87,7 @@ public class UserInfoServiceDefault implements UserInfoService {
                     var institutionMail = userResource.getWorkContacts().entrySet().stream()
                             .filter(entry -> entry.getKey().equalsIgnoreCase(userInstitution.getInstitutionId()))
                             .findFirst()
+                            .filter(entry -> Objects.nonNull(entry.getValue()) && Objects.nonNull(entry.getValue().getEmail()))
                             .map(stringWorkContactResourceEntry -> stringWorkContactResourceEntry.getValue().getEmail().getValue())
                             .orElse("");
 
@@ -150,6 +154,9 @@ public class UserInfoServiceDefault implements UserInfoService {
         return userInfos.onItem().transformToUni(userInfo ->
                 userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInfo.getUserId())
                         .map(this::buildWorkContactsMap)
+                        .onItem().transformToUni(opt -> opt.isEmpty()
+                                ? Uni.createFrom().nullItem()
+                                : Uni.createFrom().item(opt.get()))
                         .onItem().transformToUni(userResource ->  userRegistryApi.updateUsingPATCH(userResource.getId().toString(),
                                         MutableUserFieldsDto.builder().workContacts(userResource.getWorkContacts()).build())
                                 .replaceWith(userResource))
@@ -197,19 +204,28 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     }
 
-    private UserResource buildWorkContactsMap(UserResource userResource) {
-        log.info("Build work contact map");
+    private Optional<UserResource> buildWorkContactsMap(UserResource userResource) {
 
         Map<String, List<WorkContactResource>> mapGroupedByEmail;
-        if (!CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
-            if (userResource.getWorkContacts().keySet().stream().noneMatch(s -> s.startsWith(EMAIL_UUID_PREFIX))) {
-                mapGroupedByEmail = userResource.getWorkContacts().values().stream()
-                        .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
-                        .collect(groupingBy(obj -> obj.getEmail().getValue()));
-                mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
-            }
+        if (CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
+            log.info("Work contact is empty ...");
+            return Optional.empty();
         }
-        return userResource;
+
+        log.info("Work contact is not empty ...");
+
+        if (userResource.getWorkContacts().keySet().stream().noneMatch(s -> s.startsWith(EMAIL_UUID_PREFIX))) {
+            mapGroupedByEmail = userResource.getWorkContacts().values().stream()
+                    .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
+                    .collect(groupingBy(obj -> obj.getEmail().getValue()));
+            if(mapGroupedByEmail.isEmpty()) return Optional.empty();
+
+            log.info("Work contact and mail is not empty ...");
+
+            mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
+        }
+
+        return Optional.of(userResource);
     }
 
 }
