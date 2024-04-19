@@ -28,10 +28,7 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
@@ -161,11 +158,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        return Optional.ofNullable(user.getWorkContacts())
-                .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
-                .map(WorkContactResource::getEmail)
-                .map(CertifiableFieldResourceOfstring::getValue)
-                .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
+        String mail = null;
+        if (StringUtils.isNotBlank(institution.getUserMailUuid())) {
+            return Optional.ofNullable(user.getWorkContacts())
+                    .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
+                    .map(WorkContactResource::getEmail)
+                    .map(CertifiableFieldResourceOfstring::getValue)
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
+        }
+        return mail;
     }
 }
