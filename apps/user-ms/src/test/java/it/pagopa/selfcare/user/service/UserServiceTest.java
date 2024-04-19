@@ -145,6 +145,27 @@ class UserServiceTest {
     }
 
     @Test
+    void getUsersEmailsTestWithNullUserMailUUid() {
+
+        UserInstitution userInstitution = createUserInstitution();
+        userInstitution.setUserMailUuid(null);
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
+
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<String>> subscriber = userService
+                .getUsersEmails("institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+
+        verify(userRegistryApi).findByIdUsingGET(anyString(), anyString());
+        verify(userInstitutionService).findAllWithFilter(any());
+    }
+
+    @Test
     void getUserById() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any()))
                 .thenReturn(Uni.createFrom().item(createUserInstitution()));

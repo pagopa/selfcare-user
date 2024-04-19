@@ -107,18 +107,13 @@ public class UserServiceImpl implements UserService {
         var userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(productId).build().constructMap();
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
-        return userInstitutions.onItem()
-                .transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
-                        .filter(userResource -> Objects.nonNull(userResource.getWorkContacts())
-                                && StringUtils.isNotBlank(userInstitution.getUserMailUuid()))
-                        .map(userResource -> Optional.ofNullable(userResource.getWorkContacts().get(userInstitution.getUserMailUuid()))
-                                .map(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
-                                .orElse(null)).merge())
-                        .map(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
-                                .map(CertifiableFieldResourceOfstring::getValue)
-                                .orElse(null))
-                        .orElse(null))
-                .filter(Objects::nonNull)
+        return userInstitutions
+        .filter(userInstitution -> StringUtils.isNotBlank(userInstitution.getUserMailUuid()))
+        .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
+                        .map(userResource -> Objects.nonNull(userResource.getWorkContacts())  && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
+                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null)).merge()
+                .filter(workContactResource -> Objects.nonNull(workContactResource) && StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
+                .map(workContactResource -> workContactResource.getEmail().getValue())
                 .collect().asList();
 
     }
