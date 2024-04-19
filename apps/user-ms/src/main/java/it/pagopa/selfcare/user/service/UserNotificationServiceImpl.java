@@ -22,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -159,13 +161,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private static String retrieveMail(UserResource user, UserInstitution institution) {
-        WorkContactResource certEmail = user.getWorkContacts().getOrDefault(institution.getUserMailUuid(), null);
-        String email;
-        if (certEmail == null || certEmail.getEmail() == null || StringUtils.isBlank(certEmail.getEmail().getValue())) {
-            throw new InvalidRequestException("Missing mail for userId: " + user.getId());
-        } else {
-            email = certEmail.getEmail().getValue();
-        }
-        return email;
+        return Optional.ofNullable(user.getWorkContacts())
+                .map(contacts -> contacts.getOrDefault(institution.getUserMailUuid(), null))
+                .map(WorkContactResource::getEmail)
+                .map(CertifiableFieldResourceOfstring::getValue)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new InvalidRequestException("Missing mail for userId: " + user.getId()));
     }
 }
