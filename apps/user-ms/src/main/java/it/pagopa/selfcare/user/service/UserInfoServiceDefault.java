@@ -123,7 +123,7 @@ public class UserInfoServiceDefault implements UserInfoService {
                     .page(page, size);
             uniUserInstitutions = entityBase.list();
         } else {
-            entityBase = UserInstitution.find("{ userMailUuid: { $exists: false } }", Sorts.ascending("_id"))
+            entityBase = UserInstitution.find("{ userMailUuid: { $exists: false }, \"products.createdAt\":{$gte:ISODate('2024-04-18')} }", Sorts.ascending("_id"))
                     .page(page, size);
             uniUserInstitutions = entityBase.list();
         }
