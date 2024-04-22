@@ -53,6 +53,10 @@ app_settings = [
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "EVENT_HUB_BASE_PATH"
+    value = "https://selc-p-eventhub-ns.servicebus.windows.net/sc-users"
   }
 ]
 
