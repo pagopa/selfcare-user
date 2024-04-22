@@ -206,26 +206,28 @@ public class UserInfoServiceDefault implements UserInfoService {
 
     private Optional<UserResource> buildWorkContactsMap(UserResource userResource) {
 
-        Map<String, List<WorkContactResource>> mapGroupedByEmail;
         if (CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())) {
-            log.info("Work contact is empty ...");
             return Optional.empty();
         }
 
-        log.info("Work contact is not empty ...");
+        final Map<String, List<WorkContactResource>> mapGroupedByEmailToMigrate;
+        final Map<String, List<WorkContactResource>> mapGroupedByEmailAlreadyMigrate;
 
-        if (userResource.getWorkContacts().keySet().stream().noneMatch(s -> s.startsWith(EMAIL_UUID_PREFIX))) {
-            mapGroupedByEmail = userResource.getWorkContacts().values().stream()
-                    .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
-                    .collect(groupingBy(obj -> obj.getEmail().getValue()));
-            if(mapGroupedByEmail.isEmpty()) return Optional.empty();
+        mapGroupedByEmailAlreadyMigrate = userResource.getWorkContacts().entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(EMAIL_UUID_PREFIX))
+                .filter(entry -> Objects.nonNull(entry.getValue().getEmail()))
+                .map(Map.Entry::getValue)
+                .collect(groupingBy(obj -> obj.getEmail().getValue()));
 
-            log.info("Work contact and mail is not empty ...");
+        mapGroupedByEmailToMigrate = userResource.getWorkContacts().values().stream()
+                .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail())
+                        && Objects.nonNull(workContactResource.getEmail().getValue()))
+                .filter(workContactResource -> !mapGroupedByEmailAlreadyMigrate.containsKey(workContactResource.getEmail().getValue()))
+                .collect(groupingBy(obj -> obj.getEmail().getValue()));
 
-            mapGroupedByEmail.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
-        }
-
+        mapGroupedByEmailToMigrate.forEach((key, value) -> userResource.getWorkContacts().put(EMAIL_UUID_PREFIX.concat(UUID.randomUUID().toString()), value.get(0)));
         return Optional.of(userResource);
+
     }
 
 }
