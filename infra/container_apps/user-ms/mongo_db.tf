@@ -21,8 +21,12 @@ module "mongodb_collection_user_institutions" {
   cosmosdb_mongo_database_name = azurerm_cosmosdb_mongo_database.selc_user.name
 
   indexes = [{
-    keys   = ["_id"]
-    unique = true
+      keys   = ["_id"]
+      unique = true
+    },
+    {
+      keys   = ["userId","institutionId"]
+      unique = false
     }
   ]
 
