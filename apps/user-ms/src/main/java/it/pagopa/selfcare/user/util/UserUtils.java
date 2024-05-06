@@ -61,6 +61,7 @@ public class UserUtils {
         if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
             try {
                 productService.validateProductRole(productId, productRole, role);
+                log.info("Product role {} is valid for product {}", productRole, productId);
             } catch (IllegalArgumentException e) {
                 throw new InvalidRequestException(e.getMessage());
             }
