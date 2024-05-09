@@ -153,7 +153,7 @@ class UserServiceTest {
         userInstitution.setUserMailUuid(null);
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
 
-        when(userRegistryApi.findByIdUsingGET(anyString(), anyString()))
+        when(userRegistryApi.findByIdUsingGET(anyString(), eq(userInstitution.getUserId())))
                 .thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<List<String>> subscriber = userService
@@ -163,7 +163,7 @@ class UserServiceTest {
 
         subscriber.assertCompleted();
 
-        verify(userRegistryApi).findByIdUsingGET(anyString(), anyString());
+        verify(userRegistryApi).findByIdUsingGET(anyString(), eq(userInstitution.getUserId()));
         verify(userInstitutionService).findAllWithFilter(any());
     }
 
@@ -577,7 +577,7 @@ class UserServiceTest {
                 any())
         ).thenReturn(Uni.createFrom().nullItem());
 
-        when(userUtils.buildUserNotificationToSend(any(), any(), any(), any(), any())).thenReturn(new UserNotificationToSend());
+        when(userUtils.buildUserNotificationToSend(userInstitutionResponse, userResource, "productId", "productRole",  OnboardedProductState.ACTIVE)).thenReturn(new UserNotificationToSend());
 
         var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,"productRole",
                         LoggedUser.builder().build())

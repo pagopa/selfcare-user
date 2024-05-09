@@ -87,7 +87,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     private PartyRole retrieveRoleFromUserInstitution(UserInstitution userInstitution, String productId, String productRole) {
         return userInstitution.getProducts().stream()
-                .filter(onboardedProduct -> !Objects.isNull(onboardedProduct.getProductRole()) && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
+                .filter(onboardedProduct -> Objects.nonNull(onboardedProduct.getProductRole()) && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
                 && onboardedProduct.getProductId().equalsIgnoreCase(productId))
                 .findFirst()
                 .map(OnboardedProduct::getRole)
@@ -98,7 +98,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         boolean isProductRoleAlreadyActive = userInstitution.getProducts().stream()
                 .anyMatch(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(productId)
                         && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
-                        && onboardedProduct.getStatus().equals(OnboardedProductState.ACTIVE));
+                        && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()));
 
         if (isProductRoleAlreadyActive && status.equals(ACTIVE)) {
             return Uni.createFrom().item(0L);

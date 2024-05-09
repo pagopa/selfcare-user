@@ -15,7 +15,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
-import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
