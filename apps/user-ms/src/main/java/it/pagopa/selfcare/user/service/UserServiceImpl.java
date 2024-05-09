@@ -169,11 +169,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private static Function<UserInstitution, UserInstitution> filterAndSetProducts(List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+
         return userInstitution -> {
             userInstitution.setProducts(userInstitution.getProducts().stream()
                     .filter(product -> CollectionUtils.isNullOrEmpty(products) || products.contains(product.getProductId()))
-                    .filter(product -> CollectionUtils.isNullOrEmpty(states) || states.contains(product.getStatus().name()))
-                    .filter(product -> CollectionUtils.isNullOrEmpty(roles) || roles.contains(product.getRole().name()))
+                    .filter(product -> CollectionUtils.isNullOrEmpty(states) || states.contains(Optional.ofNullable(product.getStatus()).map(OnboardedProductState::name).orElse(null)))
+                    .filter(product -> CollectionUtils.isNullOrEmpty(roles) || roles.contains(Optional.ofNullable(product.getRole()).map(PartyRole::name).orElse(null)))
                     .filter(product -> CollectionUtils.isNullOrEmpty(productRoles) || productRoles.contains(product.getProductRole()))
                     .toList());
             return userInstitution;
