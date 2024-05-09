@@ -57,7 +57,7 @@ public class UserUtils {
         return map;
     }
 
-    public void checkProductRole(String productId, PartyRole role, String productRole) {
+    public Uni<Void> checkProductRole(String productId, PartyRole role, String productRole) {
         if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
             try {
                 productService.validateProductRole(productId, productRole, role);
@@ -65,6 +65,7 @@ public class UserUtils {
                 throw new InvalidRequestException(e.getMessage());
             }
         }
+        return Uni.createFrom().voidItem();
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {
@@ -86,12 +87,13 @@ public class UserUtils {
                 .toList();
     }
 
-    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, OnboardedProductState status) {
+    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, String productRole, OnboardedProductState status) {
         UserToNotify userToNotify = buildUserToNotify(userResource, userInstitution, status);
         UserNotificationToSend userNotificationToSend = buildUserNotificationToSend(userInstitution, productId);
 
         userInstitution.getProducts().stream()
-                .filter(p -> org.apache.commons.lang3.StringUtils.equals(p.getProductId(), productId))
+                .filter(p -> org.apache.commons.lang3.StringUtils.equals(p.getProductId(), productId)
+                 && (org.apache.commons.lang3.StringUtils.isBlank(productRole) || org.apache.commons.lang3.StringUtils.equals(p.getProductRole(), productRole)))
                 .findFirst()
                 .ifPresent(onboardedProductResponse -> {
                     userToNotify.setRole(onboardedProductResponse.getRole());
