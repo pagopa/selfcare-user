@@ -454,7 +454,7 @@ class UserControllerTest {
         var user = "user1";
         var institution = "institution1";
         var product = "product1";
-        Mockito.when(userService.updateUserProductStatus("user1","institution1", "product1", OnboardedProductState.ACTIVE,null))
+        Mockito.when(userService.updateUserProductStatus(eq(user), eq(institution), eq(product),  eq(OnboardedProductState.ACTIVE), eq(null), any()))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -485,7 +485,7 @@ class UserControllerTest {
         var institution = "institution123";
         var product = "prod-pagopa";
 
-        Mockito.when(userService.updateUserProductStatus(eq("user123"),eq("institution123"), eq("prod-pagopa"), eq(OnboardedProductState.ACTIVE), any()))
+        Mockito.when(userService.updateUserProductStatus(eq("user123"),eq("institution123"), eq("prod-pagopa"), eq(OnboardedProductState.ACTIVE), any(), any()))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()

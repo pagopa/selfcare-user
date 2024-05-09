@@ -542,7 +542,7 @@ class UserServiceTest {
 
         when(userInstitutionService
                 .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
-                        "userId", "institutionId", "productId", null, null, OnboardedProductState.ACTIVE))
+                        "userId", "institutionId", "productId", null, "productRole", OnboardedProductState.ACTIVE))
                 .thenReturn(Uni.createFrom().item(1L));
 
 
@@ -560,9 +560,9 @@ class UserServiceTest {
                 any())
         ).thenReturn(Uni.createFrom().nullItem());
 
-        when(userUtils.buildUserNotificationToSend(any(), any(), any(), any())).thenReturn(new UserNotificationToSend());
+        when(userUtils.buildUserNotificationToSend(any(), any(), any(), any(), any())).thenReturn(new UserNotificationToSend());
 
-        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,"productRole",
                         LoggedUser.builder().build())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
@@ -594,7 +594,7 @@ class UserServiceTest {
                 .thenReturn(Uni.createFrom().item(1L));
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("not found")));
 
-        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,
+        var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE, "productRole",
                         LoggedUser.builder().build())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
