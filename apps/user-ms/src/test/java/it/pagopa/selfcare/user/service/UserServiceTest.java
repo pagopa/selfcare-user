@@ -156,6 +156,27 @@ class UserServiceTest {
     }
 
     @Test
+    void getUsersEmailsTestWithNullUserMailUUid() {
+
+        UserInstitution userInstitution = createUserInstitution();
+        userInstitution.setUserMailUuid(null);
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
+
+        when(userRegistryApi.findByIdUsingGET(anyString(), eq(userInstitution.getUserId())))
+                .thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<String>> subscriber = userService
+                .getUsersEmails("institutionId", "productId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+
+        verify(userRegistryApi).findByIdUsingGET(anyString(), eq(userInstitution.getUserId()));
+        verify(userInstitutionService).findAllWithFilter(any());
+    }
+
+    @Test
     void getUserById() {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any()))
                 .thenReturn(Uni.createFrom().item(createUserInstitution()));
@@ -602,7 +623,7 @@ class UserServiceTest {
                 any())
         ).thenReturn(Uni.createFrom().nullItem());
 
-        when(userUtils.buildUserNotificationToSend(any(), any(), any(), any(), any())).thenReturn(new UserNotificationToSend());
+        when(userUtils.buildUserNotificationToSend(userInstitutionResponse, userResource, "productId", "productRole",  OnboardedProductState.ACTIVE)).thenReturn(new UserNotificationToSend());
 
         var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,"productRole",
                         LoggedUser.builder().build())

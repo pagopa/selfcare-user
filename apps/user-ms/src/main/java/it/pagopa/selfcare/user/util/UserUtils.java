@@ -25,16 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
@@ -92,8 +87,8 @@ public class UserUtils {
         UserNotificationToSend userNotificationToSend = buildUserNotificationToSend(userInstitution, productId);
 
         userInstitution.getProducts().stream()
-                .filter(p -> org.apache.commons.lang3.StringUtils.equals(p.getProductId(), productId)
-                 && (org.apache.commons.lang3.StringUtils.isBlank(productRole) || org.apache.commons.lang3.StringUtils.equals(p.getProductRole(), productRole)))
+                .filter(p -> StringUtils.equals(p.getProductId(), productId)
+                 && (StringUtils.isBlank(productRole) || StringUtils.equals(p.getProductRole(), productRole)))
                 .findFirst()
                 .ifPresent(onboardedProductResponse -> {
                     userToNotify.setRole(onboardedProductResponse.getRole());
