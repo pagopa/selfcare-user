@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
     private static final String WORK_CONTACTS = "workContacts";
 
-    private static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
+    static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
@@ -103,13 +103,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Uni<List<String>> getUsersEmails(String institutionId, String productId) {
         var userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
-        var productFilters = OnboardedProductFilter.builder().productId(productId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder().productId(productId).status(ACTIVE).build().constructMap();
         Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters));
         return userInstitutions
-        .filter(userInstitution -> StringUtils.isNotBlank(userInstitution.getUserMailUuid()))
-        .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
-                        .map(userResource -> Objects.nonNull(userResource.getWorkContacts())  && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
-                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null)).merge()
+                .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(WORK_CONTACTS, userInstitution.getUserId())
+                        .map(userResource -> Objects.nonNull(userResource.getWorkContacts()) && userResource.getWorkContacts().containsKey(userInstitution.getUserMailUuid())
+                                ? userResource.getWorkContacts().get(userInstitution.getUserMailUuid()) : null))
+                .merge()
                 .filter(workContactResource -> Objects.nonNull(workContactResource) && StringUtils.isNotBlank(workContactResource.getEmail().getValue()))
                 .map(workContactResource -> workContactResource.getEmail().getValue())
                 .collect().asList();
@@ -127,6 +127,7 @@ public class UserServiceImpl implements UserService {
                                 .surname(userResource.getFamilyName().getValue())
                                 .taxCode(userResource.getFiscalCode())
                                 .products(onboardedProductMapper.toList(userInstitution.getProducts()))
+                                .email(UserUtils.getMailByMailUuid(userResource.getWorkContacts(), userInstitution.getUserMailUuid()).orElse(null))
                                 .build()))
                 .merge();
     }
@@ -201,8 +202,7 @@ public class UserServiceImpl implements UserService {
                     return new UserInstitution();
                 })
                 .onItem().transformToUni(userInstitution -> userRegistryApi.findByIdUsingGET(fields, userId)
-                        .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId)
-                                .map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
+                        .map(userResource -> userMapper.toUserDetailResponse(userResource, Optional.ofNullable(institutionId).map(ignored -> userInstitution.getUserMailUuid()).orElse(null))))
                 .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
     }
 
@@ -350,14 +350,11 @@ public class UserServiceImpl implements UserService {
                 .orElseGet(randomMailId);
 
         var workContact = UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail());
-        if(CollectionUtils.isNullOrEmpty(userResource.getWorkContacts())){
-            Map<String, WorkContactResource> workContactResourceMap = new HashMap<>();
-            workContactResourceMap.put(mailUuid, workContact);
-            userResource.setWorkContacts(workContactResourceMap);
-        }else{
-            userResource.getWorkContacts().put(mailUuid, workContact);
-        }
 
+        // when update workContract on userRegistry we must create an empty map with only key that we want persist
+        Map<String, WorkContactResource> workContactToSave = new HashMap<>();
+        workContactToSave.put(mailUuid, workContact);
+        userResource.setWorkContacts(workContactToSave);
 
         return userRegistryApi.updateUsingPATCH(userResource.getId().toString(), userMapper.toMutableUserFieldsDto(userResource))
                 .onFailure().invoke(exception -> log.error("Error during update user on userRegistry: {} ", exception.getMessage(), exception))
@@ -467,23 +464,19 @@ public class UserServiceImpl implements UserService {
     }
 
     private List<String> checkAlreadyOnboardedProdcutRole(String productId, List<String> productRole,  UserInstitution userInstitution) {
-        List<String> productRoleAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
+        List<String> productAlreadyOnboarded = Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
-                .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                //.filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
                 .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
                 .map(OnboardedProduct::getProductRole)
                 .toList();
 
-
-        List<String> productRoleToAdd = new ArrayList<>(productRole);
-        productRoleToAdd.removeAll(productRoleAlreadyOnboarded);
-
-        if (productRoleToAdd.isEmpty()) {
-            throw new InvalidRequestException(String.format("User already has this roles on Product %s", productId));
+        if (!productAlreadyOnboarded.isEmpty()) {
+            throw new InvalidRequestException(String.format("User already has roles on Product %s", productId));
         }
-        return productRoleToAdd;
+        return productRole;
     }
 
 

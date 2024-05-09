@@ -201,10 +201,26 @@ public class UserUtils {
     }
 
     public Optional<String> getMailUuidFromMail(Map<String, WorkContactResource> workContacts, String email) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty()) return Optional.empty();
+
         return workContacts.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(MAIL_ID_PREFIX) && entry.getValue().getEmail() != null
                         && org.apache.commons.lang3.StringUtils.equals(entry.getValue().getEmail().getValue(), email))
                 .map(Map.Entry::getKey)
+                .findFirst();
+    }
+
+    public static Optional<String> getMailByMailUuid(Map<String, WorkContactResource> workContacts, String mailUid) {
+        if(Objects.isNull(workContacts) || workContacts.isEmpty() || Objects.isNull(mailUid)) return Optional.empty();
+
+        return workContacts.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(mailUid))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .map(WorkContactResource::getEmail)
+                .filter(Objects::nonNull)
+                .map(CertifiableFieldResourceOfstring::getValue)
+                .filter(Objects::nonNull)
                 .findFirst();
     }
 
