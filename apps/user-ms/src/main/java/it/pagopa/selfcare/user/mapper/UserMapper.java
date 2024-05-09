@@ -69,10 +69,8 @@ public interface UserMapper {
 
     @Named("retrieveMailFromWorkContacts")
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
-        if(!CollectionUtils.isNullOrEmpty(map) && StringUtils.isNotBlank(userMailUuid)){
-            return Optional.ofNullable(map.getOrDefault(userMailUuid, null))
-                    .map(workContactResource -> workContactResource.getEmail().getValue())
-                    .orElse(null);
+        if(map!=null && !map.isEmpty() && map.containsKey(userMailUuid)){
+            return map.get(userMailUuid).getEmail().getValue();
         }
         return null;
     }
@@ -80,14 +78,8 @@ public interface UserMapper {
 
     @Named("retrieveCertifiedMailFromWorkContacts")
     default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
-        if(!CollectionUtils.isNullOrEmpty(userResource.getWorkContacts()) && StringUtils.isNotBlank(userMailUuid)){
-            String mail = Optional.ofNullable(userResource.getWorkContacts().getOrDefault(userMailUuid, null))
-                    .map(workContactResource -> workContactResource.getEmail().getValue())
-                    .orElse(null);
-
-            return Optional.ofNullable(mail)
-                    .map(s -> new CertifiableFieldResponse<>(mail, userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification()))
-                    .orElse(null);
+        if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
+            return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(), userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification());
         }
         return null;
     }
