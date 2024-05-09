@@ -592,6 +592,7 @@ class UserServiceTest {
                 any(UserInstitution.class),
                 any(Product.class),
                 any(),
+                any(),
                 anyString(),
                 anyString())
         ).thenReturn(Uni.createFrom().voidItem());
@@ -615,6 +616,7 @@ class UserServiceTest {
                 any(UserInstitution.class),
                 any(Product.class),
                 any(OnboardedProductState.class),
+                any(),
                 eq(null),
                 eq(null)
         );

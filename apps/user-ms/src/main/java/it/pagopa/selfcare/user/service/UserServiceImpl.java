@@ -261,7 +261,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationData(builder, userId, institutionId))
                 .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
                 .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
-                .onItem().transformToUni(prepareNotificationData -> userNotificationService.sendEmailNotification(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), status, loggedUser.getName(), loggedUser.getFamilyName())
+                .onItem().transformToUni(prepareNotificationData -> userNotificationService.sendEmailNotification(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct(), status, productRole, loggedUser.getName(), loggedUser.getFamilyName())
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
                 .onItem().transform(prepareNotificationData -> userUtils.buildUserNotificationToSend(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), productId, productRole, status))
