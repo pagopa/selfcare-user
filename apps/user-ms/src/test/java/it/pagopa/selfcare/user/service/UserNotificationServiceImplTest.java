@@ -117,6 +117,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.ACTIVE,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -128,6 +129,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.DELETED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -139,6 +141,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.SUSPENDED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -150,6 +153,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.PENDING,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -177,6 +181,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.ACTIVE,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -188,6 +193,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.DELETED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -199,6 +205,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.SUSPENDED,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
@@ -210,6 +217,7 @@ class UserNotificationServiceImplTest {
                         userInstitution,
                         product,
                         OnboardedProductState.PENDING,
+                        "admin",
                         loggedUserName,
                         loggedUserSurname
                 )
