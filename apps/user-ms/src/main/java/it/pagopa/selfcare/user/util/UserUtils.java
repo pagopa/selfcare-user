@@ -25,16 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
-import org.jboss.resteasy.reactive.client.api.WebClientApplicationException;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
@@ -61,7 +56,7 @@ public class UserUtils {
         if (StringUtils.isNotBlank(productRole) && StringUtils.isNotBlank(productId)) {
             try {
                 productService.validateProductRole(productId, productRole, role);
-                log.info("Product role {} is valid for product {}", productRole, productId);
+                log.debug("Product role {} is valid for product {}", productRole, productId);
             } catch (IllegalArgumentException e) {
                 throw new InvalidRequestException(e.getMessage());
             }

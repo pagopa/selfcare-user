@@ -55,9 +55,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
         return Uni.combine().all()
                 .unis(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)
-                                .onItem().ifNotNull().invoke(() -> log.info("User founded on userRegistry")),
+                                .onItem().ifNotNull().invoke(() -> log.debug("User founded on userRegistry with userId: {}", userId)),
                         userInstitutionService.findAllWithFilter(userInstitutionFilter.constructMap()).collect().asList()
-                                .onItem().ifNotNull().invoke(() -> log.info("UserInstitution founded")))
+                                .onItem().ifNotNull().invoke(() -> log.debug("UserInstitution founded for userId: {} and institutionId: {}", userId, institutionId)))
                 .asTuple()
                 .onItem().transformToMulti(tuple -> findMailUuidAndUpdateUserRegistry(tuple.getItem1(), updateUserRequest)
                         .onItem().transformToMulti(uuidMail -> updateUserInstitutionAndSendNotification(tuple.getItem1(), tuple.getItem2(), uuidMail)))
@@ -70,7 +70,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                         .peek(userInstitution -> userInstitution.setUserMailUuid(mailUuid))
                         .toList())
                 .onItem().transformToUniAndMerge(userInstitutionService::persistOrUpdate)
-                .onItem().invoke(() -> log.info("UserInstitution updated successfully"))
+                .onItem().invoke(() -> log.debug("UserInstitution updated successfully"))
                 .onItem().transformToMultiAndMerge(userInstitution -> sendKafkaNotification(userResource, userInstitution));
     }
 

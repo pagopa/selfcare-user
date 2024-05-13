@@ -29,7 +29,7 @@ public class UserPermissionServiceImpl implements UserPermissionService {
     @Override
     public Uni<Boolean> hasPermission(String institutionId, String productId, PermissionTypeEnum permission, String userId) {
         log.trace("hasPermission start");
-        log.debug("check permission {} for logged user", permission);
+        log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, userId, institutionId, productId);
 
         return retrievePerson(userId, productId, institutionId)
                 .onItem().ifNotNull().invoke(userInstitution -> log.debug("UserInstitution founded for given parameters"))

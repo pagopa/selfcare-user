@@ -167,7 +167,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         } else {
             email = certEmail.getEmail().getValue();
         }
-        log.info("retrieved Mail for user");
+        log.debug("retrieved Mail for user with id: {}", user.getId());
         return email;
     }
 }
