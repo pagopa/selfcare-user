@@ -73,8 +73,11 @@ public class UserInstitutionRepository {
                         userInfo.getInstitutions().removeIf(userInstitutionRole -> userInstitutionRole.getInstitutionId().equalsIgnoreCase(userInstitution.getInstitutionId()));
 
                         if (CollectionUtils.isEmpty(userInfo.getInstitutions())) {
+                            log.info(String.format("deleteInstitutionOrAllUserInfo removing userInfo for userId: %s", userInstitution.getUserId()));
                             return UserInfo.deleteById(userInstitution.getUserId()).replaceWith(Uni.createFrom().voidItem());
                         } else {
+                            log.info(String.format("deleteInstitutionOrAllUserInfo removing institution %s for userId %s",
+                                    userInstitution.getInstitutionId(), userInstitution.getUserId()));
                             return UserInfo.persistOrUpdate(userInfo);
                         }
                     }
@@ -89,20 +92,27 @@ public class UserInstitutionRepository {
     }
 
     private UserInfo replaceOrAddInstitution(UserInfo userInfo, UserInstitution userInstitution, PartyRole role, OnboardedProductState state) {
-        if (!CollectionUtils.isEmpty(userInfo.getInstitutions())) {
-            userInfo.getInstitutions().stream()
-                    .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
-                    .findFirst()
-                    .ifPresentOrElse(userInstitutionRole -> {
-                                userInstitutionRole.setRole(role);
-                                userInstitutionRole.setStatus(state);
-                            },
-                            () -> {
-                                List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
-                                roleList.add(userMapper.toUserInstitutionRole(userInstitution, role, state));
-                                userInfo.setInstitutions(roleList);
-                            });
+        if (CollectionUtils.isEmpty(userInfo.getInstitutions())) {
+            userInfo.setInstitutions(new ArrayList<>());
         }
+
+        userInfo.getInstitutions().stream()
+                .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
+                .findFirst()
+                .ifPresentOrElse(userInstitutionRole -> {
+                            userInstitutionRole.setRole(role);
+                            userInstitutionRole.setStatus(state);
+                            log.info(String.format("replaceOrAddInstitution execution setting role for userId: %s, institutionId: %s, role: %s",
+                                    userInstitution.getUserId(), userInstitution.getInstitutionId(), role.name()));
+                        },
+                        () -> {
+                            List<UserInstitutionRole> roleList = new ArrayList<>(userInfo.getInstitutions());
+                            roleList.add(userMapper.toUserInstitutionRole(userInstitution, role, state));
+                            userInfo.setInstitutions(roleList);
+                            log.info(String.format("replaceOrAddInstitution execution adding role for userId: %s, institutionId: %s, role: %s",
+                                    userInstitution.getUserId(), userInstitution.getInstitutionId(), role.name()));
+                        });
+
         return userInfo;
     }
 
