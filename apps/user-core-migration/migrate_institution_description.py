@@ -27,7 +27,7 @@ def migrate_institution_description(client):
         pages = math.ceil(institutions_size / BATCH_SIZE)
 
         for page in range(START_PAGE, pages):
-            print("Start page " + str(page) + "/" + str(pages))
+            print("Start page " + str(page + 1) + "/" + str(pages))
 
             institution_pages = client[CORE_DB][INSTITUTION_COLLECTION].aggregate(
                 get_institutions(page, BATCH_SIZE)
@@ -42,7 +42,7 @@ def migrate_institution_description(client):
                             {"$set": {"institutionDescription": institution_desc}},
                             False)
 
-            print("End page " + str(page) + "/" + str(pages))
+            print("End page " + str(page + 1) + "/" + str(pages))
 
     else:
         institution = client[CORE_DB][INSTITUTION_COLLECTION].find_one(
@@ -62,9 +62,7 @@ def migrate_institution_description(client):
 
 if __name__ == "__main__":
     client = MongoClient(HOST)
-    with client.start_session() as session:
-        session.start_transaction()
-        migrate_institution_description(client)
-        session.commit_transaction()
+
+    migrate_institution_description(client)
 
     client.close()
