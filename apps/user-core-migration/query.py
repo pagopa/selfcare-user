@@ -23,13 +23,9 @@ def get_institutions(page, size):
     ]
 
 def get_institution(institutionId):
-    return [
-            {
-                '$match': {
-                    '_id': institutionId
-                }
-            }
-    ]
+    return {
+               '_id': institutionId
+           }
 
 
 def user_institution_from_user_query(page, size):
