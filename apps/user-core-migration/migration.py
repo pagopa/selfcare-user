@@ -1,12 +1,11 @@
-import os
 import sys
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from pymongo import MongoClient
 
 from query import *
 
-load_dotenv()
-HOST =  os.getenv('HOST')
+# load_dotenv()
+HOST =  'mongodb://selc-d-cosmosdb-mongodb-account:gynryhYAX4MvyB6EVmXxADGurJoYIxTIaIeIFFrxhRxSyMHPJxQJqxcbXYN3CjTrV3QmqMdcJ9MiACDbU0kL7Q%3D%3D@selc-d-cosmosdb-mongodb-account.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@selc-d-cosmosdb-mongodb-account@'
 
 CORE_DB = 'selcMsCore'
 USER_COLLECTION = 'User'
@@ -17,7 +16,6 @@ USER_INFO_COLLECTION = 'userInfo'
 
 BATCH_SIZE = 100
 START_PAGE = 0
-
 
 
 def generate_user_info(client, userId):
@@ -44,9 +42,12 @@ def generate_user_info(client, userId):
 
 if __name__ == "__main__":
     client = MongoClient(HOST)
+    userId = None
+    if len(sys.argv) >1:
+     userId = sys.argv[1]
 
     print("Start generate the " + USER_INFO_COLLECTION)
-    generate_user_info(client, sys.argv[1])
+    generate_user_info(client, userId)
     print("End generate the " + USER_INFO_COLLECTION)
 
 
