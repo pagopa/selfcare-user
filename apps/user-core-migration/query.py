@@ -72,8 +72,13 @@ def user_institution_from_user_query(page, size):
     ]
 
 
-def user_info_from_user_institution_query(db, collection):
+def user_info_from_user_institution_query(db, collection, userId):
     return [
+        {
+            '$match': {
+                'userId': userId
+                }
+        },
         {
             '$group': {
                 '_id': '$userId',
