@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - main
+      - releases/**
     types:
       - opened
       - edited
@@ -27,5 +28,4 @@ jobs:
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
       sonar_key: 'pagopa_selfcare-user'
-      actor: ${{ github.actor }}
       module: 'user-cdc'
