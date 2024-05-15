@@ -4,8 +4,8 @@ from pymongo import MongoClient
 
 from query import *
 
-# load_dotenv()
-HOST =  'mongodb://selc-d-cosmosdb-mongodb-account:gynryhYAX4MvyB6EVmXxADGurJoYIxTIaIeIFFrxhRxSyMHPJxQJqxcbXYN3CjTrV3QmqMdcJ9MiACDbU0kL7Q%3D%3D@selc-d-cosmosdb-mongodb-account.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@selc-d-cosmosdb-mongodb-account@'
+load_dotenv()
+HOST = os.getenv('HOST')
 
 CORE_DB = 'selcMsCore'
 USER_COLLECTION = 'User'
