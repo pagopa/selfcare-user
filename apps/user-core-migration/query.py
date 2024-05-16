@@ -26,6 +26,10 @@ def get_institutions(page, size):
 def get_institutions_from_onboardings(page, size):
     return [
         {
+            '$match': {
+                'status': 'COMPLETED'
+            }
+        }, {
             '$group': {
                 '_id': '$institution.taxCode',
                 'description': {
@@ -40,6 +44,10 @@ def get_institutions_from_onboardings(page, size):
 def count_institutions_from_onboardings():
     return [
         {
+            '$match': {
+                'status': 'COMPLETED'
+            }
+        }, {
             '$group': {
                 '_id': '$institution.taxCode',
                 'description': {
@@ -59,7 +67,8 @@ def get_institution(taxCode):
 
 def get_onboarding(taxCode):
     return {
-        'institution.taxCode': taxCode
+        "institution.taxCode": taxCode,
+        "status": "COMPLETED"
     }
 
 def user_institution_from_user_query(page, size):

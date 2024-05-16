@@ -47,21 +47,26 @@ def migrate_institution_description_from_onboarding_to_core(client):
                     False)
 
             print("End page " + str(page + 1) + "/" + str(pages))
-
+            return True
     else:
         onboarding = client[ONBOARDING_DB][ONBOARDINGS_COLLECTION].find_one(
             get_onboarding(TAX_CODE)
         )
 
-        institution_tax_code = onboarding.get('institution').get('taxCode')
-        institution_desc = onboarding.get('institution').get('description')
+        if onboarding is not None:
+            institution_tax_code = onboarding.get('institution').get('taxCode')
+            institution_desc = onboarding.get('institution').get('description')
 
-        client[CORE_DB][INSTITUTION_COLLECTION].update_one(
-            {"taxCode": institution_tax_code},
-            {"$set": {"description": institution_desc}},
-            False)
+            client[CORE_DB][INSTITUTION_COLLECTION].update_one(
+                {"taxCode": institution_tax_code},
+                {"$set": {"description": institution_desc}},
+                False)
 
-        print("End update institution description for " + str(institution_tax_code))
+            print("End update institution description for " + str(institution_tax_code))
+            return True
+        else:
+            print("Onboarding is not completed! End update institution description for " + str(TAX_CODE))
+            return False
 
 def migrate_institution_description_from_institution_to_user(client):
     if TAX_CODE is None:
@@ -106,7 +111,7 @@ def migrate_institution_description_from_institution_to_user(client):
 if __name__ == "__main__":
     client = MongoClient(HOST)
 
-    migrate_institution_description_from_onboarding_to_core(client)
-    migrate_institution_description_from_institution_to_user(client)
+    if migrate_institution_description_from_onboarding_to_core(client):
+        migrate_institution_description_from_institution_to_user(client)
 
     client.close()
