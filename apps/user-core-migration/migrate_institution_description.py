@@ -101,7 +101,7 @@ def migrate_institution_description_from_institution_to_user(client):
         institution_id = institution.get('_id')
         institution_desc = institution.get('description')
 
-        client[USERS_DB][USER_INSTITUTION_COLLECTION].update_many(
+        client[USERS_DB][USER_INSTITUTION_COLLECTION].update_one(
                {"institutionId": institution_id},
                {"$set": {"institutionDescription": institution_desc}},
                False)
