@@ -70,6 +70,19 @@
 
         </profile>
         <profile>
+            <id>user-group-ms</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>user-group-ms-app</artifactId>
+                    <version>1.0.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>report</id>
             <build>
                 <plugins>
