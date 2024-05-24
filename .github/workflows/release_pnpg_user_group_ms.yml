@@ -31,6 +31,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev-pnpg
+      module: user-group-ms
 
   release_uat:
     uses: ./.github/workflows/call_release_ms.yml
@@ -40,6 +41,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat-pnpg
+      module: user-group-ms
 
   release_prod:
     uses: ./.github/workflows/call_release_ms.yml
@@ -49,3 +51,4 @@ jobs:
     with:
       environment: prod
       tf_environment: prod-pnpg
+      module: user-group-ms

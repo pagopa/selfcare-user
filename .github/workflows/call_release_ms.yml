@@ -7,9 +7,12 @@ on:
       tf_environment:
         type: string
         required: false
+      module:
+        type: string
+        required: true
 
 env:
-  DIR: "./infra/container_apps/user-ms"
+  DIR: "./infra/container_apps/${{ inputs.module }}"
   ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -44,14 +47,14 @@ jobs:
         id: meta
         uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
         with:
-          images: ghcr.io/${{ github.repository }}-ms
+          images: ghcr.io/selfcare-${{ inputs.module }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=sha
           labels:
-            org.opencontainers.image.title=${{ github.repository }}-ms
-            org.opencontainers.image.description=SelfCare user microservice
+            org.opencontainers.image.title=selfcare-${{ inputs.module }}
+            org.opencontainers.image.description=SelfCare ${{ inputs.module }} microservice
             org.opencontainers.image.authors=PagoPA
             org.opencontainers.image.url=github.com/pagopa/${{ github.repository }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -60,7 +63,7 @@ jobs:
         uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
         with:
           context: .
-          file: ./apps/user-ms/Dockerfile
+          file: ./apps/${{ inputs.module }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
