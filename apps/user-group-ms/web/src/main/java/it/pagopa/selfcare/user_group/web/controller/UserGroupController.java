@@ -20,6 +20,7 @@ import it.pagopa.selfcare.user_group.web.model.UpdateUserGroupDto;
 import it.pagopa.selfcare.user_group.web.model.UserGroupResource;
 import it.pagopa.selfcare.user_group.web.model.mapper.UserGroupMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -75,7 +76,7 @@ public class UserGroupController {
                             @PathVariable("id")
                                     String id) {
         log.trace("deteleGroup start");
-        log.debug("deleteGroup id = {}", id);
+        log.debug("deleteGroup id = {}", Encode.forJava(id));
         groupService.deleteGroup(id);
         log.trace("deteleGroup end");
 
@@ -89,7 +90,7 @@ public class UserGroupController {
                               @PathVariable("id")
                                       String id) {
         log.trace("activateGroup start");
-        log.debug("activateGroup id = {}", id);
+        log.debug("activateGroup id = {}", Encode.forJava(id));
         groupService.activateGroup(id);
         log.trace("activateGroup end");
     }
@@ -102,7 +103,7 @@ public class UserGroupController {
                              @PathVariable("id")
                                      String id) {
         log.trace("suspendGroup start");
-        log.debug("suspendGroup id = {}", id);
+        log.debug("suspendGroup id = {}", Encode.forJava(id));
         groupService.suspendGroup(id);
         log.trace("suspendGroup end");
     }
@@ -124,7 +125,7 @@ public class UserGroupController {
                                              @Valid
                                                      UpdateUserGroupDto groupDto) {
         log.trace("updateUserGroup start");
-        log.debug("updateUserGroup id = {}", id);
+        log.debug("updateUserGroup id = {}", Encode.forJava(id));
         UserGroupOperations updatedGroup = groupService.updateGroup(id, userGroupMapper.toUserGroupOperations(groupDto));
         UserGroupResource result = userGroupMapper.toResource(updatedGroup);
         log.debug("updateUserGroup result = {}", result);
@@ -143,7 +144,7 @@ public class UserGroupController {
                                      @PathVariable("memberId")
                                              UUID userId) {
         log.trace("addMemberToUserGroup start");
-        log.debug("addMemberToUserGroup id = {}", id);
+        log.debug("addMemberToUserGroup id = {}", Encode.forJava(id));
         groupService.addMember(id, userId);
         log.trace("addMemberToUserGroup end");
     }
@@ -156,7 +157,7 @@ public class UserGroupController {
                                           @PathVariable("id")
                                                   String id) {
         log.trace("getUserGroup start");
-        log.debug("getUserGroup id = {}", id);
+        log.debug("getUserGroup id = {}", Encode.forJava(id));
         UserGroupOperations group = groupService.getUserGroup(id);
         UserGroupResource groupResource = userGroupMapper.toResource(group);
         log.debug("getUserGroup result = {}", groupResource);
@@ -183,7 +184,7 @@ public class UserGroupController {
                                                      List<UserGroupStatus> status,
                                                  Pageable pageable) {
         log.trace("getUserGroups start");
-        log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", institutionId, productId, pageable, status);
+        log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", Encode.forJava(institutionId), Encode.forJava(productId), pageable, status);
         UserGroupFilter filter = new UserGroupFilter(institutionId, productId, memberId, status);
         Page<UserGroupResource> result = PageMapper.map(groupService.getUserGroups(filter, pageable)
                 .map(userGroupMapper::toResource));
@@ -202,7 +203,7 @@ public class UserGroupController {
                                           @PathVariable("memberId")
                                                   UUID memberId) {
         log.trace("deleteMemberFromUserGroup start");
-        log.debug("deleteMemberFromUserGroup userGroupId = {}, memberId = {}", userGroupId, memberId);
+        log.debug("deleteMemberFromUserGroup userGroupId = {}, memberId = {}", Encode.forJava(userGroupId), memberId);
         groupService.deleteMember(userGroupId, memberId.toString());
         log.trace("deleteMemberFromUserGroup end");
     }
@@ -217,7 +218,7 @@ public class UserGroupController {
                                            @RequestParam(value = "institutionId") String institutionId,
                                            @RequestParam(value = "productId") String productId) {
         log.trace("deleteMemberFromUserGroups start");
-        log.debug("deleteMemberFromUserGroups memberId = {}, institutionId = {}, productId = {}", memberId, institutionId, productId);
+        log.debug("deleteMemberFromUserGroups memberId = {}, institutionId = {}, productId = {}", memberId, Encode.forJava(institutionId), Encode.forJava(productId));
         groupService.deleteMembers(memberId.toString(), institutionId, productId);
         log.trace("deleteMemberFromUserGroups end");
     }
