@@ -18,7 +18,7 @@ module "container_app_user_group" {
   container_app                  = var.container_app
   container_app_name             = "user-group"
   container_app_environment_name = local.container_app_environment_name
-  image_name                     = "selfcare-ms-user-group"
+  image_name                     = "selfcare-user-group-ms"
   image_tag                      = var.image_tag
   app_settings                   = var.app_settings
   secrets_names                  = var.secrets_names
