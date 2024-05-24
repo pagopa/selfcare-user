@@ -8,6 +8,7 @@ import it.pagopa.selfcare.user_group.connector.exception.ResourceUpdateException
 import it.pagopa.selfcare.user_group.connector.model.UserGroupFilter;
 import it.pagopa.selfcare.user_group.connector.model.UserGroupStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -58,7 +59,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void addMember(String id, UUID memberId) {
         log.trace("addMember start");
-        log.debug("addMember id = {}, memberId ={}", id, memberId);
+        log.debug("addMember id = {}, memberId ={}", Encode.forJava(id), memberId);
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         Assert.notNull(memberId, MEMBER_ID_REQUIRED);
         UserGroupOperations foundGroup = groupConnector.findById(id).orElseThrow(ResourceNotFoundException::new);
@@ -72,7 +73,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void deleteMember(String groupId, String memberId) {
         log.trace("deleteMember start");
-        log.debug("deleteMember groupId = {}, memberId = {}", groupId, memberId);
+        log.debug("deleteMember groupId = {}, memberId = {}", Encode.forJava(groupId), Encode.forJava(memberId));
         Assert.hasText(groupId, USER_GROUP_ID_REQUIRED_MESSAGE);
         Assert.hasText(memberId, MEMBER_ID_REQUIRED);
         UserGroupOperations foundGroup = groupConnector.findById(groupId).orElseThrow(ResourceNotFoundException::new);
@@ -86,7 +87,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void deleteMembers(String memberId, String institutionId, String productId) {
         log.trace("deleteMembers start");
-        log.debug("deleteMembers memberId = {}, institutionId = {}, productId= {}", memberId, institutionId, productId);
+        log.debug("deleteMembers memberId = {}, institutionId = {}, productId= {}", Encode.forJava(memberId), Encode.forJava(institutionId), Encode.forJava(productId));
         Assert.hasText(memberId, MEMBER_ID_REQUIRED);
         Assert.hasText(institutionId, "A institution id is required");
         Assert.hasText(productId, "A product id is required");
@@ -125,7 +126,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void deleteGroup(String id) {
         log.trace("deleteGroup start");
-        log.debug("deleteGroup id = {}", id);
+        log.debug("deleteGroup id = {}", Encode.forJava(id));
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         groupConnector.deleteById(id);
         log.trace("deleteProduct end");
@@ -134,7 +135,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void suspendGroup(String id) {
         log.trace("suspendGroup start");
-        log.debug("suspendGroup id = {}", id);
+        log.debug("suspendGroup id = {}", Encode.forJava(id));
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         groupConnector.suspendById(id);
         log.trace("suspendGroup end");
@@ -143,7 +144,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public void activateGroup(String id) {
         log.trace("activateGroup start");
-        log.debug("activateGroup id = {}", id);
+        log.debug("activateGroup id = {}", Encode.forJava(id));
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         groupConnector.activateById(id);
         log.trace("activateGroup end");
@@ -152,7 +153,7 @@ class UserGroupServiceImpl implements UserGroupService {
     @Override
     public UserGroupOperations updateGroup(String id, UserGroupOperations group) {
         log.trace("updateGroup start");
-        log.debug("updateGroup id = {}, group = {}", id, group);
+        log.debug("updateGroup id = {}, group = {}", Encode.forJava(id), group);
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         Assert.notNull(group, "A user group is required");
         UserGroupOperations foundGroup = groupConnector.findById(id).orElseThrow(ResourceNotFoundException::new);
