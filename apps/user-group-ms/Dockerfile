@@ -12,7 +12,7 @@ COPY --link ./apps/pom.xml .
 
 WORKDIR /src/apps/user-group-ms
 COPY --link ./apps/user-group-ms/pom.xml .
-COPY ./apps/user-group-ms/src/main/ ./src/main/
+COPY ./apps/user-group-ms/ ./
 
 RUN echo "<settings>\n" \
          "<servers>\n" \
