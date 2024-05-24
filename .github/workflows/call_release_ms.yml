@@ -47,13 +47,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
         with:
-          images: ghcr.io/selfcare-${{ inputs.module }}
+          images: ghcr.io/pagopa/selfcare-${{ inputs.module }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=sha
           labels:
-            org.opencontainers.image.title=selfcare-${{ inputs.module }}
+            org.opencontainers.image.title=pagopa/selfcare-${{ inputs.module }}
             org.opencontainers.image.description=SelfCare ${{ inputs.module }} microservice
             org.opencontainers.image.authors=PagoPA
             org.opencontainers.image.url=github.com/pagopa/${{ github.repository }}
