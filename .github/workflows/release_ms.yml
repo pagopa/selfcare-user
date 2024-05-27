@@ -31,6 +31,7 @@ jobs:
     with:
       environment: dev
       tf_environment: dev
+      module: user-ms
 
   release_uat:
     uses: ./.github/workflows/call_release_ms.yml
@@ -40,6 +41,7 @@ jobs:
     with:
       environment: uat
       tf_environment: uat
+      module: user-ms
 
   release_prod:
     uses: ./.github/workflows/call_release_ms.yml
@@ -49,6 +51,7 @@ jobs:
     with:
       environment: prod
       tf_environment: prod
+      module: user-ms
 
   promote_release:
     name: 'Promote prerelase release'

@@ -1,0 +1,64 @@
+name: Deploy user-group-ms
+
+on:
+  push:
+    branches:
+      - main
+      - releases/*
+    paths:
+      - "apps/user-group-ms/**"
+      - "infra/container_apps/user-group-ms/**"
+      - "apps/pom.xml"
+      - "pom.xml"
+  
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options: 
+        - dev
+        - uat
+        - prod
+
+jobs:
+
+  release_dev:
+    uses: ./.github/workflows/call_release_ms.yml
+    name: '[Dev] User Group ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
+    secrets: inherit
+    with:
+      environment: dev
+      tf_environment: dev
+      module: user-group-ms
+
+  release_uat:
+    uses: ./.github/workflows/call_release_ms.yml
+    name: '[UAT] User Group ms Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat
+      module: user-group-ms
+
+  release_prod:
+    uses: ./.github/workflows/call_release_ms.yml
+    name: '[Prod] User Group ms Release'
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod
+      module: user-group-ms
+
+  promote_release:
+    name: 'Promote prerelase release'
+    runs-on: ubuntu-20.04
+    needs: [release_prod]
+    steps:
+      - uses:  pagopa/selfcare-commons/github-actions-template/promote-release@main
+        with:
+          github_path_token: ${{ secrets.GH_PAT_VARIABLES }}
+          release_version: ${{ vars.CURRENT_UAT_VERSION }}
