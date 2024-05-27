@@ -100,20 +100,27 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
         if (roleLabels.size() > 1) {
-            String roleLabel = "no_role_found";
+            List<String> roleLabel = new ArrayList<>();
 
             if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
                 roleLabel = product.getRoleMappings().values().stream()
                         .filter(productRoleInfo -> !CollectionUtils.isNullOrEmpty(productRoleInfo.getRoles()))
-                        .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream())
-                        .filter(productRole -> roleLabels.contains(productRole.getCode()))
+                        .flatMap(productRoleInfo -> productRoleInfo.getRoles().stream()
+                                .filter(productRole -> roleLabels.contains(productRole.getCode())))
                         .map(ProductRole::getLabel)
-                        .limit(roleLabels.size() - 1L)
-                        .collect(Collectors.joining(", "));
+                        .toList();
             }
 
-            dataModel.put("productRoles", roleLabel);
-            dataModel.put("lastProductRole", roleLabels.get(roleLabels.size() - 1));
+            if(CollectionUtils.isNullOrEmpty(roleLabel)) {
+                roleLabel = List.of("no_role_found");
+            }
+
+            dataModel.put("productRoles", roleLabel.stream().limit(roleLabels.size() - 1L)
+                    .collect(Collectors.joining(", ")));
+            if(roleLabel.size() > 1) {
+                dataModel.put("lastProductRole", roleLabel.get(roleLabel.size() - 1));
+            }
+
         } else {
             String roleLabel = "no_role_found";
             if (CollectionUtils.isNotEmpty(product.getRoleMappings())) {
