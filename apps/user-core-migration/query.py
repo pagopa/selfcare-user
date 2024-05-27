@@ -34,13 +34,19 @@ def get_delegations(page, size):
     return [
         {
             '$match': {
-                'toTaxCode': {
-                    '$exists': False
-                },
-                'fromTaxCode': {
-                    '$exists': False
-                }
+                '$or': [
+                    {
+                        'toTaxCode': {
+                            '$exists': False
+                        }
+                    }, {
+                        'fromTaxCode': {
+                            '$exists': False
+                        }
+                    }
+                ]
             }
+
         },
         *paging(page, size)
     ]
