@@ -18,6 +18,6 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         log.trace("hasPermission start");
         log.debug("check permission {} for userId: {}, institutionId: {} and productId: {}", permission, userId, institutionId, productId);
 
-        return userInstitutionService.checkExistsValidUserProduct(userId, institutionId, productId, permission);
+        return userInstitutionService.existsValidUserProduct(userId, institutionId, productId, permission);
     }
 }

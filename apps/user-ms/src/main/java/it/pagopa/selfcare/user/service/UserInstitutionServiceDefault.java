@@ -187,7 +187,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Boolean> checkExistsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission) {
+    public Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission) {
 
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         OnboardedProductFilter.OnboardedProductFilterBuilder builder = OnboardedProductFilter.builder().productId(productId).status(List.of(ACTIVE, PENDING, TOBEVALIDATED));

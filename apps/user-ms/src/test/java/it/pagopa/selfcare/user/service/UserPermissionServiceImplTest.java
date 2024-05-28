@@ -40,7 +40,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.checkExistsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ANY))
                 .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
@@ -58,7 +58,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.checkExistsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
                 .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(null, productId, PermissionTypeEnum.ANY, userId);
@@ -76,7 +76,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.MANAGER);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.checkExistsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
                 .thenReturn(Uni.createFrom().item(true));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
@@ -94,7 +94,7 @@ public class UserPermissionServiceImplTest {
         product.setRole(PartyRole.OPERATOR);
         product.setProductId(productId);
         userInstitution.setProducts(Collections.singletonList(product));
-        Mockito.when(userInstitutionService.checkExistsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
+        Mockito.when(userInstitutionService.existsValidUserProduct(userId, institutionId, productId, PermissionTypeEnum.ADMIN))
                 .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ADMIN, userId);
@@ -107,7 +107,7 @@ public class UserPermissionServiceImplTest {
     @Test
     public void testHasPermissionWithUserNotFound() {
         // Arrange
-        Mockito.when(userInstitutionService.checkExistsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
+        Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
                 .thenReturn(Uni.createFrom().item(false));
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(institutionId, productId, PermissionTypeEnum.ANY, userId);
