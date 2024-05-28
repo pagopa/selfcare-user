@@ -24,28 +24,31 @@ on:
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/call_release_cdc.yml
+    uses: ./.github/workflows/call_release_ms.yml
     name: '[Dev] PNPG User-cdc ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: dev
       tf_environment: dev-pnpg
+      module: user-cdc
 
   release_uat:
-    uses: ./.github/workflows/call_release_cdc.yml
+    uses: ./.github/workflows/call_release_ms.yml
     name: '[UAT] PNPG User-cdc ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
       environment: uat
       tf_environment: uat-pnpg
+      module: user-cdc
 
   release_prod:
-    uses: ./.github/workflows/call_release_cdc.yml
+    uses: ./.github/workflows/call_release_ms.yml
     name: '[Prod] PNPG User-cdc ms Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
       environment: prod
       tf_environment: prod-pnpg
+      module: user-cdc
