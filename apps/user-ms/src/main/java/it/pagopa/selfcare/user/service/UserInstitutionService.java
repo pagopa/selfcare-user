@@ -39,4 +39,7 @@ public interface UserInstitutionService {
     Uni<UserInstitution> persistOrUpdate(UserInstitution userInstitution);
 
     Uni<Boolean> existsValidUserProduct(String userId, String institutionId, String productId, PermissionTypeEnum permission);
+
+    Uni<Long> updateInstitutionDescription(String institutionId, String institutionDescription);
+
 }

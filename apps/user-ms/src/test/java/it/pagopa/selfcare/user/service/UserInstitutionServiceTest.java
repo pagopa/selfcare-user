@@ -28,12 +28,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -547,6 +550,19 @@ class UserInstitutionServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         UserInstitution actual = subscriber.assertCompleted().awaitItem().getItem();
         Assertions.assertNull(actual);
+    }
+
+    @Test
+    void updateInstitutionDescription() {
+        final String institutionId = "institutionId";
+        String description = "description";
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class))).thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateInstitutionDescription(institutionId, description)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
     }
 
     private UserInstitution createDummyUserInstitution() {

@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.QueueEvent;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -517,6 +518,13 @@ public class UserServiceImpl implements UserService {
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                                 .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+    }
+
+    @Override
+    public Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto) {
+        return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto.getInstitutionDescription())
+                .onFailure().invoke(exception -> log.error("Error during update institution description on UserInstitution: {} ", exception.getMessage(), exception))
+                .replaceWithVoid();
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {

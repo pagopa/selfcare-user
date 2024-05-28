@@ -22,7 +22,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.constant.OnboardedProductState.*;
@@ -199,6 +202,16 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Document query = queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION);
 
         return runUserInstitutionCountQuery(query);
+    }
+
+    @Override
+    public Uni<Long> updateInstitutionDescription(String institutionId, String institutionDescription) {
+        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.institutionDescription.name() , institutionDescription);
+        Map<String, Object> filterMap = Map.of(UserInstitution.Fields.institutionId.name(), institutionId);
+
+        return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
+                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+
     }
 
 

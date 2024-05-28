@@ -35,10 +35,38 @@ paths:
             application/json:
               schema:
                 type: boolean
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /institutions/{institutionId}:
+    put:
+      tags:
+      - Institution Controller
+      summary: "The API updates the description in all occurrences of userInstitution,\
+        \ given a certain institutionId."
+      parameters:
+      - name: institutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDescriptionDto'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/products/{productId}/createdAt:
@@ -74,10 +102,10 @@ paths:
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/user-institutions:
@@ -128,10 +156,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/users:
@@ -154,10 +182,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserProductResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users:
@@ -220,10 +248,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
     post:
@@ -243,10 +271,10 @@ paths:
             application/json:
               schema:
                 type: string
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/emails:
@@ -274,10 +302,10 @@ paths:
                 type: array
                 items:
                   type: string
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/ids:
@@ -301,10 +329,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserInstitutionResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/notification:
@@ -336,10 +364,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UsersNotificationResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/search:
@@ -364,10 +392,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDetailResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}:
@@ -396,10 +424,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/details:
@@ -429,10 +457,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDetailResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/institution/{institutionId}/product/{productId}/status:
@@ -468,10 +496,10 @@ paths:
       responses:
         "204":
           description: No Content
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/status:
@@ -511,10 +539,10 @@ paths:
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{id}/user-registry:
@@ -543,10 +571,10 @@ paths:
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}:
@@ -571,10 +599,10 @@ paths:
           description: OK
           content:
             application/json: {}
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institution/{institutionId}:
@@ -635,10 +663,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserDataResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institutions:
@@ -669,10 +697,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserInfoResponse'
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /users/{userId}/institutions/{institutionId}/products/{productId}:
@@ -699,10 +727,10 @@ paths:
       responses:
         "204":
           description: No Content
-        "403":
-          description: Not Allowed
         "401":
           description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
 components:
@@ -856,6 +884,14 @@ components:
       type: object
       properties:
         fiscalCode:
+          type: string
+    UpdateDescriptionDto:
+      required:
+      - institutionDescription
+      type: object
+      properties:
+        institutionDescription:
+          minLength: 1
           type: string
     UpdateUserRequest:
       required:
