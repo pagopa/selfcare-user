@@ -18,8 +18,32 @@ def paging(page, size):
 
 
 def user_institution_from_user_query(page, size):
+    date = "2024-04-19T00:00:00Z"
     return [
         *paging(page, size),
+        {
+            '$match': {
+                '$or': [
+                    {
+                        'createdAt': {
+                            '$gt': date
+                        }
+                    }, {
+                        'updatedAt': {
+                            '$gt': date
+                        }
+                    }, {
+                        'bindings.products.updatedAt': {
+                            '$gt': date
+                        }
+                    }, {
+                        'bindings.products.createdAt': {
+                            '$gt': date
+                        }
+                    }
+                ]
+            }
+        },
         {
             '$unwind': {
                 'path': '$bindings'

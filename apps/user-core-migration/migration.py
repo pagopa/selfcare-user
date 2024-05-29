@@ -24,6 +24,7 @@ def migrate_user_institution(client):
     user_size = client[CORE_DB][USER_COLLECTION].count_documents({})
     print(USER_COLLECTION + " size: " + str(user_size))
     pages = math.ceil(user_size / BATCH_SIZE)
+    count = 0
 
     for page in range(START_PAGE, pages):
         print("Start page " + str(page) + "/" + str(pages))
@@ -45,8 +46,10 @@ def migrate_user_institution(client):
                 {"userId": user.get('userId'), "institutionId": user.get('institutionId')},
                 {"$set": set_dict},
                 True)
+            count += 1
 
         print("End page " + str(page) + "/" + str(pages))
+        print("Total migrated: " + str(count))
 
 
 def generate_user_info(client):
