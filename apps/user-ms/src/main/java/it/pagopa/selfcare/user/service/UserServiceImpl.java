@@ -38,6 +38,7 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.owasp.encoder.Encode;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.LocalDateTime;
@@ -523,7 +524,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto) {
         return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
-                .onFailure().invoke(exception -> log.error("Error during update institution description with id {} on UserInstitution: {} ", institutionId, exception.getMessage(), exception))
+                .onFailure().invoke(exception -> log.error("Error during update institution description with id {} on UserInstitution: {} ",
+                        Encode.forJava(institutionId) , exception.getMessage(), exception))
                 .replaceWithVoid();
     }
 
