@@ -522,8 +522,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto) {
-        return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto.getInstitutionDescription())
-                .onFailure().invoke(exception -> log.error("Error during update institution description on UserInstitution: {} ", exception.getMessage(), exception))
+        return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
+                .onFailure().invoke(exception -> log.error("Error during update institution description with id {} on UserInstitution: {} ", institutionId, exception.getMessage(), exception))
                 .replaceWithVoid();
     }
 

@@ -893,6 +893,8 @@ components:
         institutionDescription:
           minLength: 1
           type: string
+        institutionRootName:
+          type: string
     UpdateUserRequest:
       required:
       - email

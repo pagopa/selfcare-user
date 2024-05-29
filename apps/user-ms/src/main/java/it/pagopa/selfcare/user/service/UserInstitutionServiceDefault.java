@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.constant.SelfCareRole;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -205,8 +206,15 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
-    public Uni<Long> updateInstitutionDescription(String institutionId, String institutionDescription) {
-        Map<String, Object> fieldToUpdateMap = Map.of(UserInstitution.Fields.institutionDescription.name() , institutionDescription);
+    public Uni<Long> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto) {
+
+        Map<String, Object> fieldToUpdateMap = new HashMap<>();
+        fieldToUpdateMap.put(UserInstitution.Fields.institutionDescription.name() , descriptionDto.getInstitutionDescription());
+
+        if(Objects.nonNull(descriptionDto.getInstitutionRootName())) {
+            fieldToUpdateMap.put(UserInstitution.Fields.institutionRootName.name(), descriptionDto.getInstitutionRootName());
+        }
+
         Map<String, Object> filterMap = Map.of(UserInstitution.Fields.institutionId.name(), institutionId);
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))

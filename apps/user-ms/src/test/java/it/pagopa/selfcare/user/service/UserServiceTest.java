@@ -1270,9 +1270,10 @@ class UserServiceTest {
         String institutionId = "institutionId";
         UpdateDescriptionDto descriptionDto = new UpdateDescriptionDto();
         descriptionDto.setInstitutionDescription("description");
+        descriptionDto.setInstitutionRootName("rootName");
 
         // Mock external dependencies
-        when(userInstitutionService.updateInstitutionDescription(any(), anyString())).thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.updateInstitutionDescription(any(), any())).thenReturn(Uni.createFrom().item(1L));
 
         // Call the method
         UniAssertSubscriber<Void> subscriber = userService
@@ -1284,7 +1285,7 @@ class UserServiceTest {
         subscriber.assertCompleted();
 
         // Verify the interactions
-        verify(userInstitutionService).updateInstitutionDescription(institutionId, descriptionDto.getInstitutionDescription());
+        verify(userInstitutionService).updateInstitutionDescription(institutionId, descriptionDto);
 
     }
 }

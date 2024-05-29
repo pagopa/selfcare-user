@@ -16,6 +16,7 @@ import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.OnboardedProductState;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
+import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -555,12 +556,31 @@ class UserInstitutionServiceTest {
     @Test
     void updateInstitutionDescription() {
         final String institutionId = "institutionId";
+        UpdateDescriptionDto updateDescriptionDto = new UpdateDescriptionDto();
         String description = "description";
+        String rootName = "rootName";
+        updateDescriptionDto.setInstitutionDescription(description);
+        updateDescriptionDto.setInstitutionRootName(rootName);
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class))).thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
-        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateInstitutionDescription(institutionId, description)
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void updateInstitutionDescription_noInstitutionRootName() {
+        final String institutionId = "institutionId";
+        UpdateDescriptionDto updateDescriptionDto = new UpdateDescriptionDto();
+        String description = "description";
+        updateDescriptionDto.setInstitutionDescription(description);
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        when(UserInstitution.update(any(Document.class))).thenReturn(update);
+        when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<Long> subscriber = userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(1L);
     }

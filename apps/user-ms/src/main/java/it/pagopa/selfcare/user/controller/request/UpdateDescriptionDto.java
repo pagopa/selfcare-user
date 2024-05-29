@@ -8,5 +8,6 @@ public class UpdateDescriptionDto {
 
     @NotEmpty(message = "institution's description is required")
     private String institutionDescription;
+    private String institutionRootName;
 
 }
