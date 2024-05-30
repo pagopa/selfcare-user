@@ -74,9 +74,7 @@ class UserServiceTest {
     @InjectMock
     private UserInfoService userInfoService;
 
-    @RestClient
-    @InjectMock
-    private UserApi userRegistryApi;
+    private UserRegistryService userRegistryApi;
 
     @InjectMock
     private UserMapper userMapper;

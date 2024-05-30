@@ -54,7 +54,19 @@ app_settings = [
   {
     name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
-  }
+  },
+    {
+      name  = "USER-MS-RETRY-MIN-BACKOFF"
+      value = 10
+    },
+    {
+      name  = "USER-MS-RETRY-MAX-BACKOFF"
+      value = 12
+    },
+    {
+      name  = "USER-MS-RETRY"
+      value = 3
+    }
 ]
 
 secrets_names = {

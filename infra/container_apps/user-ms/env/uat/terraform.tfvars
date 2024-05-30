@@ -46,6 +46,18 @@ app_settings = [
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
       value = "selc-u-product"
+    },
+    {
+    name  = "USER-MS-RETRY-MIN-BACKOFF"
+    value = 10
+    },
+    {
+    name  = "USER-MS-RETRY-MAX-BACKOFF"
+    value = 12
+    },
+    {
+    name  = "USER-MS-RETRY"
+    value = 3
     }
 
 ]

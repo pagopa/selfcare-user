@@ -57,6 +57,18 @@ app_settings = [
   {
     name  = "EVENT_HUB_BASE_PATH"
     value = "https://selc-p-eventhub-ns.servicebus.windows.net/sc-users"
+  },
+  {
+    name  = "USER-MS-RETRY-MIN-BACKOFF"
+    value = 10
+  },
+  {
+    name  = "USER-MS-RETRY-MAX-BACKOFF"
+    value = 12
+  },
+  {
+    name  = "USER-MS-RETRY"
+    value = 3
   }
 ]
 
