@@ -1,4 +1,4 @@
-name: Release user sdk
+name: Release SDK - user-sdk
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Deploy user ms
+name: Deploy SELC - user ms
 
 on:
   push:

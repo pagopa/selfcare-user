@@ -1,4 +1,4 @@
-name: Deploy PNPG user-cdc
+name: Deploy PNPG - user-cdc
 
 on:
   push:

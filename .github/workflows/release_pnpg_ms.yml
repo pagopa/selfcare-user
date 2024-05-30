@@ -1,4 +1,4 @@
-name: Deploy PNPG user ms
+name: Deploy PNPG - user-ms
 
 on:
   push:
