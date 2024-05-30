@@ -74,6 +74,7 @@ class UserServiceTest {
     @InjectMock
     private UserInfoService userInfoService;
 
+    @InjectMock
     private UserRegistryService userRegistryApi;
 
     @InjectMock

@@ -39,13 +39,13 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private final UserMapper userMapper;
 
     @ConfigProperty(name = "user-ms.retry.min-backoff")
-    Integer retryMinBackOff;
+    private Integer retryMinBackOff;
 
     @ConfigProperty(name = "user-ms.retry.max-backoff")
-    Integer retryMaxBackOff;
+    private Integer retryMaxBackOff;
 
     @ConfigProperty(name = "user-ms.retry")
-    Integer maxRetry;
+    private Integer maxRetry;
 
 
     @RestClient

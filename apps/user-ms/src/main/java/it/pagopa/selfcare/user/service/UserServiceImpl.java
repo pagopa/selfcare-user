@@ -59,7 +59,7 @@ import static it.pagopa.selfcare.user.util.UserUtils.VALID_USER_PRODUCT_STATES_F
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private UserRegistryService userRegistryService;
+    private final UserRegistryService userRegistryService;
 
     private final UserMapper userMapper;
     private final UserInstitutionMapper userInstitutionMapper;
