@@ -1,4 +1,4 @@
-name: Code Review container app infra
+name: Code Review - container app infra
 
 on:
   workflow_dispatch:

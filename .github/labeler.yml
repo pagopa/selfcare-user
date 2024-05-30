@@ -1,6 +1,12 @@
 user-ms:
   - changed-files:
       - any-glob-to-any-file: ['apps/user-ms/**']
+user-group-ms:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-group-ms/**']
+user-cdc:
+  - changed-files:
+      - any-glob-to-any-file: ['apps/user-cdc/**']
 
 libs:
   - changed-files:

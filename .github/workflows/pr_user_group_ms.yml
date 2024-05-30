@@ -1,4 +1,4 @@
-name: Code Review user-group-ms
+name: Code Review - user-group-ms
 
 on:
   workflow_dispatch:

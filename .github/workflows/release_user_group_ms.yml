@@ -1,4 +1,4 @@
-name: Deploy user-group-ms
+name: Deploy SELC - user-group-ms
 
 on:
   push:

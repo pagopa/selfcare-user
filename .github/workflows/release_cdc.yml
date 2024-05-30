@@ -1,4 +1,4 @@
-name: Deploy user-cdc
+name: Deploy SELC - user-cdc
 
 on:
   push:

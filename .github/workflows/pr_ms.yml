@@ -1,4 +1,4 @@
-name: Code Review user-ms
+name: Code Review - user-ms
 
 on:
   workflow_dispatch:
