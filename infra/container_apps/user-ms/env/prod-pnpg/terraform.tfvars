@@ -54,6 +54,18 @@ app_settings = [
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "USER_MS_RETRY_MIN_BACKOFF"
+    value = 5
+  },
+  {
+    name  = "USER_MS_RETRY_MAX_BACKOFF"
+    value = 60
+  },
+  {
+    name  = "USER_MS_RETRY"
+    value = 3
   }
 ]
 

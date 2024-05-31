@@ -53,6 +53,18 @@ app_settings = [
  {
    name  = "USER_MS_EVENTHUB_USERS_ENABLED"
    value = true
+ },
+ {
+   name  = "USER_MS_RETRY_MIN_BACKOFF"
+   value = 5
+ },
+ {
+   name  = "USER_MS_RETRY_MAX_BACKOFF"
+   value = 60
+ },
+ {
+   name  = "USER_MS_RETRY"
+   value = 3
  }
 ]
 
