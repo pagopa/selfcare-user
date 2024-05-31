@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user.model.notification.UserNotificationToSend;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.*;
@@ -55,25 +57,35 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     @Override
     public Uni<UserResource> findByIdUsingGET(String fl, String id) {
         return userRegistryApi.findByIdUsingGET(fl, id)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry);
+                .onFailure(this::checkIfIsRetryableException)
+                    .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+
     }
 
     @Override
     public Uni<UserId> saveUsingPATCH(SaveUserDto saveUserDto) {
         return userRegistryApi.saveUsingPATCH(saveUserDto)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry);
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
     }
 
     @Override
     public Uni<UserResource> searchUsingPOST(String fl, UserSearchDto userSearchDto) {
         return userRegistryApi.searchUsingPOST(fl, userSearchDto)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry);
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
     }
 
     @Override
     public Uni<Response> updateUsingPATCH(String id, MutableUserFieldsDto mutableUserFieldsDto) {
         return userRegistryApi.updateUsingPATCH(id, mutableUserFieldsDto)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry);
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry);
+    }
+
+    private boolean checkIfIsRetryableException(Throwable throwable) {
+        return throwable instanceof TimeoutException ||
+                (throwable instanceof WebApplicationException webApplicationException && webApplicationException.getResponse().getStatus() == 429);
     }
 
 

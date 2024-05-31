@@ -49,15 +49,15 @@ app_settings = [
       value = "selc-u-product"
     },
     {
-    name  = "USER-MS-RETRY-MIN-BACKOFF"
-    value = 10
+    name  = "USER_MS_RETRY_MIN_BACKOFF"
+    value = 5
     },
     {
-    name  = "USER-MS-RETRY-MAX-BACKOFF"
-    value = 12
+    name  = "USER_MS_RETRY_MAX_BACKOFF"
+    value = 60
     },
     {
-    name  = "USER-MS-RETRY"
+    name  = "USER_MS_RETRY"
     value = 3
     }
 ]
