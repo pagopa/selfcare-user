@@ -56,3 +56,42 @@ and usage of a couple of lesser known command line switches.
 | Print dependencies of `user-sdk`                                                             |   `./apps/user-ms`   | `mvn dependency:list`                                                           |
 | Change version  of `user-sdk`                                                                |         `.`          | `mvn versions:set -DnewVersion=0.1.2 --projects :user-sdk-pom  `                |
 | Persist version  of `user-sdk`                                                               |         `.`          | `mvn versions:commit   `                                                        |
+
+## Environment Variables
+
+| **Environment Variable**                | **Default** | **Required** |
+|-----------------------------------------|-------------|:------------:|
+| JWT-PUBLIC-KEY                          |             |     yes      |
+| EVENT_HUB_BASE_PATH                     |             |     yes      |
+| SHARED_ACCESS_KEY_NAME                  |             |     yes      |
+| EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC    |             |     yes      |
+| USER_MS_EVENTHUB_USERS_ENABLED          |             |     yes      |
+| MONGODB-CONNECTION-STRING               |             |     yes      |
+| STORAGE_CONTAINER_PRODUCT               |             |     yes      |
+| BLOB-STORAGE-PRODUCT-CONNECTION-STRING  |             |     yes      |
+| STORAGE_CONTAINER_TEMPLATES             |             |     yes      |
+| SUSER-REGISTRY-API-KEY                  |             |     yes      |
+| USER_REGISTRY_URL                       |             |     yes      |
+| MAIL_SUBJECT_PREFIX                     |             |     yes      |
+| ENV_TARGET                              |             |     yes      |
+| NO_REPLY_MAIL                           |             |     yes      |
+| AWS_SES_ACCESS_KEY_ID                   |             |     yes      |
+| AWS_SES_SECRET_ACCESS_KEY               |             |     yes      |
+| AWS_SES_REGION                          |             |     yes      |
+| NO_REPLY_MAIL                           |             |     yes      |
+| USER_MS_RETRY_MIN_BACKOFF               | 5           |     yes      |
+| USER_MS_RETRY_MAX_BACKOFF               | 60          |     yes      |
+| USER_MS_RETRY                           | 3           |     yes      |
+
+## Invio messaggi su EventHub
+
+I messaggi tramite EventHub vengono inviati nelle seguenti casistiche:
+- Creazione nuovo utente o assegnazione nuovo ruolo ad utente già censito
+- Modifica dati utente già censito (nome, cognome, mail)
+- Aggiornamento stato di un prodotto prodotto associato all'utente
+
+Per effettuare test in locale di funzionalità che prevedono l'invio di messaggi al topic SC-User è necessario che le seguenti variabili d'ambiente
+siano valorizzate con i valori corrispondenti all'ambiente verso il quale si vuole inviare i messaggi:
+- EVENT_HUB_BASE_PATH
+- SHARED_ACCESS_KEY_NAME
+- EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC
