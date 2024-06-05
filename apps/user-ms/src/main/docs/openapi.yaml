@@ -831,6 +831,7 @@ components:
       - DELEGATE
       - SUB_DELEGATE
       - OPERATOR
+      - ADMIN_EA
       type: string
     PermissionTypeEnum:
       enum:
@@ -855,6 +856,8 @@ components:
           type: array
           items:
             type: string
+        delegationId:
+          type: string
     Product1:
       required:
       - productId
