@@ -24,34 +24,43 @@ on:
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/call_release_ms.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: '[Dev] User Group ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
       environment: dev
       tf_environment: dev
-      module: user-group-ms
+      dir: 'infra/container_apps/user-group-ms'
+      dockerfile_path: ./apps/user-group-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-ms
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   release_uat:
-    uses: ./.github/workflows/call_release_ms.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: '[UAT] User Group ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
       environment: uat
       tf_environment: uat
-      module: user-group-ms
+      dir: 'infra/container_apps/user-group-ms'
+      dockerfile_path: ./apps/user-group-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-ms
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   release_prod:
-    uses: ./.github/workflows/call_release_ms.yml
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: '[Prod] User Group ms Release'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
       environment: prod
       tf_environment: prod
-      module: user-group-ms
+      dir: 'infra/container_apps/user-group-ms'
+      dockerfile_path: ./apps/user-group-ms/Dockerfile
+      docker_image_name: pagopa/selfcare-user-group-ms
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   promote_release:
     name: 'Promote prerelase release'
