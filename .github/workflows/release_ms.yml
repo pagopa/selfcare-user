@@ -32,7 +32,7 @@ jobs:
       environment: dev
       tf_environment: dev
       dir: 'infra/container_apps/user-ms'
-      docker_file: ./apps/user-ms/Dockerfile
+      dockerfile_path: ./apps/user-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-ms
 
   release_uat:
