@@ -24,7 +24,7 @@ on:
 jobs:
 
   release_dev:
-    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@SELC-5009
     name: '[Dev] User Group ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
