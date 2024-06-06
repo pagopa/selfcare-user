@@ -484,7 +484,7 @@ class UserServiceTest {
         Assert.assertNotNull(actual);
         assertEquals(1, actual.size());
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
-        assertEquals(MANAGER, actual.get(0).getProducts().get(0).getRole());
+        assertEquals(MANAGER.name(), actual.get(0).getProducts().get(0).getRole());
     }
 
     @Test
