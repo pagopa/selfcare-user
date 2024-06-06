@@ -24,7 +24,7 @@ on:
 jobs:
 
   release_dev:
-    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@SELC-5009
+    uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
     name: '[Dev] User Group ms Release'
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
@@ -34,7 +34,7 @@ jobs:
       dir: 'infra/container_apps/user-group-ms'
       dockerfile_path: ./apps/user-group-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-group-ms
-      path_openapi_docs: ./apps/user-group-ms/app/src/main/resources/swagger/api-docs.json
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -47,6 +47,7 @@ jobs:
       dir: 'infra/container_apps/user-group-ms'
       dockerfile_path: ./apps/user-group-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-group-ms
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -59,6 +60,7 @@ jobs:
       dir: 'infra/container_apps/user-group-ms'
       dockerfile_path: ./apps/user-group-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-group-ms
+      path_openapi_docs: ./apps/user-group-ms/app/src/main/docs/openapi.json
 
   promote_release:
     name: 'Promote prerelase release'

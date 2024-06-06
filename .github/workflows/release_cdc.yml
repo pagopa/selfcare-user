@@ -34,6 +34,7 @@ jobs:
       dir: 'infra/container_apps/user-cdc'
       dockerfile_path: ./apps/user-cdc/Dockerfile
       docker_image_name: pagopa/selfcare-user-cdc
+      upload_openapi_enabled: false
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -46,6 +47,7 @@ jobs:
       dir: 'infra/container_apps/user-cdc'
       dockerfile_path: ./apps/user-cdc/Dockerfile
       docker_image_name: pagopa/selfcare-user-cdc
+      upload_openapi_enabled: false
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -58,3 +60,4 @@ jobs:
       dir: 'infra/container_apps/user-cdc'
       dockerfile_path: ./apps/user-cdc/Dockerfile
       docker_image_name: pagopa/selfcare-user-cdc
+      upload_openapi_enabled: false
