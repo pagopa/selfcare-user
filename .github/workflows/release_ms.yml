@@ -34,7 +34,7 @@ jobs:
       dir: 'infra/container_apps/user-ms'
       dockerfile_path: ./apps/user-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-ms
-      path_openapi_docs: ./apps/user-ms/src/main/docs/openapi.json
+      path_openapi_docs: ./apps/user-group/app/src/main/resources/swagger/api-docs.json
 
   release_uat:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
