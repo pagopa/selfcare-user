@@ -34,7 +34,8 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping(value = "/user-groups/v1", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "user-group")
+@Api(tags = "UserGroup")
+@Deprecated
 public class UserGroupController {
 
     private final UserGroupService groupService;
@@ -165,8 +166,6 @@ public class UserGroupController {
         return groupResource;
     }
 
-
-    @Tags({@Tag(name = "user-group"), @Tag(name = "support"), @Tag(name = "external-v2")})
     @GetMapping(value = "/")
     @ResponseStatus(HttpStatus.OK)
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.getUserGroups}")
