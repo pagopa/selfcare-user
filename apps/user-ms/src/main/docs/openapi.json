@@ -586,7 +586,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "external-v2" ],
+        "tags" : [ "User", "external-v2" ],
         "summary" : "Retrieves user given userId and optional ProductId",
         "parameters" : [ {
           "name" : "id",
