@@ -28,11 +28,11 @@ public class EventhubSasTokenAuthorization implements ClientRequestFilter {
     }
     @Override
     public void filter(ClientRequestContext clientRequestContext) throws IOException {
-        clientRequestContext.getHeaders().add("Authorization", GetSASToken(resourceUri.toString(), keyName, key));
+        clientRequestContext.getHeaders().add("Authorization", getSASToken(resourceUri.toString(), keyName, key));
 
     }
 
-    private static String GetSASToken(String resourceUri, String keyName, String key) {
+    private static String getSASToken(String resourceUri, String keyName, String key) {
         long epoch = System.currentTimeMillis() / 1000L;
         int week = 60 * 60 * 24 * 7;
         String expiry = Long.toString(epoch + week);
