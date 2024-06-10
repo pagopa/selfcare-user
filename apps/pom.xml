@@ -28,6 +28,11 @@
       <artifactId>onboarding-sdk-product</artifactId>
       <version>0.1.9</version>
     </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>user-sdk-event</artifactId>
+      <version>0.0.1</version>
+    </dependency>
   </dependencies>
 
   <profiles>

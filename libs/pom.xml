@@ -17,6 +17,7 @@
     </properties>
 
     <modules>
+        <module>user-sdk-event</module>
     </modules>
 
 
