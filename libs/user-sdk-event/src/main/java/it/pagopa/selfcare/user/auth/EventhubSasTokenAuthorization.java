@@ -2,7 +2,6 @@ package it.pagopa.selfcare.user.auth;
 
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,9 +19,9 @@ public class EventhubSasTokenAuthorization implements ClientRequestFilter {
     private final String keyName;
     private final String key;
 
-    public EventhubSasTokenAuthorization(@ConfigProperty(name = "rest-client.event-hub.uri") URI resourceUri,
-                                         @ConfigProperty(name = "eventhub.rest-client.keyName") String keyName,
-                                         @ConfigProperty(name = "eventhub.rest-client.key") String key) {
+    public EventhubSasTokenAuthorization(URI resourceUri,
+                                         String keyName,
+                                         String key) {
         this.resourceUri = resourceUri;
         this.keyName = keyName;
         this.key = key;
