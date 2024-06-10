@@ -15,6 +15,8 @@
     "name" : "User"
   }, {
     "name" : "external-v2"
+  }, {
+    "name" : "support"
   } ],
   "paths" : {
     "/authorize" : {
@@ -241,7 +243,7 @@
     },
     "/institutions/{institutionId}/users" : {
       "get" : {
-        "tags" : [ "Institution Controller" ],
+        "tags" : [ "support" ],
         "summary" : "The API retrieves user's info including details of roles on products",
         "parameters" : [ {
           "name" : "institutionId",
@@ -586,7 +588,7 @@
     },
     "/users/{id}" : {
       "get" : {
-        "tags" : [ "User", "external-v2" ],
+        "tags" : [ "User", "external-v2", "support" ],
         "summary" : "Retrieves user given userId and optional ProductId",
         "parameters" : [ {
           "name" : "id",

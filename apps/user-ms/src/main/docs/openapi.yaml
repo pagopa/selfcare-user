@@ -11,6 +11,7 @@ servers:
 tags:
 - name: User
 - name: external-v2
+- name: support
 paths:
   /authorize:
     get:
@@ -168,7 +169,7 @@ paths:
   /institutions/{institutionId}/users:
     get:
       tags:
-      - Institution Controller
+      - support
       summary: The API retrieves user's info including details of roles on products
       parameters:
       - name: institutionId
@@ -406,6 +407,7 @@ paths:
       tags:
       - User
       - external-v2
+      - support
       summary: Retrieves user given userId and optional ProductId
       parameters:
       - name: id
