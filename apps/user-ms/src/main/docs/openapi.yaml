@@ -1094,9 +1094,7 @@ components:
         email:
           type: string
         role:
-          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
-            \ ADMIN_EA"
-          type: string
+          $ref: "#/components/schemas/PartyRole"
         productRole:
           type: string
         relationshipStatus:
