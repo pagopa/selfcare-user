@@ -9,6 +9,7 @@ servers:
 - url: http://0.0.0.0:8080
   description: Auto generated value
 tags:
+- name: Institution
 - name: User
 - name: external-v2
 - name: support
@@ -48,7 +49,7 @@ paths:
   /institutions/{institutionId}:
     put:
       tags:
-      - Institution Controller
+      - Institution
       summary: "The API updates the description in all occurrences of userInstitution,\
         \ given a certain institutionId."
       parameters:
@@ -76,7 +77,7 @@ paths:
   /institutions/{institutionId}/products/{productId}/createdAt:
     put:
       tags:
-      - Institution Controller
+      - Institution
       summary: The API updates user's onboarded product with createdAt passed in input
       parameters:
       - name: institutionId
@@ -115,7 +116,7 @@ paths:
   /institutions/{institutionId}/user-institutions:
     get:
       tags:
-      - Institution Controller
+      - Institution
       summary: The API retrieves users with optional filters in input as query params
       parameters:
       - name: institutionId
@@ -170,6 +171,7 @@ paths:
     get:
       tags:
       - support
+      - Institution
       summary: The API retrieves user's info including details of roles on products
       parameters:
       - name: institutionId

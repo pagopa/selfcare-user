@@ -22,6 +22,7 @@ import java.util.List;
 
 @Authenticated
 @Path("/institutions")
+@Tag(name = "Institution")
 @AllArgsConstructor
 public class InstitutionController {
 
@@ -31,6 +32,7 @@ public class InstitutionController {
     @GET
     @Path(value = "/{institutionId}/users")
     @Tag(name = "support")
+    @Tag(name = "Institution")
     @Produces(MediaType.APPLICATION_JSON)
     public Multi<UserProductResponse> getInstitutionUsers(@PathParam(value = "institutionId") String institutionId) {
         return userService.getUserProductsByInstitution(institutionId);
