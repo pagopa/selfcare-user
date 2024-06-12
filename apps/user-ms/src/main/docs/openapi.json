@@ -1522,7 +1522,8 @@
             "type" : "string"
           },
           "role" : {
-            "$ref" : "#/components/schemas/PartyRole"
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
           },
           "productRole" : {
             "type" : "string"
