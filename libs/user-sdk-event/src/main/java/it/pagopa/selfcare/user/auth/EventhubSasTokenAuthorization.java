@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.user.auth;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
@@ -15,7 +14,6 @@ import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-@ApplicationScoped
 public class EventhubSasTokenAuthorization implements ClientRequestFilter {
 
     @Inject
