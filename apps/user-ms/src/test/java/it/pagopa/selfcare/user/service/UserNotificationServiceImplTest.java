@@ -9,6 +9,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -19,6 +20,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -42,7 +44,8 @@ class UserNotificationServiceImplTest {
     private MailService mailService;
 
     @InjectMock
-    private EventhubService eventHubRestClient;
+    @RestClient
+    private EventHubRestClient eventHubRestClient;
 
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;

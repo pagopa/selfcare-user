@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -18,6 +19,7 @@ import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import software.amazon.awssdk.utils.CollectionUtils;
@@ -33,8 +35,12 @@ import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
+//    @Inject
+//    EventhubService eventHubRestClient;
+
     @Inject
-    EventhubService eventHubRestClient;
+    @RestClient
+    EventHubRestClient eventHubRestClient;
 
     private final MailService mailService;
     private final Configuration freemarkerConfig;
