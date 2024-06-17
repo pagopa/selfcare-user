@@ -519,6 +519,20 @@ public class UserServiceImpl implements UserService {
                 .replaceWithVoid();
     }
 
+    @Override
+    public Uni<Void> sendOldData(LocalDateTime fromDate, String institutionId, String userId) {
+        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutions(userId, institutionId, null, null, null, null);
+        return userInstitutions.onItem().transformToUniAndMerge(userInstitution -> {
+            Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
+            userInstitution.getProducts().forEach(onboardedProduct -> {
+                if (onboardedProduct.getCreatedAt().isAfter(fromDate)) {
+                    Uni<Multi<UserNotificationToSend>> map = userResourceUni.map(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE));
+                }
+            });
+            return null;
+        }).onItem().ignoreAsUni();
+    }
+
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
         if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
             userInstitution.getProducts().removeIf(product ->
@@ -559,4 +573,10 @@ public class UserServiceImpl implements UserService {
         return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), prepareNotificationData.getQueueEvent()))
                 .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
     }
+
+    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource, QueueEvent eventType){
+        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource, eventType))
+                .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
+    }
+
 }
