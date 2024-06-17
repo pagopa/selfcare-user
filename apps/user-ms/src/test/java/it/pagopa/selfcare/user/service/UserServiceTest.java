@@ -200,6 +200,28 @@ class UserServiceTest {
 
     }
 
+    @Test
+    void sendOldData(){
+        final String institutionId = "institutionId";
+        final String userId = "userId";
+        final LocalDateTime fromDate = LocalDateTime.now();
+        final UserInstitution userInstitution = createUserInstitution();
+        userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setCreatedAt(fromDate.plusDays(1)));
+        UserResource userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+
+        when(userInstitutionService.findUserInstitutionsAfterDateWithFilter(anyMap(), any())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .sendOldData(fromDate, institutionId, userId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+    }
+
 
     @Test
     void getUserProductsByInstitutionTest() {
