@@ -42,7 +42,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
@@ -522,20 +521,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<Void> sendOldData(LocalDateTime fromDate, String institutionId, String userId) {
-        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutions(userId, institutionId, null, null, null, null);
-        Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
-        return userResourceUni.onItem().transformToUni(userResource ->
-                userInstitutions.onItem().transformToMultiAndMerge(userInstitution -> {
-                    // Filter the products based on the fromDate
-                    List<OnboardedProduct> filteredProducts = userInstitution.getProducts().stream()
-                            .filter(onboardedProduct -> onboardedProduct.getCreatedAt().isAfter(fromDate))
-                            .collect(Collectors.toList());
-                    userInstitution.setProducts(filteredProducts);
+        Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate);
+        return userInstitutions
+                .onItem().transformToUniAndMerge(userInstitution -> {
+                    String userIdToUse = userId != null ? userId : userInstitution.getUserId();
+                    Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
 
-                    return Multi.createFrom().item(userInstitution)
-                            .onItem().transformToMultiAndMerge(userInstitution1 -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE));
-                }).collect().asList().replaceWithVoid()
-        );
+                    return userResourceUni
+                            .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE)
+                                    .collect().asList()
+                                    .replaceWithVoid())
+                            .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource", exception)).replaceWithNull();
+                })
+                .collect().asList()
+                .replaceWithVoid()
+                .onFailure().invoke(exception -> log.error("Failed to process sendOldData", exception)).replaceWithVoid();
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
@@ -554,6 +554,13 @@ public class UserServiceImpl implements UserService {
         var prodFilter = OnboardedProductFilter.builder().role(roles).status(states).productRole(productRoles).productId(products).build().constructMap();
         var queryParam = userUtils.retrieveMapForFilter(institutionFilters, prodFilter);
         return userInstitutionService.findAllWithFilter(queryParam);
+    }
+
+    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, LocalDateTime fromDate){
+        var institutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).userId(userId).build().constructMap();
+        var productFilter = OnboardedProductFilter.builder().build().constructMap();
+        var queryParam = userUtils.retrieveMapForFilter(institutionFilters, productFilter);
+        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
     }
 
     private Uni<UserInstitution> retrieveAdminUserInstitution(String institutionId, String userUuid) {

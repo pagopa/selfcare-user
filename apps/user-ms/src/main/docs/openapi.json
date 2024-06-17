@@ -79,6 +79,7 @@
         "parameters" : [ {
           "name" : "fromDate",
           "in" : "query",
+          "required" : true,
           "schema" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           }
@@ -98,8 +99,17 @@
         "responses" : {
           "201" : {
             "description" : "Created"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
           }
-        }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
       }
     },
     "/institutions/{institutionId}" : {

@@ -143,8 +143,7 @@ public class UserUtils {
     }
 
     private UserNotificationToSend constructUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, OnboardedProduct onboardedProduct) {
-        UserToNotify userToNotify = notificationMapper.toUserNotify(userResource, onboardedProduct, userInstitution.getUserId());
-        return notificationMapper.setNotificationDetailsFromOnboardedProduct(userToNotify, onboardedProduct, userInstitution.getInstitutionId());
+        return notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource);
     }
 
     /**

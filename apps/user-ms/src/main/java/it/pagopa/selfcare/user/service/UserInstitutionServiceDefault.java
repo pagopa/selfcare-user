@@ -157,6 +157,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
+    @Override
+    public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, LocalDateTime fromDate) {
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        return runUserInstitutionFindQuery(query, null).stream();
+
+    }
     private Uni<Long> updateUserStatusDao(Map<String, Object> filterMap, OnboardedProductState status) {
 
         Map<String, Object> fieldToUpdateMap = new HashMap<>();
