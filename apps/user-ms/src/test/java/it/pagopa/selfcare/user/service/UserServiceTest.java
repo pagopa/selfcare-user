@@ -222,6 +222,26 @@ class UserServiceTest {
         subscriber.assertCompleted();
     }
 
+    @Test
+    void sendOldData_noFilters(){
+        final LocalDateTime fromDate = LocalDateTime.now();
+        final UserInstitution userInstitution = createUserInstitution();
+        userInstitution.getProducts().forEach(onboardedProduct -> onboardedProduct.setCreatedAt(fromDate.plusDays(1)));
+        UserResource userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+
+        when(userInstitutionService.findUserInstitutionsAfterDateWithFilter(anyMap(), any())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<Void> subscriber = userService
+                .sendOldData(fromDate, null, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        // Verify the result
+        subscriber.assertCompleted();
+    }
+
 
     @Test
     void getUserProductsByInstitutionTest() {
