@@ -42,6 +42,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
@@ -522,15 +523,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public Uni<Void> sendOldData(LocalDateTime fromDate, String institutionId, String userId) {
         Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutions(userId, institutionId, null, null, null, null);
-        return userInstitutions.onItem().transformToUniAndMerge(userInstitution -> {
-            Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
-            userInstitution.getProducts().forEach(onboardedProduct -> {
-                if (onboardedProduct.getCreatedAt().isAfter(fromDate)) {
-                    Uni<Multi<UserNotificationToSend>> map = userResourceUni.map(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE));
-                }
-            });
-            return null;
-        }).onItem().ignoreAsUni();
+        Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId);
+        return userResourceUni.onItem().transformToUni(userResource ->
+                userInstitutions.onItem().transformToMultiAndMerge(userInstitution -> {
+                    // Filter the products based on the fromDate
+                    List<OnboardedProduct> filteredProducts = userInstitution.getProducts().stream()
+                            .filter(onboardedProduct -> onboardedProduct.getCreatedAt().isAfter(fromDate))
+                            .collect(Collectors.toList());
+                    userInstitution.setProducts(filteredProducts);
+
+                    return Multi.createFrom().item(userInstitution)
+                            .onItem().transformToMultiAndMerge(userInstitution1 -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE));
+                }).collect().asList().replaceWithVoid()
+        );
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
