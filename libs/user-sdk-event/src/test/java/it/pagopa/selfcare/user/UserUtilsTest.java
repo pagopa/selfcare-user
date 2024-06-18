@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.event;
+package it.pagopa.selfcare.user;
 
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -56,7 +56,6 @@ public class UserUtilsTest {
         products.add(dummyOnboardedProduct("example-2", OnboardedProductState.DELETED, 2));
 
         Collection<OnboardedProduct> actuals = UserUtils.groupingProductAndReturnMinStateProduct(products);
-
         assertEquals(2, actuals.size());
     }
 

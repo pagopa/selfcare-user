@@ -14,12 +14,38 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <junit-jupiter.version>5.7.2</junit-jupiter.version>
+        <mockito.version>5.7.0</mockito.version>
     </properties>
 
     <modules>
         <module>user-sdk-event</module>
         <module>user-sdk-model</module>
     </modules>
+
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
 
 
 </project>
