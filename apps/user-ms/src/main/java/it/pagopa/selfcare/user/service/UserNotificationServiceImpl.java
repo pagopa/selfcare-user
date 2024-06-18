@@ -35,9 +35,6 @@ import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
-//    @Inject
-//    EventhubService eventHubRestClient;
-
     @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;

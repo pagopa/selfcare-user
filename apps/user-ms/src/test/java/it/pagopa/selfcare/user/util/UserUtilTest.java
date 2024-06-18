@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
@@ -282,7 +283,7 @@ class UserUtilTest {
         String productId = "productId";
         UserResource userResource = getUserResource(uuid);
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
-        List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource, QueueEvent.UPDATE);
+        List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource);
         Assertions.assertEquals(2, response.size());
         Assertions.assertEquals(userId, response.get(0).getUser().getUserId());
         Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
