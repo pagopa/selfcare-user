@@ -18,6 +18,7 @@
 
     <modules>
         <module>user-sdk-event</module>
+        <module>user-sdk-model</module>
     </modules>
 
 
