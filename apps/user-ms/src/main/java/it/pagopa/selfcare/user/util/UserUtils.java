@@ -5,7 +5,6 @@ import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -72,14 +71,9 @@ public class UserUtils {
         return false;
     }
 
-    public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, QueueEvent eventType) {
+    public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource) {
         return userInstitution.getProducts().stream()
-                .map(onboardedProduct -> {
-                    UserNotificationToSend userNotificationToSend = constructUserNotificationToSend(userInstitution, userResource, onboardedProduct);
-                    userNotificationToSend.setId(idBuilder(userInstitution.getUserId(), userInstitution.getInstitutionId(), onboardedProduct.getProductId(), onboardedProduct.getProductRole()));
-                    userNotificationToSend.setEventType(eventType);
-                    return userNotificationToSend;
-                })
+                .map(onboardedProduct ->  notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource))
                 .toList();
     }
 
@@ -134,16 +128,12 @@ public class UserUtils {
                 .filter(Objects::nonNull)
                 .map(onboardedProduct -> {
                     if (StringUtils.isBlank(productId) || productId.equals(onboardedProduct.getProductId()) && VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION.contains(onboardedProduct.getStatus().name())) {
-                        return constructUserNotificationToSend(userInstitution, userResource, onboardedProduct);
+                        return notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource);
                     }
                     return null;
                 })
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    private UserNotificationToSend constructUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, OnboardedProduct onboardedProduct) {
-        return notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource);
     }
 
     /**

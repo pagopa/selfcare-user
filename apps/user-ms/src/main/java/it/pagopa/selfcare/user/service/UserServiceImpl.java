@@ -12,7 +12,6 @@ import it.pagopa.selfcare.user.controller.response.UserDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserDetailResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
@@ -23,6 +22,7 @@ import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
@@ -528,7 +528,7 @@ public class UserServiceImpl implements UserService {
                     Uni<UserResource> userResourceUni = userRegistryService.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userIdToUse);
 
                     return userResourceUni
-                            .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource, QueueEvent.UPDATE)
+                            .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
                                     .collect().asList()
                                     .replaceWithVoid())
                             .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource", exception)).replaceWithNull();
@@ -581,13 +581,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(PrepareNotificationData prepareNotificationData) {
-        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(prepareNotificationData.getUserInstitution(), prepareNotificationData.getUserResource(), prepareNotificationData.getQueueEvent()))
-                .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
-    }
-
-    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource, QueueEvent eventType){
-        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource, eventType))
+    private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource){
+        return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource))
                 .onItem().transformToUniAndMerge(notification -> userNotificationService.sendKafkaNotification(notification, notification.getUser().getUserId()));
     }
 

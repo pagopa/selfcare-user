@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.user.mapper;
 
-import it.pagopa.selfcare.user.entity.OnboardedProduct;
+import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.UUID;
@@ -19,12 +21,16 @@ public interface NotificationMapper {
     @Mapping(target = "user.role", source = "product.role")
     @Mapping(target = "user.productRole", source = "product.productRole")
     @Mapping(target = "user.relationshipStatus", source = "product.status")
-    @Mapping(target = "user.userId", source = "userResource.id")
+    @Mapping(target = "user.userId", source = "userResource.id", ignore = true)
     @Mapping(target = "user.name", source = "userResource.name.value")
     @Mapping(target = "user.familyName", source = "userResource.familyName.value")
     @Mapping(target = "user.email", source = "userResource.email.value")
-    @Mapping(target = "id", expression = "java(null)")
-    UserNotificationToSend toUserNotificationToSend(UserInstitution userInstitution, OnboardedProduct product, UserResource userResource);
+    @Mapping(target = "id", expression = "java(toUniqueIdNotification(userInstitution, product))")
+    @Mapping(target = "eventType", expression = "java(it.pagopa.selfcare.user.model.constants.QueueEvent.UPDATE)")
+    UserNotificationToSend toUserNotificationToSend(UserInstitution userInstitution, it.pagopa.selfcare.user.model.OnboardedProduct product, UserResource userResource);
 
-
+    @Named("toUniqueIdNotification")
+    default String toUniqueIdNotification(UserInstitution userInstitution, OnboardedProduct product) {
+        return UserUtils.uniqueIdNotification(userInstitution.getId().toHexString(), product.getProductId(), product.getProductRole());
+    }
 }
