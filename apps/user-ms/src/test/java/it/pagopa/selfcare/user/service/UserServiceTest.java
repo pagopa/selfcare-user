@@ -32,7 +32,6 @@ import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.UserToNotify;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
-import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -656,9 +655,6 @@ class UserServiceTest {
                 anyString(),
                 anyString())
         ).thenReturn(Uni.createFrom().voidItem());
-
-
-        when(userUtils.buildUserNotificationToSend(userInstitutionResponse, userResource, "productId", "productRole",  OnboardedProductState.ACTIVE)).thenReturn(new UserNotificationToSend());
 
         var subscriber = userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.ACTIVE,"productRole",
                         LoggedUser.builder().build())

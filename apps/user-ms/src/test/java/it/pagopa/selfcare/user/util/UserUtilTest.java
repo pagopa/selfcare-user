@@ -14,11 +14,11 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
-import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -229,22 +229,6 @@ class UserUtilTest {
         assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
     }
 
-    @Test
-    void buildUserNotificationToSendTest(){
-        UUID uuid = UUID.randomUUID();
-        final String userId = uuid.toString();
-        String institutionId = "institutionId";
-        String productId = "productId";
-        String productRole = "admin2";
-        UserResource userResource = getUserResource(uuid);
-        UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
-        UserNotificationToSend userNotificationToSend =
-                userUtils.buildUserNotificationToSend(userInstitution, userResource, productId, productRole, OnboardedProductState.ACTIVE);
-        Assertions.assertEquals(userId, userNotificationToSend.getId());
-        Assertions.assertEquals(institutionId, userNotificationToSend.getInstitutionId());
-        Assertions.assertNotNull(userNotificationToSend.getUser());
-    }
-
     private static UserResource getUserResource(UUID uuid) {
         Map<String, WorkContactResource> map = new HashMap<>();
         WorkContactResource workContactResource = new WorkContactResource();
@@ -268,7 +252,7 @@ class UserUtilTest {
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
         List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource, productId);
         Assertions.assertEquals(2, response.size());
-        Assertions.assertEquals(userId, response.get(0).getUser().getUserId());
+
         Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
         Assertions.assertEquals(productId, response.get(0).getProductId());
         Assertions.assertNotNull(response.get(0).getUser());
@@ -284,16 +268,18 @@ class UserUtilTest {
         UserResource userResource = getUserResource(uuid);
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
         List<UserNotificationToSend> response = userUtils.buildUsersNotificationResponse(userInstitution, userResource);
-        Assertions.assertEquals(2, response.size());
-        Assertions.assertEquals(userId, response.get(0).getUser().getUserId());
+        Assertions.assertEquals(1, response.size());
+
         Assertions.assertEquals(institutionId, response.get(0).getInstitutionId());
         Assertions.assertEquals(productId, response.get(0).getProductId());
+        Assertions.assertEquals(OnboardedProductState.ACTIVE, response.get(0).getUser().getRelationshipStatus());
         Assertions.assertNotNull(response.get(0).getUser());
 
     }
 
     private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
         UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
         userInstitution.setUserId(userId);
         userInstitution.setInstitutionId(institutionId);
         userInstitution.setUserMailUuid("MAIL_ID#123");

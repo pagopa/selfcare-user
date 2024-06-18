@@ -11,9 +11,7 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.NotificationMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.UserToNotify;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
-import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.InternalServerErrorException;
@@ -72,56 +70,12 @@ public class UserUtils {
     }
 
     public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource) {
-        return userInstitution.getProducts().stream()
+        return it.pagopa.selfcare.user.UserUtils.groupingProductAndReturnMinStateProduct(userInstitution.getProducts())
+                .stream()
                 .map(onboardedProduct ->  notificationMapper.toUserNotificationToSend(userInstitution, onboardedProduct, userResource))
                 .toList();
     }
 
-    public UserNotificationToSend buildUserNotificationToSend(UserInstitution userInstitution, UserResource userResource, String productId, String productRole, OnboardedProductState status) {
-        UserToNotify userToNotify = buildUserToNotify(userResource, userInstitution, status);
-        UserNotificationToSend userNotificationToSend = buildUserNotificationToSend(userInstitution, productId);
-
-        userInstitution.getProducts().stream()
-                .filter(p -> StringUtils.equals(p.getProductId(), productId)
-                 && (StringUtils.isBlank(productRole) || StringUtils.equals(p.getProductRole(), productRole)))
-                .findFirst()
-                .ifPresent(onboardedProductResponse -> {
-                    userToNotify.setRole(onboardedProductResponse.getRole().name());
-                    userToNotify.setProductRole(onboardedProductResponse.getProductRole());
-
-                    userNotificationToSend.setUser(userToNotify);
-                    userNotificationToSend.setOnboardingTokenId(onboardedProductResponse.getTokenId());
-                    userNotificationToSend.setCreatedAt(onboardedProductResponse.getCreatedAt());
-                    userNotificationToSend.setUpdatedAt(onboardedProductResponse.getUpdatedAt());
-                });
-
-        return userNotificationToSend;
-    }
-
-    private UserNotificationToSend buildUserNotificationToSend(UserInstitution institution, String productId) {
-        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
-        userNotificationToSend.setId(institution.getUserId());
-        userNotificationToSend.setInstitutionId(institution.getInstitutionId());
-        userNotificationToSend.setProductId(productId);
-        userNotificationToSend.setEventType(QueueEvent.UPDATE);
-        return userNotificationToSend;
-
-    }
-
-    private UserToNotify buildUserToNotify(UserResource user, UserInstitution institution, OnboardedProductState status) {
-        UserToNotify userToNotify = new UserToNotify();
-        userToNotify.setUserId(institution.getUserId());
-        userToNotify.setName(Optional.ofNullable(user.getName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
-        userToNotify.setFamilyName(Optional.ofNullable(user.getFamilyName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
-        userToNotify.setEmail(Optional.ofNullable(user.getEmail()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
-        userToNotify.setRelationshipStatus(status);
-        return userToNotify;
-
-    }
-
-    private String idBuilder(String userId, String institutionId, String productId, String productRole) {
-        return String.format("%s_%s_%s_%s", userId, institutionId, productId, productRole);
-    }
 
     public List<UserNotificationToSend> buildUsersNotificationResponse(UserInstitution userInstitution, UserResource userResource, String productId) {
         return userInstitution.getProducts().stream()
