@@ -51,7 +51,7 @@ public class UserInstitutionCdcService {
     private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
     private static final String SEND_EVENTS_FAILURE_MECTRICS = "SendEvents_failures";
     private static final String SEND_EVENTS_SUCCESS_MECTRICS = "SendEvents_successes";
-    private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+    public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
     public static final String METRIC_TRUE = "TRUE";
     public static final String METRIC_FALSE = "FALSE";
 
@@ -198,7 +198,7 @@ public class UserInstitutionCdcService {
 
 
 
-    protected void consumerToSendScUserEvent(ChangeStreamDocument<UserInstitution> document) {
+    public void consumerToSendScUserEvent(ChangeStreamDocument<UserInstitution> document) {
 
         assert document.getFullDocument() != null;
         assert document.getDocumentKey() != null;
