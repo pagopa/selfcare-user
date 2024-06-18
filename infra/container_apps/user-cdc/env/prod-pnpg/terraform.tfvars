@@ -26,10 +26,6 @@ app_settings = [
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
     value = "user-cdc",
-  },
-  {
-    name  = "USER-CDC-MONGODB-WATCH-ENABLED"
-    value = "false"
   }
 ]
 
