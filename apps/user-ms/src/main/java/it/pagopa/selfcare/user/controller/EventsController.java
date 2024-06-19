@@ -25,9 +25,9 @@ public class EventsController {
     @Operation(summary = "The API resend all the users's given an institutionId and a userId after the given fromDate")
     @POST
     @Path(value = "/sc-users")
-    public Uni<Void> sendOldUsers(@QueryParam(value = "institutionId")String institutionId,
-                                  @QueryParam(value = "userId")String userId,
-                                  @NotNull @QueryParam(value = "fromDate")LocalDateTime fromDate){
-        return userService.sendOldData(fromDate, institutionId, userId);
+    public Uni<Void> sendUsersEvents(@QueryParam(value = "institutionId") String institutionId,
+                                  @QueryParam(value = "userId") String userId,
+                                  @NotNull @QueryParam(value = "fromDate") LocalDateTime fromDate){
+        return userService.sendEventsByDateAndUserIdAndInstitutionId(fromDate, institutionId, userId);
     }
 }

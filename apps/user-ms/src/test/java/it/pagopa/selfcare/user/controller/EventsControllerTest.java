@@ -29,7 +29,7 @@ class EventsControllerTest {
         final String userId = "userId";
         final LocalDateTime fromDate = LocalDateTime.now();
 
-        when(userService.sendOldData(any(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        when(userService.sendEventsByDateAndUserIdAndInstitutionId(any(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
         given()
                 .when()
                 .contentType(ContentType.JSON)

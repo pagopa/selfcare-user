@@ -57,5 +57,5 @@ public interface UserService {
 
     Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto);
 
-    Uni<Void> sendOldData(LocalDateTime fromDate, String institutionId, String userId);
+    Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId);
 }

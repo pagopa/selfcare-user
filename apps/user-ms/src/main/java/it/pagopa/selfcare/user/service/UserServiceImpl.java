@@ -519,7 +519,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> sendOldData(LocalDateTime fromDate, String institutionId, String userId) {
+    public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId) {
         Multi<UserInstitution> userInstitutions = retrieveFilteredUserInstitutionsByDate(userId, institutionId, fromDate);
         return userInstitutions
                 .onItem().transformToUniAndMerge(userInstitution -> {

@@ -213,7 +213,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .sendOldData(fromDate, institutionId, userId)
+                .sendEventsByDateAndUserIdAndInstitutionId(fromDate, institutionId, userId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -233,7 +233,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
         UniAssertSubscriber<Void> subscriber = userService
-                .sendOldData(fromDate, null, null)
+                .sendEventsByDateAndUserIdAndInstitutionId(fromDate, null, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
