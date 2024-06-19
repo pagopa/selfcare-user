@@ -53,11 +53,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     @Override
-    public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend, String userId) {
+    public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend) {
         return eventHubUsersEnabled
                 ? eventHubRestClient.sendMessage(userNotificationToSend)
-                .onItem().invoke(() -> log.info("sent dataLake notification for user : {}", userId))
-                .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for user {}: {} ", userId, throwable.getMessage(), throwable))
+                .onItem().invoke(() -> log.info("sent dataLake notification for id : {}", userNotificationToSend.getId()))
+                .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for id {}: {} ", userNotificationToSend.getId(), throwable.getMessage(), throwable))
                 .replaceWith(userNotificationToSend)
                 : Uni.createFrom().item(userNotificationToSend);
     }

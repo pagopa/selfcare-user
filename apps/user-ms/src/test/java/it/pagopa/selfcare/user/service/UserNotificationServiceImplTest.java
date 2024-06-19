@@ -299,8 +299,7 @@ class UserNotificationServiceImplTest {
         when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().voidItem());
 
         UniAssertSubscriber<UserNotificationToSend> subscriber = userNotificationService.sendKafkaNotification(
-                userNotificationToSend,
-                "userId"
+                userNotificationToSend
         ).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
         verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
