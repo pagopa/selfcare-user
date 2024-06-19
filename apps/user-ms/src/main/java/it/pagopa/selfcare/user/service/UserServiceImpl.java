@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
 
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
-    private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+    public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
@@ -536,12 +536,14 @@ public class UserServiceImpl implements UserService {
     public Uni<Void> sendEventsByDateAndUserIdAndInstitutionId(LocalDateTime fromDate, String institutionId, String userId) {
 
         return retrieveFilteredUserInstitutionsByDatePageCount(userId,institutionId,fromDate)
-                .onItem().transformToUni(pageCount -> Uni.combine().all().unis(
-                            IntStream.range(0, pageCount).boxed()
-                            .map(index -> sendEventsByDateAndUserIdAndInstitutionId(fromDate,institutionId,userId,index))
-                            .toList())
-                        .usingConcurrencyOf(eventhubUsersConcurrencyLevel)
-                        .discardItems());
+                .onItem().transformToUni(pageCount -> pageCount > 0
+                        ? Uni.combine().all().unis(
+                                IntStream.range(0, pageCount).boxed()
+                                .map(index -> sendEventsByDateAndUserIdAndInstitutionId(fromDate,institutionId,userId,index))
+                                .toList())
+                            .usingConcurrencyOf(eventhubUsersConcurrencyLevel)
+                            .discardItems()
+                        : Uni.createFrom().voidItem());
     }
 
 
