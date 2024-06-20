@@ -37,6 +37,8 @@ import java.util.concurrent.TimeoutException;
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_CDC_NAME;
 import static java.util.Arrays.asList;
 
 @Startup
@@ -46,7 +48,6 @@ public class UserInstitutionCdcService {
 
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
-    private static final String EVENT_NAME = "USER-CDC";
     private static final String USERINSTITUTION_FAILURE_MECTRICS = "UserInfoUpdate_failures";
     private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
     private static final String SEND_EVENTS_FAILURE_MECTRICS = "SendEvents_failures";
@@ -140,7 +141,7 @@ public class UserInstitutionCdcService {
                     this::consumerToSendScUserEvent,
                     failure -> {
                         log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                        constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", SEND_EVENTS_FAILURE_MECTRICS);
+                        constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", EVENTS_USER_INSTITUTION_FAILURE);
                         Quarkus.asyncExit();
                     });
         }
@@ -193,7 +194,7 @@ public class UserInstitutionCdcService {
 
         Map<String, Double> metricsMap = new HashMap<>();
         Arrays.stream(metrics).forEach(metricName -> metricsMap.put(metricName, 1D));
-        telemetryClient.trackEvent(EVENT_NAME, propertiesMap, metricsMap);
+        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, propertiesMap, metricsMap);
     }
 
 
@@ -211,13 +212,15 @@ public class UserInstitutionCdcService {
                     .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
                         .map(onboardedProduct -> notificationMapper.toUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource))
-                        .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend))
+                        .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
+                            .onItem().invoke(() -> constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS))
+                            .onFailure().invoke(() -> constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_PRODUCT_FAILURE)))
                         .toUni()
                 )
                 .subscribe().with(
                         result -> {
                             log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, SEND_EVENTS_SUCCESS_MECTRICS);
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_SUCCESS);
                         },
                         failure -> {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
