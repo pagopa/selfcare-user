@@ -29,6 +29,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
@@ -63,11 +64,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return eventHubUsersEnabled
                 ? eventHubRestClient.sendMessage(userNotificationToSend)
                     .onItem().invoke(() -> log.info("sent dataLake notification for id : {}", userNotificationToSend.getId()))
-                    .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, Map.of(), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                    .onItem().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS))
                     .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for id {}: {} ", userNotificationToSend.getId(), throwable.getMessage(), throwable))
-                    .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, Map.of(), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)))
+                    .onFailure().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_FAILURE))
                     .replaceWith(userNotificationToSend)
                 : Uni.createFrom().item(userNotificationToSend);
+    }
+
+    private Runnable trackTelemetryEvent(UserNotificationToSend userNotificationToSend, String metricsName) {
+        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(userNotificationToSend.getId(), null, userNotificationToSend.getProductId()), Map.of(metricsName, 1D));
     }
 
     @Override

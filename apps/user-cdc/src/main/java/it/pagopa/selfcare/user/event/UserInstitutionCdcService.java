@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 
 import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
+import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_CDC_NAME;
@@ -48,13 +49,7 @@ public class UserInstitutionCdcService {
 
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
-    private static final String USERINSTITUTION_FAILURE_MECTRICS = "UserInfoUpdate_failures";
-    private static final String USERINSTITUTION_SUCCESS_MECTRICS = "UserInfoUpdate_successes";
-    private static final String SEND_EVENTS_FAILURE_MECTRICS = "SendEvents_failures";
-    private static final String SEND_EVENTS_SUCCESS_MECTRICS = "SendEvents_successes";
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
-    public static final String METRIC_TRUE = "TRUE";
-    public static final String METRIC_FALSE = "FALSE";
 
     private final TelemetryClient telemetryClient;
 
@@ -132,7 +127,7 @@ public class UserInstitutionCdcService {
                 this::consumerUserInstitutionRepositoryEvent,
                 failure -> {
                     log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                    constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", USERINSTITUTION_FAILURE_MECTRICS);
+                    telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(failure.getClass().toString(), null,null),  Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                     Quarkus.asyncExit();
                 });
 
@@ -141,7 +136,7 @@ public class UserInstitutionCdcService {
                     this::consumerToSendScUserEvent,
                     failure -> {
                         log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                        constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", EVENTS_USER_INSTITUTION_FAILURE);
+                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(failure.getClass().toString(), null,null), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         Quarkus.asyncExit();
                     });
         }
@@ -159,20 +154,22 @@ public class UserInstitutionCdcService {
 
         assert document.getFullDocument() != null;
         assert document.getDocumentKey() != null;
+        UserInstitution userInstitutionChanged = document.getFullDocument();
+        String userInstitutionId = userInstitutionChanged.getId().toHexString();
 
         log.info("Starting consumerUserInstitutionRepositoryEvent ... ");
 
-        userInstitutionRepository.updateUser(document.getFullDocument())
+        userInstitutionRepository.updateUser(userInstitutionChanged)
                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
                 .subscribe().with(
                         result -> {
-                            log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", userInstitutionId);
                             updateLastResumeToken(document.getResumeToken());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, USERINSTITUTION_SUCCESS_MECTRICS);
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionId, userInstitutionChanged.getUserId(), null), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
                         },
                         failure -> {
-                            log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_FALSE, USERINSTITUTION_FAILURE_MECTRICS);
+                            log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", userInstitutionId, failure.getMessage());
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionId, userInstitutionChanged.getUserId(), null), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                         });
     }
 
@@ -186,18 +183,6 @@ public class UserInstitutionCdcService {
         tableClient.upsertEntity(tableEntity);
 
     }
-
-    private void constructMapAndTrackEvent(String documentKey, String success, String... metrics) {
-        Map<String, String> propertiesMap = new HashMap<>();
-        propertiesMap.put("documentKey", documentKey);
-        propertiesMap.put("success", success);
-
-        Map<String, Double> metricsMap = new HashMap<>();
-        Arrays.stream(metrics).forEach(metricName -> metricsMap.put(metricName, 1D));
-        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, propertiesMap, metricsMap);
-    }
-
-
 
     public void consumerToSendScUserEvent(ChangeStreamDocument<UserInstitution> document) {
 
@@ -213,18 +198,18 @@ public class UserInstitutionCdcService {
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
                         .map(onboardedProduct -> notificationMapper.toUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource))
                         .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
-                            .onItem().invoke(() -> constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS))
-                            .onFailure().invoke(() -> constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_PRODUCT_FAILURE)))
+                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), userNotificationToSend.getProductId()),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), userNotificationToSend.getProductId()),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
                         .toUni()
                 )
                 .subscribe().with(
                         result -> {
                             log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_TRUE, EVENTS_USER_INSTITUTION_SUCCESS);
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), null), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
                         },
                         failure -> {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), METRIC_FALSE, SEND_EVENTS_FAILURE_MECTRICS);
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(userInstitutionChanged.getId().toHexString(), userInstitutionChanged.getUserId(), null), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         });
     }
 

@@ -47,6 +47,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_FAILURE;
@@ -563,13 +564,17 @@ public class UserServiceImpl implements UserService {
                             .onItem().transformToUni(userResource -> buildAndSendKafkaNotifications(userInstitution, userResource)
                                     .collect().asList()
                                     .replaceWithVoid())
-                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, Map.of(), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D)))
+                            .onItem().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_SUCCESS))
                             .onFailure().invoke(exception -> log.error("Failed to retrieve UserResource userId:{}", userIdToUse, exception))
-                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, Map.of(), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D)))
+                            .onFailure().invoke(trackTelemetryEvent(userInstitution, userIdToUse, EVENTS_USER_INSTITUTION_FAILURE))
                             .onFailure().recoverWithNull();
                 })
                 .merge().toUni()
                 .onFailure().invoke(exception -> log.error("Failed to send Events for page: {}, message: {}", page, exception.getMessage()));
+    }
+
+    private Runnable trackTelemetryEvent(UserInstitution userInstitution, String userIdToUse, String metricsName) {
+        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(userInstitution.getId().toHexString(), userIdToUse, null), Map.of(metricsName, 1D));
     }
 
     private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
