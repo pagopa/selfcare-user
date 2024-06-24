@@ -102,6 +102,20 @@
                 </dependency>
             </dependencies>
         </profile>
+
+        <profile>
+            <id>user-libs</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>it.pagopa.selfcare</groupId>
+                    <artifactId>user-sdk-event</artifactId>
+                    <version>0.0.1</version>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>report</id>
             <build>
