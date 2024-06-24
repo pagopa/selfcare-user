@@ -47,6 +47,7 @@ jobs:
       dir: 'infra/container_apps/user-ms'
       dockerfile_path: ./apps/user-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-ms
+      path_openapi_docs: ./apps/user-ms/src/main/docs/openapi.json
 
   release_prod:
     uses: pagopa/selfcare-commons/.github/workflows/call_release_docker.yml@main
@@ -59,6 +60,7 @@ jobs:
       dir: 'infra/container_apps/user-ms'
       dockerfile_path: ./apps/user-ms/Dockerfile
       docker_image_name: pagopa/selfcare-user-ms
+      path_openapi_docs: ./apps/user-ms/src/main/docs/openapi.json
 
   promote_release:
     name: 'Promote prerelase release'
