@@ -11,9 +11,7 @@ import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.OnboardedProduct;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
+import it.pagopa.selfcare.user.model.*;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -72,7 +70,13 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     }
 
     private Runnable trackTelemetryEvent(UserNotificationToSend userNotificationToSend, String metricsName) {
-        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(userNotificationToSend.getId(), null, userNotificationToSend.getProductId()), Map.of(metricsName, 1D));
+        TrackEventInput trackEventInput = TrackEventInput.builder()
+                .documentKey(userNotificationToSend.getInstitutionId())
+                .userId(Optional.ofNullable(userNotificationToSend.getUser()).map(UserToNotify::getUserId).orElse(null))
+                .institutionId(userNotificationToSend.getInstitutionId())
+                .productId(userNotificationToSend.getProductId())
+                .build();
+        return () -> telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(trackEventInput), Map.of(metricsName, 1D));
     }
 
     @Override
