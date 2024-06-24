@@ -61,7 +61,6 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend) {
         return eventHubUsersEnabled
                 ? eventHubRestClient.sendMessage(userNotificationToSend)
-                    .onItem().invoke(() -> log.info("sent dataLake notification for id : {}", userNotificationToSend.getId()))
                     .onItem().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS))
                     .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for id {}: {} ", userNotificationToSend.getId(), throwable.getMessage(), throwable))
                     .onFailure().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_FAILURE))
