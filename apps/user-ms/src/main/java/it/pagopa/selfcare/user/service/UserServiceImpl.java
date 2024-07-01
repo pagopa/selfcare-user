@@ -449,31 +449,48 @@ public class UserServiceImpl implements UserService {
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
     }
 
+    /**
+     * Updates or creates a UserInstitution by userId and institutionId, persists the changes,
+     * and sends notifications if needed. If the productRole already exists return nullItem.
+     *
+     * @param userResource The resource representing the user.
+     * @param userDto The DTO containing user role and institution information.
+     * @param loggedUser The currently logged-in user.
+     * @return A Uni containing the userId as a string.
+     */
     private Uni<String> updateUserInstitutionByUserId(UserResource userResource, AddUserRoleDto userDto, LoggedUser loggedUser) {
         return userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), userDto.getInstitutionId())
-                .onItem().transform(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
-                .onItem().invoke(userInstitution -> log.info("start persist userInstititon: {}", userInstitution))
-                .onItem().transformToUni(userInstitutionService::persistOrUpdate)
-                .onItem().invoke(() -> log.info("UserInstitution persisted"))
+                .onItem().transformToUni(userInstitution -> updateOrCreateUserInstitution(userDto, userInstitution, userResource.getId().toString()))
+                .onItem().ifNotNull().transformToUni(userInstitutionService::persistOrUpdate)
+                .onItem().ifNotNull().invoke(userInstitution -> log.info("UserInstitution with userId: {}, institutionId: {} persisted", userInstitution.getUserId(), userInstitution.getInstitutionId()))
                 .onFailure().invoke(exception -> log.error("Error during persist user on UserInstitution: {} ", exception.getMessage(), exception))
                 .onItem().ifNotNull().transformToUni(userInstitution -> sendNotificationsAndReturnData(userInstitution, userResource, userDto.getProduct().getProductRoles(), userDto.isHasToSendEmail(), loggedUser, userDto.getProduct().getProductId(), QueueEvent.UPDATE)
                     .replaceWith(userResource.getId().toString()));
 
     }
 
-    private UserInstitution updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
+    private Uni<UserInstitution> updateOrCreateUserInstitution(AddUserRoleDto userDto, UserInstitution userInstitution, String userId) {
         if (userInstitution == null) {
             log.info(USER_INSTITUTION_NOT_FOUND, userId, userDto.getInstitutionId());
-            return userInstitutionMapper.toNewEntity(userDto, userId);
+            return Uni.createFrom().item(userInstitutionMapper.toNewEntity(userDto, userId));
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
+        //Verify if productRole already exists
+        if(Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> userDto.getProduct().getProductId().equals(onboardedProduct.getProductId()))
+                .anyMatch(onboardedProduct -> userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()))){
+            return Uni.createFrom().nullItem();
+        }
 
         List<String> productRoleToAdd = checkAlreadyOnboardedProdcutRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole)));
-        return userInstitution;
+        return Uni.createFrom().item(userInstitution);
     }
 
     /**

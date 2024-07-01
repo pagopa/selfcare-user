@@ -923,16 +923,6 @@ class UserServiceTest {
         addUserRoleProduct.setProductRoles(List.of("admin"));
         LoggedUser loggedUser = LoggedUser.builder().build();
 
-        Product product = new Product();
-        product.setDescription("description");
-
-        UserToNotify userToNotify = new UserToNotify();
-        userToNotify.setUserId(userId.toString());
-
-        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
-        userNotificationToSend.setUser(userToNotify);
-
-
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
 
@@ -942,7 +932,8 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertFailedWith(InvalidRequestException.class, "User already has roles on Product test");
+        String userId = subscriber.awaitItem().getItem();
+        assertNull(userId);
     }
 
     @Test
@@ -968,7 +959,8 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        subscriber.assertFailedWith(InvalidRequestException.class);
+        String userId = subscriber.awaitItem().getItem();
+        assertNull(userId);
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
     }
 
