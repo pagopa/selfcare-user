@@ -932,8 +932,7 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        String userId = subscriber.awaitItem().getItem();
-        assertNull(userId);
+        assertNull(subscriber.awaitItem().getItem());
     }
 
     @Test
@@ -959,8 +958,7 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        String userId = subscriber.awaitItem().getItem();
-        assertNull(userId);
+        assertNull(subscriber.awaitItem().getItem());
         verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
     }
 
