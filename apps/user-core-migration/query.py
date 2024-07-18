@@ -108,6 +108,31 @@ def count_institutions_whithout_description():
         }
     ]
 
+
+def count_institutions_with_active_onboarding():
+    return [
+        {
+            "$match": {
+                "onboarding.status": "ACTIVE"
+            }
+        },
+        {
+            '$count': 'count'
+        }
+    ]
+
+
+def get_institutions_with_active_onboarding(page, size):
+    return [
+        {
+            "$match": {
+                "onboarding.status": "ACTIVE"
+            }
+        },
+        *paging(page, size)
+    ]
+
+
 def count_delegations():
     return [
         {
