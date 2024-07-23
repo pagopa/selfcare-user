@@ -16,8 +16,8 @@ public enum UserAction {
     MANAGE_PRODUCT_USER("Selc","ManageProductUsers"),
     MANAGE_PRODUCT_GROUPS("Selc","ManageProductGroups"),
     CREATE_DELEGATION("Selc","CreateDelegation"),
-    VIEW_INSTITUTION_DATA("Selc","ViewInstitutionData");
-
+    VIEW_INSTITUTION_DATA("Selc","ViewInstitutionData"),
+    UPDATE_INSTITUTION_DATA("Selc","UpdateInstitutionData");
 
     private final String functionality;
     private final String namespace;
@@ -29,6 +29,6 @@ public enum UserAction {
 
     @Override
     public String toString() {
-        return namespace + ":" + functionality;
+        return String.format("%s:%s", namespace, functionality);
     }
 }
