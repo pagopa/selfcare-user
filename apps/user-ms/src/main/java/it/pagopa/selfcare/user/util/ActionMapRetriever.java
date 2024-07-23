@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.Startup;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,6 +17,7 @@ import java.util.Map;
 @ApplicationScoped
 @Slf4j
 @Getter
+@Startup
 public class ActionMapRetriever {
 
     private Map<PartyRole, List<String>> userActionsMap;
