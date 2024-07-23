@@ -347,7 +347,7 @@ public class UserController {
         return userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userId);
     }
 
-    @Operation(summary = "Retrieves user's information")
+    @Operation(summary = "Retrieves userInstitution data with list of actions permitted for each user's product")
     @GET
     @Path("/{userId}/institutions/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)

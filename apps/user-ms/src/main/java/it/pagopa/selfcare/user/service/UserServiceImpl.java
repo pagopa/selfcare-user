@@ -29,8 +29,10 @@ import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.model.notification.PrepareNotificationData;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
+import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -80,7 +82,9 @@ public class UserServiceImpl implements UserService {
     private final UserInstitutionService userInstitutionService;
     private final UserNotificationService userNotificationService;
     private final TelemetryClient telemetryClient;
-    private Map<PartyRole, List<String>> actionsMap;
+
+    @Inject
+    private final ActionMapRetriever actionMapRetriever;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
@@ -702,7 +706,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<UserInstitutionWithActions> getUserInstitutionWithPermission(String userId, String institutionId, String productId) {
-        actionsMap = userUtils.retrieveActionsMap();
         Map<String, Object> queryParameter;
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         if (StringUtils.isNotEmpty(productId)) {
@@ -727,7 +730,7 @@ public class UserServiceImpl implements UserService {
         return userInstitutionWithActions.getProducts().stream()
                 .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
                 .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
-                .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionsMap.get(onboardedProductWithActions.getRole())))
+                .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
                 .toList();
     }
 

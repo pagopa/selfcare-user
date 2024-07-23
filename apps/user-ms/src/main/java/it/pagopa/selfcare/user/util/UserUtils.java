@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.user.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.security.identity.CurrentIdentityAssociation;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
@@ -28,8 +26,6 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
@@ -45,17 +41,6 @@ public class UserUtils {
     private final ProductService productService;
     private final NotificationMapper notificationMapper;
     public static final List<String> VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION = List.of(OnboardedProductState.ACTIVE.name(), OnboardedProductState.DELETED.name(), OnboardedProductState.SUSPENDED.name());
-    private static final String ACTIONS_FILE_PATH = "src/main/resources/role_action_mapping.json";
-
-    public Map<PartyRole, List<String>> retrieveActionsMap() {
-        try {
-            byte[] jsonFile = Files.readAllBytes(Paths.get(ACTIONS_FILE_PATH));
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(jsonFile, new TypeReference<>() {});
-        } catch (Exception e) {
-            throw new InvalidRequestException("Error during retrieve actions map");
-        }
-    }
 
     @SafeVarargs
     public final Map<String, Object> retrieveMapForFilter(Map<String, Object>... maps) {

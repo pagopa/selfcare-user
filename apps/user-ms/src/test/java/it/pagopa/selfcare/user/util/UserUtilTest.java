@@ -3,7 +3,9 @@ package it.pagopa.selfcare.user.util;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -24,9 +26,6 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
@@ -85,23 +84,16 @@ class UserUtilTest {
                 .checkProductRole("prod-io", PartyRole.MANAGER, "admin"), "ProductRole admin not found for role MANAGER");
     }
 
-    @Test
-    void retrieveActionsMap_returnsCorrectActionsMap() throws IOException {
-
-        Path path = Paths.get("src/test/resources/role_action_mapping_test.json");
-
-        // When
-        Map<PartyRole, List<String>> actionsMap = userUtils.retrieveActionsMap();
-
-        // Then
-        assertNotNull(actionsMap);
-        assertEquals(5, actionsMap.size());
-        assertTrue(actionsMap.containsKey(PartyRole.MANAGER));
-        assertTrue(actionsMap.containsKey(PartyRole.DELEGATE));
-        assertTrue(actionsMap.containsKey(PartyRole.ADMIN_EA));
-        assertTrue(actionsMap.containsKey(PartyRole.SUB_DELEGATE));
-        assertTrue(actionsMap.containsKey(PartyRole.OPERATOR));
-
+    private Product getProductResource() {
+        Product productResource = new Product();
+        Map<PartyRole, ProductRoleInfo> map = new HashMap<>();
+        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
+        ProductRole productRole = new ProductRole();
+        productRole.setCode("operatore");
+        productRoleInfo.setRoles(List.of(productRole));
+        map.put(PartyRole.MANAGER, productRoleInfo);
+        productResource.setRoleMappings(map);
+        return productResource;
     }
 
     @Test

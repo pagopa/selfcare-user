@@ -1070,7 +1070,7 @@
     "/users/{userId}/institutions/{institutionId}" : {
       "get" : {
         "tags" : [ "User" ],
-        "summary" : "Retrieves user's information",
+        "summary" : "Retrieves userInstitution data with list of actions permitted for each user's product",
         "parameters" : [ {
           "name" : "institutionId",
           "in" : "path",
