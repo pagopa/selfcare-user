@@ -1,3 +1,4 @@
+/*
 package it.pagopa.selfcare.user.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,7 +18,9 @@ import java.util.Map;
 @ApplicationScoped
 @Slf4j
 @Getter
-@Startup
+@Startup*/
+/**//*
+
 public class ActionMapRetriever {
 
     private Map<PartyRole, List<String>> userActionsMap;
@@ -40,3 +43,4 @@ public class ActionMapRetriever {
         }
     }
 }
+*/

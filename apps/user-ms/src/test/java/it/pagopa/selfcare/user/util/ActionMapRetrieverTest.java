@@ -1,3 +1,4 @@
+/*
 package it.pagopa.selfcare.user.util;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
@@ -23,3 +24,4 @@ public class ActionMapRetrieverTest {
 
     }
 }
+*/
