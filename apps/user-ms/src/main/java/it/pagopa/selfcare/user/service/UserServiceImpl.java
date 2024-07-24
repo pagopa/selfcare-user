@@ -29,7 +29,7 @@ import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import it.pagopa.selfcare.user.model.notification.PrepareNotificationData;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
-import it.pagopa.selfcare.user.util.ActionMapRetriever;
+//import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -83,8 +83,7 @@ public class UserServiceImpl implements UserService {
     private final UserNotificationService userNotificationService;
     private final TelemetryClient telemetryClient;
 
-    @Inject
-    private final ActionMapRetriever actionMapRetriever;
+  //  private final ActionMapRetriever actionMapRetriever;
 
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
 
@@ -730,7 +729,7 @@ public class UserServiceImpl implements UserService {
         return userInstitutionWithActions.getProducts().stream()
                 .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
                 .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
-                .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
+              //  .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
                 .toList();
     }
 
