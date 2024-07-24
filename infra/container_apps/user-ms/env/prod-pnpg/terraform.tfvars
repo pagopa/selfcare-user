@@ -47,10 +47,10 @@ app_settings = [
     name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
   },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-p-product"
-    },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-p-product"
+  },
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
