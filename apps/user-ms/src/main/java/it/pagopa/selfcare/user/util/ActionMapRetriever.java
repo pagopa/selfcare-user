@@ -1,4 +1,3 @@
-/*
 package it.pagopa.selfcare.user.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -10,29 +9,27 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
 @Slf4j
 @Getter
-@Startup*/
-/**//*
-
+@Startup
 public class ActionMapRetriever {
 
     private Map<PartyRole, List<String>> userActionsMap;
-    private static final String ACTIONS_FILE_PATH = "src/main/resources/role_action_mapping.json";
+    private static final String ACTIONS_FILE_PATH = "role_action_mapping.json";
 
     public ActionMapRetriever() {
         this.userActionsMap = retrieveActionsMap();
     }
 
     private Map<PartyRole, List<String>>  retrieveActionsMap() {
-        try {
-            byte[] jsonFile = Files.readAllBytes(Paths.get(ACTIONS_FILE_PATH));
+        try (InputStream actionsFile = getClass().getClassLoader().getResourceAsStream(ACTIONS_FILE_PATH)) {
+            assert actionsFile != null;
+            byte[] jsonFile = actionsFile.readAllBytes();
             ObjectMapper objectMapper = new ObjectMapper();
             log.info("retrieved file with actions map");
             userActionsMap = objectMapper.readValue(jsonFile, new TypeReference<>() {});
@@ -43,4 +40,3 @@ public class ActionMapRetriever {
         }
     }
 }
-*/
