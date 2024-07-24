@@ -44,22 +44,22 @@ app_settings = [
     name  = "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"
     value = "string"
   },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-u-product"
-    },
-    {
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-u-product"
+  },
+  {
     name  = "USER_MS_RETRY_MIN_BACKOFF"
     value = 5
-    },
-    {
+  },
+  {
     name  = "USER_MS_RETRY_MAX_BACKOFF"
     value = 60
-    },
-    {
+  },
+  {
     name  = "USER_MS_RETRY"
     value = 3
-    }
+  }
 ]
 
 secrets_names = {

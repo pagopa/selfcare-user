@@ -1,5 +1,5 @@
-prefix    = "selc"
-env_short = "p"
+prefix           = "selc"
+env_short        = "p"
 suffix_increment = "-002"
 cae_name         = "cae-002"
 

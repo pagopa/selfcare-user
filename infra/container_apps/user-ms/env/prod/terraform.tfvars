@@ -1,4 +1,4 @@
-env_short = "p"
+env_short        = "p"
 suffix_increment = "-002"
 cae_name         = "cae-002"
 
@@ -44,14 +44,14 @@ app_settings = [
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
-    {
-      name  = "USER_MS_EVENTHUB_USERS_ENABLED"
-      value = true
-    },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-p-product"
-    },
+  {
+    name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+    value = true
+  },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-p-product"
+  },
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
