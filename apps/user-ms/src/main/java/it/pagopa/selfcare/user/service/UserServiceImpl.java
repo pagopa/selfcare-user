@@ -92,6 +92,8 @@ public class UserServiceImpl implements UserService {
 
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
 
+    public static final List<OnboardedProductState> VALID_USER_PRODUCT_STATES = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
+
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
 
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
@@ -728,7 +730,7 @@ public class UserServiceImpl implements UserService {
 
     private List<OnboardedProductWithActions> filterProductAndAddActions(UserInstitutionWithActions userInstitutionWithActions, String productId) {
         return userInstitutionWithActions.getProducts().stream()
-                .filter(onboardedProductWithActions -> ACTIVE.equals(onboardedProductWithActions.getStatus()))
+                .filter(onboardedProductWithActions -> VALID_USER_PRODUCT_STATES.contains(onboardedProductWithActions.getStatus()))
                 .filter(onboardedProductWithActions -> Objects.isNull(productId) || productId.equalsIgnoreCase(onboardedProductWithActions.getProductId()))
                 .peek(onboardedProductWithActions -> onboardedProductWithActions.setUserProductActions(actionMapRetriever.getUserActionsMap().get(onboardedProductWithActions.getRole())))
                 .toList();
