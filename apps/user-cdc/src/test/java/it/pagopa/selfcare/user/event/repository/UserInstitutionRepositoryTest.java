@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
@@ -60,7 +61,7 @@ class UserInstitutionRepositoryTest {
                     UserInstitutionRole role = new UserInstitutionRole();
                     role.setInstitutionId("institutionId");
                     role.setInstitutionName("institutionName");
-                    role.setRole(PartyRole.DELEGATE);
+                    role.setRole(PartyRole.DELEGATE.name());
                     userInfo.setInstitutions(List.of(role));
                     return Uni.createFrom().item(Optional.of(userInfo));
                 }));

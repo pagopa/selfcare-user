@@ -133,7 +133,7 @@ public class UserInstitutionCdcService {
                     Quarkus.asyncExit();
                 });
 
-        if(sendEventsEnabled) {
+        /*if(sendEventsEnabled) {
             publisher.subscribe().with(
                     this::consumerToSendScUserEvent,
                     failure -> {
@@ -142,6 +142,8 @@ public class UserInstitutionCdcService {
                         Quarkus.asyncExit();
                     });
         }
+
+         */
 
         log.info("Completed initOrderStream ... ");
     }
