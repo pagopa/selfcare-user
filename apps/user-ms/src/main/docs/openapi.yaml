@@ -218,7 +218,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserProductResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProductResponse"
         "400":
           description: Bad Request
           content:
