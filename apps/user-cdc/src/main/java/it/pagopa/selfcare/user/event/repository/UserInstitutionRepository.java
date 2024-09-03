@@ -67,8 +67,11 @@ public class UserInstitutionRepository {
         userInfo.setUserId(userInstitution.getUserId());
         userInfo.setInstitutions(List.of(institutionRole));
 
-        return UserInfo.persistOrUpdate(userInfo)
+        // flow of new user must persist userInfo, if already exists it must be failed
+        return UserInfo.persist(userInfo)
                 .invoke(() -> log.info(String.format("createNewUserInfo for userId %s and institution %s",
+                        userInstitution.getUserId(),userInstitution.getInstitutionId())))
+                .onFailure().invoke(() -> log.error(String.format("createNewUserInfo failed for userId %s and institution %s",
                         userInstitution.getUserId(),userInstitution.getInstitutionId())))
                 .replaceWith(Uni.createFrom().voidItem());
     }
