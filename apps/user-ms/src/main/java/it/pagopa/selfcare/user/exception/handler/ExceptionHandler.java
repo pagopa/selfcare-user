@@ -18,7 +18,7 @@ public class ExceptionHandler {
 
     @ServerExceptionMapper
     public RestResponse<String> toResponse(InvalidRequestException exception) {
-        LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.warn("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         return RestResponse.status(Response.Status.BAD_REQUEST, exception.getMessage());
     }
 
@@ -30,7 +30,7 @@ public class ExceptionHandler {
 
     @ServerExceptionMapper
     public Response toResponse(ResourceNotFoundException exception) {
-        LOGGER.error("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.warn("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         Problem problem = new Problem(exception.getMessage(), null, null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
         return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
     }
