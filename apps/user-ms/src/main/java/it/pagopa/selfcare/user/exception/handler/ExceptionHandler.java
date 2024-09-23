@@ -15,10 +15,11 @@ public class ExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER = "Something has gone wrong in the server";
+    public static final String PREFIX_LOGGER = "{}: {}";
 
     @ServerExceptionMapper
     public RestResponse<String> toResponse(InvalidRequestException exception) {
-        LOGGER.warn("{}: {}", SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
         return RestResponse.status(Response.Status.BAD_REQUEST, exception.getMessage());
     }
 
