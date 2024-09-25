@@ -37,6 +37,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.ResponseStatus;
 import org.openapi.quarkus.user_registry_json.model.Problem;
+import org.owasp.encoder.Encode;
 
 import java.util.List;
 
@@ -303,7 +304,7 @@ public class UserController {
                                                 @Valid AddUserRoleDto userDto,
                                                 @Context SecurityContext ctx) {
 
-        log.info("[createOrUpdateByFiscalCode] Received body: {}", userDto.toString());
+        log.info("[createOrUpdateByFiscalCode] Received body: {}", Encode.forJava(userDto.toString()));
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser))
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
@@ -330,7 +331,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
                                                   @Context SecurityContext ctx) {
-        log.info("[createOrUpdateByFiscalCode] Received body: {}", userDto.toString());
+        log.info("[createOrUpdateByFiscalCode] Received body: {}", Encode.forJava(userDto.toString()));
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response
