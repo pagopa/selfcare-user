@@ -660,7 +660,7 @@ class UserControllerTest {
         userDto.setUser(user);
         CreateUserDto.Product product = new CreateUserDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         userDto.setProduct(product);
@@ -680,7 +680,7 @@ class UserControllerTest {
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductId("productId");
-        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER);
+        product.setRole(it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
         product.setDelegationId("delegationId");
