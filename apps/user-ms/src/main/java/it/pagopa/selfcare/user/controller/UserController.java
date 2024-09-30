@@ -10,6 +10,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
@@ -237,10 +238,12 @@ public class UserController {
                                                                            @QueryParam(value = "productRoles") List<String> productRoles,
                                                                            @QueryParam(value = "page") @DefaultValue("0") Integer page,
                                                                            @QueryParam(value = "size") @DefaultValue("100") Integer size) {
-        List<PartyRole> roleList = new ArrayList<>();
+
+        List<PartyRole> roleList = null;
         if(!CollectionUtils.isNullOrEmpty(roles)) {
-            roleList.addAll(roles.stream().map(PartyRole::valueOf).toList());
+            roleList = retrievePartyRoleFromStringList(roles);
         }
+
         return userService.findPaginatedUserInstitutions(institutionId, userId, roleList, states, products, productRoles, page, size);
     }
 
@@ -406,6 +409,19 @@ public class UserController {
                     }
                     return Uni.createFrom().nullItem();
                 });
+    }
+
+    private static List<PartyRole> retrievePartyRoleFromStringList(List<String> roles) {
+        List<PartyRole> roleList = new ArrayList<>();
+        for (String role : roles) {
+            try {
+                roleList.add(PartyRole.valueOf(role));
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid role value: {}", role);
+                throw new InvalidRequestException(String.format("Invalid role value: %s", role));
+            }
+        }
+        return roleList;
     }
 }
 
