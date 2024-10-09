@@ -168,12 +168,14 @@ public interface UserMapper {
     @Named("getMaxStatus")
     default String getMaxStatus(List<OnboardedProduct> onboardedProductList){
         List<OnboardedProductState> onboardedProductStateList = onboardedProductList.stream().map(OnboardedProduct::getStatus).toList();
+        if(onboardedProductStateList.isEmpty()) return null;
         return Collections.min(onboardedProductStateList).name();
     }
 
     @Named("getMaxRole")
     default String getMaxRole(List<OnboardedProduct> onboardedProductList){
         List<PartyRole> partyRoleList = onboardedProductList.stream().map(OnboardedProduct::getRole).toList();
+        if(partyRoleList.isEmpty()) return null;
         return Collections.min(partyRoleList).name();
     }
 
