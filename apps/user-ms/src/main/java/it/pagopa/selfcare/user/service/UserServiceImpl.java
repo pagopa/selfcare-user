@@ -566,11 +566,12 @@ public class UserServiceImpl implements UserService {
                 .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)
                 .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
                 .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
-                .onItem().invoke(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
+                .onItem().transform(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
-                                .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource)));
+                                .map(userResource -> userMapper.toUserDataResponse(userInstitution, userResource))
+                );
     }
 
     @Override
@@ -635,7 +636,7 @@ public class UserServiceImpl implements UserService {
         telemetryClient.trackEvent(EVENT_USER_MS_NAME, mapPropsForTrackEvent(trackEventInput), Map.of(metricsName, 1D));
     }
 
-    private void applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
+    private UserInstitution applyFiltersToRemoveProducts(UserInstitution userInstitution, List<String> states, List<String> products, List<String> roles, List<String> productRoles) {
         if(!CollectionUtils.isNullOrEmpty(userInstitution.getProducts())) {
             userInstitution.getProducts().removeIf(product ->
                     (!CollectionUtils.isNullOrEmpty(states) && !states.contains(product.getStatus().name())) ||
@@ -644,6 +645,7 @@ public class UserServiceImpl implements UserService {
                     (!CollectionUtils.isNullOrEmpty(productRoles) && !productRoles.contains(product.getProductRole()))
             );
         }
+        return userInstitution;
     }
 
     private Multi<UserInstitution> retrieveFilteredUserInstitutions(String user, String institutionId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
