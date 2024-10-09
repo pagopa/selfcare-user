@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserResource> retrievePerson(String userId, String productId, String institutionId) {
+    public Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(productId).build().constructMap();
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
@@ -155,8 +155,10 @@ public class UserServiceImpl implements UserService {
                     log.error(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId));
                     return new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode());
                 })
-                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId()))
-                .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()));
+                .onItem().transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
+                    .onFailure(UserUtils::checkIfNotFoundException).transform(t -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), userId), USER_NOT_FOUND_ERROR.getCode()))
+                    .onItem().transform(user -> userMapper.toUserResponse(user, userInstitution.getUserMailUuid()))
+                );
     }
 
     @Override
