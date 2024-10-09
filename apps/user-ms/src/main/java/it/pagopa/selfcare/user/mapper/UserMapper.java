@@ -48,7 +48,9 @@ public interface UserMapper {
             return Collections.emptyMap();
         }
         return workContactResourceMap.entrySet().stream()
-                .filter(entry -> entry.getValue().getEmail() != null && entry.getValue().getEmail().getValue() != null)
+                .filter(entry -> Objects.nonNull(entry.getValue()))
+                .filter(entry -> Objects.nonNull(entry.getValue().getEmail()))
+                .filter(entry -> Objects.nonNull(entry.getValue().getEmail().getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getEmail().getValue()));
     }
 
@@ -73,10 +75,12 @@ public interface UserMapper {
 
     @Named("retrieveMailFromWorkContacts")
     default String retrieveMailFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
-        if(map!=null && !map.isEmpty() && map.containsKey(userMailUuid)){
-            return map.get(userMailUuid).getEmail().getValue();
-        }
-        return null;
+        return Optional.ofNullable(map)
+                .filter(item -> item.containsKey(userMailUuid))
+                .map(item -> map.get(userMailUuid))
+                .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
+                .map(workContactResource -> workContactResource.getEmail().getValue())
+                .orElse(null);
     }
 
 
