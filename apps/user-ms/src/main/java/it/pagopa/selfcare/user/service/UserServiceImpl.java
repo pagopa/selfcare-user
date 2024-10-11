@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -352,6 +353,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser) {
+        log.info(String.format("createOrUpdateUserByFiscalCode for fiscalCode: %s", userDto.getUser().getFiscalCode().trim()));
         return userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode().trim()))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).retry().atMost(2)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
@@ -412,11 +414,13 @@ public class UserServiceImpl implements UserService {
      * If any of the operations fail, the method logs an error message and returns a Uni that emits a failure.
      */
     private Uni<CreateOrUpdateUserByFiscalCodeResponse> createUserOnUserRegistryAndUserInstitution(CreateUserDto userDto,LoggedUser loggedUser) {
-        log.info("Creating user on userRegistry and userInstitution");
         String mailUuid = randomMailId.get();
         Map<String, WorkContactResource> workContacts = new HashMap<>();
         workContacts.put(mailUuid, UserUtils.buildWorkContact(userDto.getUser().getInstitutionEmail()));
-        return userRegistryService.saveUsingPATCH(userMapper.toSaveUserDto(userDto.getUser(), workContacts))
+        SaveUserDto saveUserDto = userMapper.toSaveUserDto(userDto.getUser(), workContacts);
+        log.info(String.format("Creating user on userRegistry and userInstitution, user: %s", saveUserDto.toString()));
+
+        return userRegistryService.saveUsingPATCH(saveUserDto)
             .onFailure().invoke(exception -> log.error("Error during create user on userRegistry: {} ", exception.getMessage(), exception))
             .onItem().invoke(userResource -> log.info("User created with id {}", userResource.getId()))
             .onItem().transform(userResource -> userResource.getId().toString())
