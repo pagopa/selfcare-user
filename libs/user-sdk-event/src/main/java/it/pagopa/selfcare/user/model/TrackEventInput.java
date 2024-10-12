@@ -4,6 +4,7 @@ package it.pagopa.selfcare.user.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Optional;
 
 @Data
@@ -16,6 +17,7 @@ public class TrackEventInput {
     private String institutionId;
     private String exception;
     private String productRole;
+    private List<String> groupMembers;
 
     public static TrackEventInput toTrackEventInput(UserNotificationToSend userNotificationToSend) {
         return TrackEventInput.builder()
@@ -24,6 +26,15 @@ public class TrackEventInput {
                 .institutionId(userNotificationToSend.getInstitutionId())
                 .productId(userNotificationToSend.getProductId())
                 .productRole(Optional.ofNullable(userNotificationToSend.getUser()).map(UserToNotify::getProductRole).orElse(null))
+                .build();
+    }
+
+    public static TrackEventInput toTrackEventInputForUserGroup(UserGroupNotificationToSend userGroupEntity) {
+        return TrackEventInput.builder()
+                .documentKey(userGroupEntity.getId())
+                .institutionId(userGroupEntity.getInstitutionId())
+                .productId(userGroupEntity.getProductId())
+                .groupMembers(userGroupEntity.getMembers().stream().toList())
                 .build();
     }
 }

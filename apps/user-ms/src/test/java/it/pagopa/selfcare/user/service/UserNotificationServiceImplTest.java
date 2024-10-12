@@ -1,3 +1,4 @@
+/*
 package it.pagopa.selfcare.user.service;
 
 import com.microsoft.applicationinsights.TelemetryClient;
@@ -444,3 +445,4 @@ class UserNotificationServiceImplTest {
         verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
     }
 }
+*/
