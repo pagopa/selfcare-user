@@ -332,6 +332,28 @@ class UserServiceTest {
         subscriber.assertCompleted();
     }
 
+    //@Test
+    void testRetrievePerson_workContractsIsEmpty() {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId("test-user");
+        String userMailUuId = UUID.randomUUID().toString();
+        userInstitution.setUserMailUuid(userMailUuId);
+
+        UserResource userResource = dummyUserResource();
+        WorkContactResource workContactResource = new WorkContactResource();
+        userResource.setWorkContacts(Map.of(userMailUuId, workContactResource));
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<UserResponse> subscriber = userService.retrievePerson("test-user", "test-product", "test-institutionId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        UserResponse actual = subscriber.assertCompleted().getItem();
+        assertNull(actual.getEmail());
+        assertEquals(userResource.getName().getValue(), actual.getName());
+    }
+
     @Test
     void testRetrievePerson_workContractsIsEmpty() {
         UserInstitution userInstitution = new UserInstitution();
