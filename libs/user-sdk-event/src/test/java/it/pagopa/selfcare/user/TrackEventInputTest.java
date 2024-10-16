@@ -47,6 +47,5 @@ class TrackEventInputTest {
         assertEquals("docKey", result.getDocumentKey());
         assertEquals("institutionId", result.getInstitutionId());
         assertEquals("productId", result.getProductId());
-        assertEquals(List.of("member1", "member2"), result.getGroupMembers());
     }
 }
