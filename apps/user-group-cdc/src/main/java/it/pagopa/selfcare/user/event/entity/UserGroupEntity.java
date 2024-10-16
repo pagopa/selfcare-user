@@ -4,18 +4,23 @@ import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.bson.types.ObjectId;
 
 import java.time.Instant;
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Getter
+@Setter
 @MongoEntity(collection = "userGroups")
 @FieldNameConstants(asEnum = true)
 public class UserGroupEntity extends ReactivePanacheMongoEntity {
 
-    private String id;
+    private ObjectId id;
     private String institutionId;
     private String productId;
     private String name;
