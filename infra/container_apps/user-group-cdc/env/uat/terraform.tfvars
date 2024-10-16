@@ -29,12 +29,8 @@ app_settings = [
     value = "user-group-cdc",
   },
   {
-    name  = "USER_CDC_SEND_EVENTS_WATCH_ENABLED"
-    value = "false"
-  },
-  {
     name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
+    value = "https://selc-u-eventhub-ns.servicebus.windows.net/sc-user-groups"
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
@@ -42,7 +38,7 @@ app_settings = [
   },
   {
     name = "USER_GROUP_CDC_SEND_EVENTS_WATCH_ENABLED"
-    value = "false"
+    value = "true"
   }
 ]
 
@@ -50,5 +46,5 @@ secrets_names = {
   "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
   "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
   "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-  "EVENTHUB-SC-USER-GROUPS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-user-groups-selfcare-wo-key-lc"
+  "EVENTHUB-SC-USER-GROUPS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-usergroups-selfcare-wo-key-lc"
 }

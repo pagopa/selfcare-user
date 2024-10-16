@@ -40,10 +40,10 @@ import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_N
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
-   /* @Inject
+    @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;
-*/
+
     private final MailService mailService;
     private final Configuration freemarkerConfig;
     private final boolean eventHubUsersEnabled;
@@ -62,12 +62,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     @Override
     public Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend) {
         return eventHubUsersEnabled
-                ? /*eventHubRestClient.sendMessage(userNotificationToSend)
+                ? eventHubRestClient.sendMessage(userNotificationToSend)
                     .onItem().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS))
                     .onFailure().invoke(throwable -> log.warn("error during send dataLake notification for id {}: {} ", userNotificationToSend.getId(), throwable.getMessage(), throwable))
                     .onFailure().invoke(trackTelemetryEvent(userNotificationToSend, EVENTS_USER_INSTITUTION_PRODUCT_FAILURE))
-                    .replaceWith(userNotificationToSend)*/
-        null
+                    .replaceWith(userNotificationToSend)
                 : Uni.createFrom().item(userNotificationToSend);
     }
 
