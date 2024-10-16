@@ -1,4 +1,4 @@
-name: Code Review - user-cdc
+name: Code Review - user-group-cdc
 
 on:
   workflow_dispatch:
@@ -14,8 +14,8 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'apps/user-cdc/**'
-      - '.github/workflows/pr_cdc.yml'
+      - 'apps/user-group-cdc/**'
+      - '.github/workflows/pr_user_cdc.yml'
       - '.github/workflows/call_code_review.yml'
 
 jobs:
@@ -28,4 +28,4 @@ jobs:
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
       sonar_key: 'pagopa_selfcare-user'
-      module: 'user-cdc'
+      module: 'user-group-cdc'

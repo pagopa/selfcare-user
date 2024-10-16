@@ -1,9 +1,3 @@
-variable "is_pnpg" {
-  type        = bool
-  default     = false
-  description = "(Optional) True if you want to apply changes to PNPG environment"
-}
-
 variable "prefix" {
   description = "Domain prefix"
   type        = string

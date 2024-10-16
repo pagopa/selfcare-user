@@ -47,7 +47,7 @@ import static java.util.Arrays.asList;
 @Slf4j
 @ApplicationScoped
 public class UserGroupCdcService {
-    private static final String OPERATION_NAME = "USER-GROUP-CDC-UserInfoUpdate";
+    private static final String OPERATION_NAME = "USER-GROUP-CDC-sendUserGroupEvent";
     private static final String COLLECTION_NAME = "userGroups";
 
     private final TelemetryClient telemetryClient;
@@ -118,7 +118,7 @@ public class UserGroupCdcService {
                     this::consumerToSendScUserGroupEvent,
                     failure -> {
                         log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                        telemetryClient.trackEvent(EVENT_USER_GROUP_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                        telemetryClient.trackEvent(EVENT_USER_GROUP_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_GROUP_FAILURE, 1D));
                         Quarkus.asyncExit();
                     });
         }
