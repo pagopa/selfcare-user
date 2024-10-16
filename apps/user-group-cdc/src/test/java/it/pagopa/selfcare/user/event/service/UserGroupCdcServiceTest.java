@@ -22,7 +22,6 @@ public class UserGroupCdcServiceTest {
     @Inject
     UserGroupCdcService userGroupCdcService;
 
-    @Inject
     @RestClient
     @InjectMock
     EventHubRestClient eventHubRestClient;
