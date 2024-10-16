@@ -30,11 +30,14 @@ public class TrackEventInput {
     }
 
     public static TrackEventInput toTrackEventInputForUserGroup(UserGroupNotificationToSend userGroupEntity) {
-        return TrackEventInput.builder()
+        TrackEventInputBuilder trackEventInputBuilder = TrackEventInput.builder()
                 .documentKey(userGroupEntity.getId())
                 .institutionId(userGroupEntity.getInstitutionId())
-                .productId(userGroupEntity.getProductId())
-                .groupMembers(userGroupEntity.getMembers().stream().toList())
-                .build();
+                .productId(userGroupEntity.getProductId());
+
+        if(userGroupEntity.getMembers() != null && !userGroupEntity.getMembers().isEmpty()) {
+            trackEventInputBuilder.groupMembers(userGroupEntity.getMembers().stream().toList());
+        }
+        return trackEventInputBuilder.build();
     }
 }

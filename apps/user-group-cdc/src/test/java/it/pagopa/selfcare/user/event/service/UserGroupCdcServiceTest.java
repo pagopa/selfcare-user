@@ -8,11 +8,13 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserGroupCdcService;
 import it.pagopa.selfcare.user.event.entity.UserGroupEntity;
+import it.pagopa.selfcare.user.event.mapper.UserGroupNotificationMapper;
 import jakarta.inject.Inject;
 import org.bson.BsonDocument;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 
 import static org.mockito.Mockito.*;
 
@@ -27,6 +29,9 @@ public class UserGroupCdcServiceTest {
     @InjectMock
     EventHubRestClient eventHubRestClient;
 
+    @Spy
+    UserGroupNotificationMapper userGroupNotificationMapper;
+
     @Test
     void consumerToSendScUserGroupEventTest() {
         UserGroupEntity userGroupEntity = dummyUserGroup();
@@ -36,8 +41,7 @@ public class UserGroupCdcServiceTest {
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         userGroupCdcService.consumerToSendScUserGroupEvent(document);
         verify(eventHubRestClient, times(1)).
-                sendMessage(any());
-
+                sendUserGroupMessage(any());
     }
 
     UserGroupEntity dummyUserGroup() {
