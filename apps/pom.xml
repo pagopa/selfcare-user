@@ -69,6 +69,17 @@
         <module>user-group-ms</module>
       </modules>
     </profile>
+    <profile>
+      <id>user-group-cdc</id>
+      <activation>
+        <file>
+          <exists>user-group-cdc/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>user-group-cdc</module>
+      </modules>
+    </profile>
   </profiles>
 
 </project>
