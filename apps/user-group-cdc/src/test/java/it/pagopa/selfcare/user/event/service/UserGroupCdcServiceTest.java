@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserGroupCdcService;
 import it.pagopa.selfcare.user.event.entity.UserGroupEntity;
 import jakarta.inject.Inject;
+import org.bson.BsonDocument;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,6 +32,8 @@ public class UserGroupCdcServiceTest {
         UserGroupEntity userGroupEntity = dummyUserGroup();
         ChangeStreamDocument<UserGroupEntity> document = Mockito.mock(ChangeStreamDocument.class);
         when(document.getFullDocument()).thenReturn(userGroupEntity);
+        BsonDocument bsonDocument = Mockito.mock(BsonDocument.class);
+        when(document.getDocumentKey()).thenReturn(bsonDocument);
         userGroupCdcService.consumerToSendScUserGroupEvent(document);
         verify(eventHubRestClient, times(1)).
                 sendMessage(any());
