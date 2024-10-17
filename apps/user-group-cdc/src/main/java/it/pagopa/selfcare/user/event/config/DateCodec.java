@@ -19,7 +19,7 @@ public class DateCodec implements Codec<Instant> {
             return Instant.ofEpochMilli(reader.readDateTime());
         } else if (currentType.equals(BsonType.TIMESTAMP)) {
             BsonTimestamp timestamp = reader.readTimestamp();
-            return Instant.ofEpochSecond(timestamp.getTime() / 1000, timestamp.getInc() * 1000L);
+            return Instant.ofEpochSecond(timestamp.getTime(), timestamp.getInc());
         }
         return null;
     }
