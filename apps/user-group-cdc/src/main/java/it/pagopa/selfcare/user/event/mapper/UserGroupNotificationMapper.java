@@ -8,6 +8,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "cdi")
 public interface UserGroupNotificationMapper {
 
-    @Mapping(target = "id", expression = "java(userGroupEntity.getId().toString())")
+    @Mapping(target = "id", expression = "java(java.util.Objects.nonNull(userGroupEntity.getId()) ? userGroupEntity.getId().toHexString() : null)")
     UserGroupNotificationToSend toUserGroupNotificationToSend(UserGroupEntity userGroupEntity);
 }
