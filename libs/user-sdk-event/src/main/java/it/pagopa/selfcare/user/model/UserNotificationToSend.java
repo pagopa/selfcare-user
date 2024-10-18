@@ -3,7 +3,7 @@ package it.pagopa.selfcare.user.model;
 import it.pagopa.selfcare.user.model.constants.QueueEvent;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class UserNotificationToSend {
@@ -12,8 +12,8 @@ public class UserNotificationToSend {
     private String institutionId;
     private String productId;
     private String onboardingTokenId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
     private QueueEvent eventType;
     private UserToNotify user;
 }
