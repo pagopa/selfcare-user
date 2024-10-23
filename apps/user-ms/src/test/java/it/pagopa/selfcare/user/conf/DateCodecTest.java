@@ -28,7 +28,6 @@ class DateCodecTest {
         BsonReader reader = new JsonReader("{\"date\": {\"$date\":" + epoch + "}}");
         reader.readStartDocument();
         reader.readName("date");
-
         Assertions.assertDoesNotThrow(() -> dateCodec.decode(reader, DecoderContext.builder().build()));
     }
 
