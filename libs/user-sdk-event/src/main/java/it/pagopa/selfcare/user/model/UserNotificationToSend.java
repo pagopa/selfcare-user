@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.OffsetDateTime;
 
 @Data
+@SuppressWarnings("java:S1068")
 public class UserNotificationToSend {
 
     private String id;

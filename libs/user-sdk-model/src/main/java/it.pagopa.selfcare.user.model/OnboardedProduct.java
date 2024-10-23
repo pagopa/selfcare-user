@@ -12,6 +12,7 @@ import static it.pagopa.selfcare.onboarding.common.Env.ROOT;
 
 
 @Data
+@SuppressWarnings("java:S1068")
 @FieldNameConstants(asEnum = true)
 public class OnboardedProduct {
 
