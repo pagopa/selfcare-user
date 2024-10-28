@@ -66,4 +66,19 @@ public class UserUtils {
         Optional.ofNullable(trackEventInput.getException()).ifPresent(value -> propertiesMap.put("exec", value));
         return propertiesMap;
     }
+
+    /**
+     * The retrieveFdProductIfItChanged method is designed to retrieve the most recently updated OnboardedProduct
+     * from a list of products, provided that the product's ID is included in a specified list of product IDs to check.
+     */
+    public static OnboardedProduct retrieveFdProductIfItChanged(List<OnboardedProduct> products, List<String> productIdToCheck) {
+        if (Objects.nonNull(products) && !products.isEmpty()) {
+            return products.stream()
+                    .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
+                            .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
+                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                    .orElse(null);
+        }
+        return null;
+    }
 }

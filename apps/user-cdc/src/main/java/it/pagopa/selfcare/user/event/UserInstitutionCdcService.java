@@ -15,11 +15,14 @@ import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.mapper.NotificationMapper;
 import it.pagopa.selfcare.user.event.repository.UserInstitutionRepository;
+import it.pagopa.selfcare.user.model.NotificationUserType;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -52,6 +55,9 @@ public class UserInstitutionCdcService {
     private static final String COLLECTION_NAME = "userInstitutions";
     private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
+    private static final String PROD_FD = "prod-fd";
+    private static final String PROD_FD_GARANTITO = "prod-fd-garantito";
+
 
     private final TelemetryClient telemetryClient;
 
@@ -103,7 +109,7 @@ public class UserInstitutionCdcService {
         //Retrieve last resumeToken for watching collection at specific operation
         String resumeToken = null;
 
-        if(!ConfigUtils.getProfiles().contains("test")) {
+        if (!ConfigUtils.getProfiles().contains("test")) {
             try {
                 TableEntity cdcStartAtEntity = tableClient.getEntity(CDC_START_AT_PARTITION_KEY, CDC_START_AT_ROW_KEY);
                 if (Objects.nonNull(cdcStartAtEntity))
@@ -117,7 +123,7 @@ public class UserInstitutionCdcService {
         ReactiveMongoCollection<UserInstitution> dataCollection = getCollection();
         ChangeStreamOptions options = new ChangeStreamOptions()
                 .fullDocument(FullDocument.UPDATE_LOOKUP);
-        if(Objects.nonNull(resumeToken))
+        if (Objects.nonNull(resumeToken))
             options = options.resumeAfter(BsonDocument.parse(resumeToken));
 
         Bson match = Aggregates.match(Filters.in("operationType", asList("update", "replace", "insert")));
@@ -129,11 +135,11 @@ public class UserInstitutionCdcService {
                 this::consumerUserInstitutionRepositoryEvent,
                 failure -> {
                     log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                    telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()),  Map.of(USER_INFO_UPDATE_FAILURE, 1D));
+                    telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
                     Quarkus.asyncExit();
                 });
 
-        if(sendEventsEnabled) {
+        if (sendEventsEnabled) {
             publisher.subscribe().with(
                     this::consumerToSendScUserEvent,
                     failure -> {
@@ -196,13 +202,13 @@ public class UserInstitutionCdcService {
 
         userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitutionChanged.getUserId())
                 .onFailure(this::checkIfIsRetryableException)
-                    .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
                         .map(onboardedProduct -> notificationMapper.toUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource))
                         .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
-                            .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)),  Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
+                                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                                .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
                         .toUni()
                 )
                 .subscribe().with(
@@ -214,6 +220,44 @@ public class UserInstitutionCdcService {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
                             telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         });
+    }
+
+    public void consumerToSendUserEventForFD(ChangeStreamDocument<UserInstitution> document) {
+
+        assert document.getFullDocument() != null;
+        assert document.getDocumentKey() != null;
+        UserInstitution userInstitutionChanged = document.getFullDocument();
+
+        log.info("Starting consumerToSendUserEventForFd ... ");
+
+        userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitutionChanged.getUserId())
+                .onFailure(this::checkIfIsRetryableException)
+                .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                .onItem().transformToUni(userResource -> Uni.createFrom().item(UserUtils.retrieveFdProductIfItChanged(userInstitutionChanged.getProducts(), List.of(PROD_FD, PROD_FD_GARANTITO)))
+                        .map(onboardedProduct -> notificationMapper.toFdUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource, evaluateType(onboardedProduct)))
+                        .onItem().ifNotNull().transformToUni(fdUserNotificationToSend -> eventHubRestClient.sendMessage(fdUserNotificationToSend)
+                                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                                .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
+                )
+                .subscribe().with(
+                        result -> {
+                            log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
+                        },
+                        failure -> {
+                            log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                        });
+    }
+
+    private NotificationUserType evaluateType(OnboardedProduct onboardedProduct) {
+        return switch (onboardedProduct.getStatus()) {
+            case ACTIVE -> NotificationUserType.ACTIVE_USER;
+            case SUSPENDED -> NotificationUserType.SUSPEND_USER;
+            case DELETED -> NotificationUserType.DELETE_USER;
+            default -> null;
+        };
     }
 
     private boolean checkIfIsRetryableException(Throwable throwable) {
