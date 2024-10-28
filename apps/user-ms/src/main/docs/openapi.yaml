@@ -343,6 +343,7 @@ paths:
       - SecurityScheme: []
     post:
       tags:
+      - User
       - internal-pnpg
       summary: Create or update a user by fiscal code
       description: The createOrUpdateByFiscalCode function is used to create a new
