@@ -59,6 +59,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
+import static it.pagopa.selfcare.onboarding.common.PartyRole.OPERATOR;
 import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
@@ -811,6 +812,7 @@ class UserServiceTest {
         user.setFiscalCode("fiscalCode");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
         createUserProduct.setProductId("test");
+        createUserProduct.setRole(MANAGER.name());
         createUserProduct.setProductRoles(List.of("admin2","admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
@@ -838,7 +840,7 @@ class UserServiceTest {
         UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
-        Assertions.assertEquals(2, userInstitution.getProducts().size());
+        Assertions.assertEquals(4, userInstitution.getProducts().size());
         // Verify the result
 
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
@@ -859,7 +861,7 @@ class UserServiceTest {
         user.setFiscalCode("fiscalCode");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
         createUserProduct.setProductId("test");
-        createUserProduct.setRole("MANAGER");
+        createUserProduct.setRole(MANAGER.name());
         createUserProduct.setProductRoles(List.of("admin","admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
@@ -908,7 +910,7 @@ class UserServiceTest {
         user.setFiscalCode("fiscalCode");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
         createUserProduct.setProductId("test");
-        createUserProduct.setRole("OPERATOR");
+        createUserProduct.setRole(PartyRole.OPERATOR.name());
         createUserProduct.setProductRoles(List.of("admin","admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
@@ -1052,7 +1054,7 @@ class UserServiceTest {
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
         addUserRoleProduct.setDelegationId("delegationId");
-        addUserRoleProduct.setRole("MANAGER");
+        addUserRoleProduct.setRole(MANAGER.name());
         addUserRoleProduct.setProductRoles(List.of("admin"));
         addUserRoleDto.setProduct(addUserRoleProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
@@ -1072,7 +1074,7 @@ class UserServiceTest {
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
-        addUserRoleProduct.setRole("OPERATOR");
+        addUserRoleProduct.setRole(OPERATOR.name());
         addUserRoleProduct.setDelegationId("delegationId");
         addUserRoleDto.setProduct(addUserRoleProduct);
         addUserRoleProduct.setProductRoles(List.of("operatore api"));
@@ -1095,7 +1097,7 @@ class UserServiceTest {
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
-        addUserRoleProduct.setRole("OPERATOR");
+        addUserRoleProduct.setRole(OPERATOR.name());
         addUserRoleProduct.setDelegationId("delegationId");
         addUserRoleDto.setProduct(addUserRoleProduct);
         addUserRoleProduct.setProductRoles(List.of("security"));
@@ -1142,7 +1144,7 @@ class UserServiceTest {
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
-        addUserRoleProduct.setRole("MANAGER");
+        addUserRoleProduct.setRole(MANAGER.name());
         addUserRoleDto.setProduct(addUserRoleProduct);
         addUserRoleProduct.setProductRoles(List.of("admin", "admin2"));
         LoggedUser loggedUser = LoggedUser.builder().build();
