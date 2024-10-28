@@ -13,6 +13,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
@@ -62,6 +63,7 @@ import static it.pagopa.selfcare.user.constant.CustomError.*;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.DELETED;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
 import static it.pagopa.selfcare.user.service.UserServiceImpl.USERS_WORKS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
@@ -141,6 +143,7 @@ class UserServiceTest {
         OnboardedProduct productTest = new OnboardedProduct();
         productTest.setProductId("prod-test");
         productTest.setProductRole("operator");
+        productTest.setRole(PartyRole.OPERATOR);
         productTest.setStatus(OnboardedProductState.DELETED);
         List<OnboardedProduct> products = new ArrayList<>();
         products.add(product);
@@ -959,12 +962,76 @@ class UserServiceTest {
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
         addUserRoleProduct.setDelegationId("delegationId");
-        addUserRoleDto.setProduct(addUserRoleProduct);
+        addUserRoleProduct.setRole("MANAGER");
         addUserRoleProduct.setProductRoles(List.of("admin"));
+        addUserRoleDto.setProduct(addUserRoleProduct);
         LoggedUser loggedUser = LoggedUser.builder().build();
 
         when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
         when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(InvalidRequestException.class, "User already has roles on Product test");
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_ProductAlreadyOnboardedWithAnotherRole() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole("OPERATOR");
+        addUserRoleProduct.setDelegationId("delegationId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        addUserRoleProduct.setProductRoles(List.of("operatore api"));
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+
+
+        userService.createOrUpdateUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(InvalidRequestException.class, "User already has different role on Product test");
+
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_ProductAlreadyOnboardedWithAnotherProductRole() {
+        // Prepare test data
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole("OPERATOR");
+        addUserRoleProduct.setDelegationId("delegationId");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+        addUserRoleProduct.setProductRoles(List.of("security"));
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        UserInstitution userInstitution = createUserInstitution();
+        userInstitution.getProducts().get(0).setStatus(DELETED);
+        userInstitution.getProducts().get(1).setStatus(ACTIVE);
+        userInstitution.getProducts().get(1).setProductId("test");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        // Mock external dependencies
+        when(userRegistryApi.findByIdUsingGET(any(), eq("userId"))).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(userResource.getId().toString(), addUserRoleDto.getInstitutionId())).thenReturn(Uni.createFrom().item((userInstitution)));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(createUserInstitution()));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method
@@ -972,7 +1039,10 @@ class UserServiceTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
         // Verify the result
-        assertNull(subscriber.awaitItem().getItem());
+        subscriber.awaitItem().assertCompleted();
+        verify(userRegistryApi).findByIdUsingGET(any(), eq("userId"));
+        verify(userInstitutionService).persistOrUpdate(any());
+
     }
 
     @Test
@@ -982,6 +1052,7 @@ class UserServiceTest {
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
         addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole("MANAGER");
         addUserRoleDto.setProduct(addUserRoleProduct);
         addUserRoleProduct.setProductRoles(List.of("admin", "admin2"));
         LoggedUser loggedUser = LoggedUser.builder().build();
