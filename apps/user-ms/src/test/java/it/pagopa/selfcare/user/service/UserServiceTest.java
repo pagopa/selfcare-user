@@ -810,7 +810,7 @@ class UserServiceTest {
         CreateUserDto.User user = new CreateUserDto.User();
         user.setFiscalCode("fiscalCode");
         CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
-        createUserProduct.setProductId("prod-io");
+        createUserProduct.setProductId("test");
         createUserProduct.setProductRoles(List.of("admin2","admin3"));
         createUserDto.setUser(user);
         createUserDto.setProduct(createUserProduct);
@@ -838,7 +838,7 @@ class UserServiceTest {
         UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
-        Assertions.assertEquals(4, userInstitution.getProducts().size());
+        Assertions.assertEquals(2, userInstitution.getProducts().size());
         // Verify the result
 
         CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
@@ -849,6 +849,96 @@ class UserServiceTest {
         verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
     }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode_with2role_oneAlreadyOnboarded() {
+        UserInstitution userInstitution = createUserInstitution();
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        createUserProduct.setProductId("test");
+        createUserProduct.setRole("MANAGER");
+        createUserProduct.setProductRoles(List.of("admin","admin3"));
+        createUserDto.setUser(user);
+        createUserDto.setProduct(createUserProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+
+        // Call the method
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        Assertions.assertEquals(3, userInstitution.getProducts().size());
+        // Verify the result
+
+        CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
+
+        assertEquals(userId.toString(),response.getUserId());
+        verify(userRegistryApi).updateUsingPATCH(any(), any());
+        verify(userInstitutionService).persistOrUpdate(any());
+        verify(userInstitutionService).findByUserIdAndInstitutionId(any(), any());
+        verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(),any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessByFiscalCode_with2role_oneAlreadyOnboarded_withDifferentSelcRole() {
+        UserInstitution userInstitution = createUserInstitution();
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new  CreateUserDto.Product();
+        createUserProduct.setProductId("test");
+        createUserProduct.setRole("OPERATOR");
+        createUserProduct.setProductRoles(List.of("admin","admin3"));
+        createUserDto.setUser(user);
+        createUserDto.setProduct(createUserProduct);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        Product product = new Product();
+        product.setDescription("description");
+
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(userId.toString());
+
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setUser(userToNotify);
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(any(), any())).thenReturn(Uni.createFrom().item(Response.ok().build()));
+        when(userInstitutionService.persistOrUpdate(any())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(productService.getProduct(any())).thenReturn(product);
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(),any())).thenReturn(Uni.createFrom().voidItem());
+        when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
+
+        userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(InvalidRequestException.class, "User already has different role on Product test");
+
+        Assertions.assertEquals(2, userInstitution.getProducts().size());
+   }
+
 
     @Test
     void testCreateOrUpdateUser_CreateUser_SuccessByFiscalCode() {

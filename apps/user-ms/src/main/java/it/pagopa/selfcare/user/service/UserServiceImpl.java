@@ -501,6 +501,15 @@ public class UserServiceImpl implements UserService {
                 .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
     }
 
+    private boolean checkAlreadyOnboardedRole(CreateUserDto.Product product, UserInstitution userInstitution) {
+        return Optional.ofNullable(userInstitution.getProducts())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
+                .filter(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(product.getProductId()))
+                .anyMatch(onboardedProduct -> !onboardedProduct.getRole().name().equalsIgnoreCase(product.getRole()));
+    }
+
     /**
      * Updates or creates a UserInstitution based on the provided data.
      * Return null value if UserInstitution exists in ACTIVE with the same productRole
@@ -518,14 +527,10 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        //Verify if productRole already exists
-        if(Optional.ofNullable(userInstitution.getProducts())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(onboardedProduct -> onboardedProduct.getStatus().equals(ACTIVE))
-                .filter(onboardedProduct -> userDto.getProduct().getProductId().equals(onboardedProduct.getProductId()))
-                .anyMatch(onboardedProduct -> userDto.getProduct().getProductRoles().contains(onboardedProduct.getProductRole()))){
-           return Uni.createFrom().nullItem();
+        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
+
+        if(checkAlreadyOnboardedRole(userDto.getProduct(), userInstitution)){
+            throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
         List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
