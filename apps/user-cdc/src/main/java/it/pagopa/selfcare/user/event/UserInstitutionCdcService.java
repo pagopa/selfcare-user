@@ -17,6 +17,7 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.UserUtils;
+import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.event.mapper.NotificationMapper;
@@ -78,6 +79,10 @@ public class UserInstitutionCdcService {
     @Inject
     EventHubRestClient eventHubRestClient;
 
+    @RestClient
+    @Inject
+    EventHubFdRestClient eventHubFdRestClient;
+
     private final NotificationMapper notificationMapper;
 
 
@@ -87,6 +92,7 @@ public class UserInstitutionCdcService {
                                      @ConfigProperty(name = "user-cdc.retry.max-backoff") Integer retryMaxBackOff,
                                      @ConfigProperty(name = "user-cdc.retry") Integer maxRetry,
                                      @ConfigProperty(name = "user-cdc.send-events.watch.enabled") Boolean sendEventsEnabled,
+                                     @ConfigProperty(name = "user-cdc.send-events-fd.watch.enabled") Boolean sendFdEventsEnabled,
                                      UserInstitutionRepository userInstitutionRepository,
                                      TelemetryClient telemetryClient,
                                      TableClient tableClient, NotificationMapper notificationMapper) {
@@ -100,10 +106,10 @@ public class UserInstitutionCdcService {
         this.tableClient = tableClient;
         this.notificationMapper = notificationMapper;
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
-        initOrderStream(sendEventsEnabled);
+        initOrderStream(sendEventsEnabled, sendFdEventsEnabled);
     }
 
-    private void initOrderStream(Boolean sendEventsEnabled) {
+    private void initOrderStream(Boolean sendEventsEnabled, Boolean sendFdEventsEnabled) {
         log.info("Starting initOrderStream ... ");
 
         //Retrieve last resumeToken for watching collection at specific operation
@@ -148,6 +154,17 @@ public class UserInstitutionCdcService {
                         Quarkus.asyncExit();
                     });
         }
+
+        if (sendFdEventsEnabled) {
+            publisher.subscribe().with(
+                    this::consumerToSendUserEventForFD,
+                    failure -> {
+                        log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
+                        telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(TrackEventInput.builder().exception(failure.getClass().toString()).build()), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                        Quarkus.asyncExit();
+                    });
+        }
+
 
         log.info("Completed initOrderStream ... ");
     }
@@ -234,19 +251,22 @@ public class UserInstitutionCdcService {
                 .onFailure(this::checkIfIsRetryableException)
                 .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                 .onItem().transformToUni(userResource -> Uni.createFrom().item(UserUtils.retrieveFdProductIfItChanged(userInstitutionChanged.getProducts(), List.of(PROD_FD, PROD_FD_GARANTITO)))
-                        .map(onboardedProduct -> notificationMapper.toFdUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource, evaluateType(onboardedProduct)))
-                        .onItem().ifNotNull().transformToUni(fdUserNotificationToSend -> eventHubRestClient.sendMessage(fdUserNotificationToSend)
-                                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                                .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
-                )
+                        .onItem().ifNotNull().transform(onboardedProduct -> notificationMapper.toFdUserNotificationToSend(userInstitutionChanged, onboardedProduct, userResource, evaluateType(onboardedProduct)))
+                        .onItem().ifNotNull().transformToUni(fdUserNotificationToSend -> {
+                                    log.info("Sending message to EventHubFdRestClient ... ");
+                                    return eventHubFdRestClient.sendMessage(fdUserNotificationToSend)
+                                            .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                                            .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                                            .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)));
+                                }
+                        ))
                 .subscribe().with(
                         result -> {
-                            log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
+                            log.info("SendFdEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
                             telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
                         },
                         failure -> {
-                            log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
+                            log.error("Error during SendFdEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
                             telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
                         });
     }

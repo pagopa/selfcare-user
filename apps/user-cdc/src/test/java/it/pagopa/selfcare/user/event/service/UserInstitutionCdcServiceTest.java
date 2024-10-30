@@ -7,6 +7,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserInstitutionCdcService;
 import it.pagopa.selfcare.user.event.entity.UserInfo;
@@ -51,6 +52,10 @@ public class UserInstitutionCdcServiceTest {
     @InjectMock
     EventHubRestClient eventHubRestClient;
 
+    @RestClient
+    @InjectMock
+    EventHubFdRestClient eventHubFdRestClient;
+
 
     @Test
     void consumerToSendScUserEvent() {
@@ -81,13 +86,13 @@ public class UserInstitutionCdcServiceTest {
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
         ArgumentCaptor<FdUserNotificationToSend> argumentCaptor = ArgumentCaptor.forClass(FdUserNotificationToSend.class);
-        when(eventHubRestClient.sendMessage(argumentCaptor.capture()))
+        when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         userInstitutionCdcService.consumerToSendUserEventForFD(document);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
-        verify(eventHubRestClient, times(1)).
+        verify(eventHubFdRestClient, times(1)).
                 sendMessage(any(FdUserNotificationToSend.class));
         Assertions.assertEquals(ACTIVE_USER, argumentCaptor.getValue().getType());
     }
@@ -104,13 +109,13 @@ public class UserInstitutionCdcServiceTest {
                 .thenReturn(Uni.createFrom().item(userResource));
         ArgumentCaptor<FdUserNotificationToSend> argumentCaptor = ArgumentCaptor.forClass(FdUserNotificationToSend.class);
 
-        when(eventHubRestClient.sendMessage(argumentCaptor.capture()))
+        when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         userInstitutionCdcService.consumerToSendUserEventForFD(document);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
-        verify(eventHubRestClient, times(1)).
+        verify(eventHubFdRestClient, times(1)).
                 sendMessage(any(FdUserNotificationToSend.class));
         Assertions.assertEquals(SUSPEND_USER, argumentCaptor.getValue().getType());
     }
@@ -126,18 +131,16 @@ public class UserInstitutionCdcServiceTest {
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
         ArgumentCaptor<FdUserNotificationToSend> argumentCaptor = ArgumentCaptor.forClass(FdUserNotificationToSend.class);
-        when(eventHubRestClient.sendMessage(argumentCaptor.capture()))
+        when(eventHubFdRestClient.sendMessage(argumentCaptor.capture()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         userInstitutionCdcService.consumerToSendUserEventForFD(document);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
-        verify(eventHubRestClient, times(1)).
+        verify(eventHubFdRestClient, times(1)).
                 sendMessage(any(FdUserNotificationToSend.class));
         Assertions.assertEquals(DELETE_USER, argumentCaptor.getValue().getType());
     }
-
-
 
     @Test
     void consumerToSendUserEventForFDNotSend() {
@@ -153,8 +156,8 @@ public class UserInstitutionCdcServiceTest {
         userInstitutionCdcService.consumerToSendUserEventForFD(document);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
-        verify(eventHubRestClient, times(0)).
-                sendMessage(any(UserNotificationToSend.class));
+        verify(eventHubFdRestClient, times(0)).
+                sendMessage(any(FdUserNotificationToSend.class));
     }
 
 

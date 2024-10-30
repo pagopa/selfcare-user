@@ -33,12 +33,28 @@ app_settings = [
     value = "true"
   },
   {
+    name = "USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED"
+    value = "true"
+  },
+  {
     name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-p-eventhub-ns.servicebus.windows.net/sc-users"
+    value = "https://selc-p-eventhub-ns.servicebus.windows.net/"
+  },
+  {
+    name  = "EVENT_HUB_SC_USERS_TOPIC"
+    value = "sc-users"
+  },
+  {
+    name  = "EVENT_HUB_SELFCARE_FD_TOPIC"
+    value = "selfcare-fd"
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
+  },
+  {
+    name  = "FD_SHARED_ACCESS_KEY_NAME"
+    value = "external-interceptor-wo"
   },
   {
     name  = "USER_REGISTRY_URL"
@@ -47,10 +63,11 @@ app_settings = [
 ]
 
 secrets_names = {
-  "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-  "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-  "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-users-selfcare-wo-key-lc"
-  "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+  "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+  "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+  "STORAGE_CONNECTION_STRING"               = "blob-storage-product-connection-string"
+  "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
+  "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
+  "EVENTHUB-SELFCARE-FD-FD-KEY-LC"          = "eventhub-selfcare-fd-fd-key-lc"
 }
 
