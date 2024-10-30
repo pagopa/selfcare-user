@@ -46,6 +46,7 @@ import static it.pagopa.selfcare.user.event.constant.CdcStartAtConstant.*;
 import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.*;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_CDC_NAME;
+import static it.pagopa.selfcare.user.model.constants.EventsName.FD_EVENT_USER_CDC_NAME;
 import static java.util.Arrays.asList;
 
 @Startup
@@ -242,7 +243,7 @@ public class UserInstitutionCdcService {
 
     public void consumerToSendUserEventForFD(ChangeStreamDocument<UserInstitution> document) {
 
-        if (Objects.nonNull(document.getFullDocument()) && Objects.nonNull(document.getDocumentKey()) {
+        if (Objects.nonNull(document.getFullDocument()) && Objects.nonNull(document.getDocumentKey())) {
             UserInstitution userInstitutionChanged = document.getFullDocument();
 
             log.info("Starting consumerToSendUserEventForFd ... ");
@@ -256,18 +257,18 @@ public class UserInstitutionCdcService {
                                         log.info("Sending message to EventHubFdRestClient ... ");
                                         return eventHubFdRestClient.sendMessage(fdUserNotificationToSend)
                                                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                                                .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)));
+                                                .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(FD_EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
+                                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(fdUserNotificationToSend)), Map.of(FD_EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)));
                                     }
                             ))
                     .subscribe().with(
                             result -> {
                                 log.info("SendFdEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
-                                telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
+                                telemetryClient.trackEvent(FD_EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(FD_EVENTS_USER_INSTITUTION_SUCCESS, 1D));
                             },
                             failure -> {
                                 log.error("Error during SendFdEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                                telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_FAILURE, 1D));
+                                telemetryClient.trackEvent(FD_EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(FD_EVENTS_USER_INSTITUTION_FAILURE, 1D));
                             });
         }
     }
