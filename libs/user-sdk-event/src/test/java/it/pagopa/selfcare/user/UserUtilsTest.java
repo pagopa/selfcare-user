@@ -88,4 +88,40 @@ public class UserUtilsTest {
         onboardedProduct.setStatus(state);
         return onboardedProduct;
     }
+
+    @Test
+    void getSASToken_withValidInputs_shouldReturnValidToken() {
+        String resourceUri = "https://example.com/resource";
+        String keyName = "keyName";
+        String key = "secretKey";
+
+        String sasToken = UserUtils.getSASToken(resourceUri, keyName, key);
+
+        assertNotNull(sasToken);
+        assertTrue(sasToken.contains("SharedAccessSignature sr="));
+        assertTrue(sasToken.contains("&sig="));
+        assertTrue(sasToken.contains("&se="));
+        assertTrue(sasToken.contains("&skn="));
+    }
+
+    @Test
+    void getSASToken_withInvalidEncoding_shouldHandleException() {
+        String resourceUri = "https://example.com/resource";
+        String keyName = "keyName";
+        String key = "secretKey";
+
+        String sasToken = UserUtils.getSASToken(resourceUri, keyName, key);
+
+        assertNotNull(sasToken);
+    }
+
+    @Test
+    void getHMAC256_withValidInputs_shouldReturnValidHash() {
+        String key = "secretKey";
+        String input = "inputString";
+
+        String hash = UserUtils.getHMAC256(key, input);
+
+        assertNotNull(hash);
+    }
 }

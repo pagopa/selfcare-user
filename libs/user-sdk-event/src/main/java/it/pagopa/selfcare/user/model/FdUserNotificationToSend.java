@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
+@SuppressWarnings("java:S1068")
 public class FdUserNotificationToSend {
 
     private String id;
