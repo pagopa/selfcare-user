@@ -68,6 +68,6 @@ secrets_names = {
   "STORAGE_CONNECTION_STRING"               = "blob-storage-product-connection-string"
   "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
   "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-  "EVENTHUB-SELFCARE-FD-FD-KEY-LC"          = "eventhub-selfcare-fd-fd-key-lc"
+  "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"    = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
 }
 
