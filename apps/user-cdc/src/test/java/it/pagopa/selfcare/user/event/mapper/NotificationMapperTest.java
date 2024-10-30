@@ -10,6 +10,8 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,6 +38,21 @@ class NotificationMapperTest {
         assertEquals("Admin", result.getProductRole());
         assertEquals("MANAGER", result.getRole());
         assertEquals(OnboardedProductState.ACTIVE, result.getRelationshipStatus());
+    }
+
+    @Test
+    void mapUserForFdTest() {
+        UserResource userResource = new UserResource();
+        userResource.setId(UUID.randomUUID());
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductRole("Admin");
+        onboardedProduct.setRole(PartyRole.MANAGER);
+
+        UserToNotify result = new NotificationMapperImpl().mapUserForFD(userResource,  onboardedProduct);
+
+        assertEquals(userResource.getId().toString(), result.getUserId());
+        assertEquals(List.of("Admin"), result.getRoles());
+        assertEquals("MANAGER", result.getRole());
     }
 
     @Test

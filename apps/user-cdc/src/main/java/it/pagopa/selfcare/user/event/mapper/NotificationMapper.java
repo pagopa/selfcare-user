@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.event.mapper;
 
+import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.StringUtils;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.*;
@@ -10,9 +11,7 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import javax.swing.text.html.Option;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Mapper(componentModel = "cdi", imports = UUID.class)
 public interface NotificationMapper {
@@ -36,10 +35,18 @@ public interface NotificationMapper {
     @Mapping(target = "product", source = "product.productId")
     @Mapping(target = "createdAt", source = "product.createdAt")
     @Mapping(target = "updatedAt", expression = "java((null == product.getUpdatedAt()) ? product.getCreatedAt() : product.getUpdatedAt())")
-    @Mapping(target = "user", expression = "java(mapUser(userResource, userInstitutionChanged.getUserMailUuid(), product))")
+    @Mapping(target = "user", expression = "java(mapUserForFD(userResource, product))")
     @Mapping(target = "type", source = "type")
     FdUserNotificationToSend toFdUserNotificationToSend(UserInstitution userInstitutionChanged, OnboardedProduct product, UserResource userResource, NotificationUserType type);
 
+    @Named("mapUserForFD")
+    default UserToNotify mapUserForFD(UserResource userResource,OnboardedProduct onboardedProduct) {
+        UserToNotify userToNotify = new UserToNotify();
+        userToNotify.setUserId(Optional.ofNullable(userResource.getId()).map(UUID::toString).orElse(null));
+        userToNotify.setRoles(StringUtils.isNotBlank(onboardedProduct.getProductRole()) ? List.of(onboardedProduct.getProductRole()) : Collections.emptyList());
+        userToNotify.setRole(Optional.ofNullable(onboardedProduct.getRole()).map(Enum::name).orElse(null));
+        return userToNotify;
+    }
 
     @Named("mapUser")
     default UserToNotify mapUser(UserResource userResource, String userMailUuid, OnboardedProduct onboardedProduct) {
