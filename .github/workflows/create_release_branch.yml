@@ -42,9 +42,9 @@ jobs:
           gh workflow run release_pnpg_ms.yml \
             --ref ${{ steps.create_branch.outputs.new_branch_name }}
 
-      - name: Trigger release cdc UAT Release
+      - name: Trigger release user cdc UAT Release
         run: |
-          gh workflow run release_cdc.yml \
+          gh workflow run release_user_cdc.yml \
             --ref ${{ steps.create_branch.outputs.new_branch_name }}
 
       - name: Trigger PNPG release cdc UAT Release
@@ -60,5 +60,10 @@ jobs:
       - name: Trigger PNPG release user-group-ms UAT Release
         run: |
           gh workflow run release_pnpg_user_group_ms.yml \
+            --ref ${{ steps.create_branch.outputs.new_branch_name }}
+
+      - name: Trigger release user-group-cdc UAT Release
+        run: |
+          gh workflow run release_user_group_cdc.yml \
             --ref ${{ steps.create_branch.outputs.new_branch_name }}
   
