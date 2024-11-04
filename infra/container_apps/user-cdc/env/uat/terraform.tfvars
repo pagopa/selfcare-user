@@ -38,7 +38,7 @@ app_settings = [
   },
   {
     name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-d-eventhub-ns.servicebus.windows.net/"
+    value = "https://selc-u-eventhub-ns.servicebus.windows.net/"
   },
   {
     name  = "EVENT_HUB_SC_USERS_TOPIC"
