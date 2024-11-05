@@ -30,7 +30,11 @@ app_settings = [
   },
   {
     name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-u-eventhub-ns.servicebus.windows.net/sc-usergroups"
+    value = "https://selc-u-eventhub-ns.servicebus.windows.net/"
+  },
+  {
+    name  = "EVENT_HUB_SC_USERGROUPS_TOPIC"
+    value = "sc-usergroups"
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
