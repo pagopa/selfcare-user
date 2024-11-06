@@ -51,21 +51,25 @@ class UserGroupServiceImpl implements UserGroupService {
         Assert.state(authentication.getPrincipal() instanceof SelfCareUser, "Not SelfCareUser principal");
         Assert.notNull(group, "A group is required");
 
-        checkNameUniqueness(group.getName(), group.getProductId(), group.getInstitutionId());
+        checkNameUniqueness(group.getId(), group.getName(), group.getProductId(), group.getInstitutionId());
         UserGroupOperations insert = groupConnector.insert(group);
         log.debug("insert = {}", insert);
         log.trace("createGroup end");
         return insert;
     }
 
-    private void checkNameUniqueness(String groupName, String productId, String institutionId) {
+    private void checkNameUniqueness(String currentGroupId, String groupName, String productId, String institutionId) {
         UserGroupFilter filter = new UserGroupFilter();
         filter.setProductId(productId);
         filter.setInstitutionId(institutionId);
         filter.setStatus(Arrays.asList(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED));
 
         Page<UserGroupOperations> existingGroups = groupConnector.findAll(filter, Pageable.unpaged());
-        if (existingGroups.stream().anyMatch(g -> g.getName().equals(groupName))) {
+        boolean isDuplicate = existingGroups.stream()
+                .anyMatch(g -> g.getName().equals(groupName) && !g.getId().equals(currentGroupId));
+
+        if (isDuplicate) {
+            log.warn("Attempted to create/update group with duplicate name: {}", groupName);
             throw new ResourceAlreadyExistsException(GROUP_NAME_ALREADY_EXISTS);
         }
     }
@@ -174,7 +178,7 @@ class UserGroupServiceImpl implements UserGroupService {
         if (UserGroupStatus.SUSPENDED.equals(foundGroup.getStatus())) {
             throw new ResourceUpdateException(TRYING_TO_MODIFY_SUSPENDED_GROUP);
         }
-        checkNameUniqueness(group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId());
+        checkNameUniqueness(id, group.getName(), foundGroup.getProductId(), foundGroup.getInstitutionId());
 
         foundGroup.setMembers(group.getMembers());
         foundGroup.setName(group.getName());

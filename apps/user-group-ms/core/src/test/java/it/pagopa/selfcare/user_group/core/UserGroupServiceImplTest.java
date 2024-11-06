@@ -327,6 +327,42 @@ class UserGroupServiceImplTest {
     }
 
     @Test
+    void updateGroup_exists_notChangingName() {
+        //given
+        String id = "id";
+        UserGroupOperations group = TestUtils.mockInstance(new DummyGroup(), "setId");
+        group.setName("existingGroupName");
+
+        UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
+        foundGroup.setId("foundId");
+        foundGroup.setName("existingGroupName");
+        foundGroup.setStatus(UserGroupStatus.ACTIVE);
+
+        // existing group find the same group without changing the name
+        Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(foundGroup), Pageable.unpaged(), () -> 1L);
+
+        when(groupConnectorMock.findAll(any(), any()))
+                .thenReturn(existingGroups);
+        when(groupConnectorMock.findById(Mockito.anyString()))
+                .thenReturn(Optional.of(foundGroup));
+        when(groupConnectorMock.save(any()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0, UserGroupOperations.class));
+
+        //when
+        UserGroupOperations saved = groupService.updateGroup(id, group);
+        //then
+        assertEquals(saved.getDescription(), group.getDescription());
+        assertEquals(saved.getMembers(), group.getMembers());
+        assertEquals(saved.getName(), group.getName());
+
+        verify(groupConnectorMock, times(1))
+                .findById(id);
+        verify(groupConnectorMock, times(1))
+                .findAll(any(), any());
+        verifyNoMoreInteractions(groupConnectorMock);
+    }
+
+    @Test
     void updateGroup_exists_conflict() {
         //given
         String id = "id";
