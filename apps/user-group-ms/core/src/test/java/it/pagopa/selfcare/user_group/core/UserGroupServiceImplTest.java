@@ -24,17 +24,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.ValidationException;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -107,7 +107,7 @@ class UserGroupServiceImplTest {
         verifyNoInteractions(groupConnectorMock);
     }
 
-    @Test
+  @Test
     void createGroup_ok() {
         //given
         SelfCareUser selfCareUser = SelfCareUser.builder("userId")
@@ -117,10 +117,10 @@ class UserGroupServiceImplTest {
                 .build();
         TestingAuthenticationToken authenticationToken = new TestingAuthenticationToken(selfCareUser, null);
         TestSecurityContextHolder.setAuthentication(authenticationToken);
-        Set<UUID> members = Set.of(randomUUID(), randomUUID());
         UserGroupOperations input = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
-        input.setId("id");
-        input.setMembers(members.stream().map(UUID::toString).collect(Collectors.toSet()));
+        Page<UserGroupOperations> existingGroups = getPage(Collections.emptyList(), Pageable.unpaged(), () -> 0L);
+        when(groupConnectorMock.findAll(any(), any()))
+                .thenReturn(existingGroups);
         when(groupConnectorMock.insert(any(UserGroupOperations.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0, UserGroupOperations.class));
         //when
@@ -130,6 +130,40 @@ class UserGroupServiceImplTest {
 
         verify(groupConnectorMock, times(1))
                 .insert(any(UserGroupOperations.class));
+          verify(groupConnectorMock, times(1))
+                .findAll(filter.capture(), any());
+        verifyNoMoreInteractions(groupConnectorMock);
+    }
+
+    @Test
+    void createGroup_conflict() {
+        //given
+        SelfCareUser selfCareUser = SelfCareUser.builder("userId")
+                .email("test@example.com")
+                .name("name")
+                .surname("surname")
+                .build();
+        TestingAuthenticationToken authenticationToken = new TestingAuthenticationToken(selfCareUser, null);
+        TestSecurityContextHolder.setAuthentication(authenticationToken);
+        UserGroupOperations input = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
+        input.setName("existingGroupName");
+
+        UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
+        existingGroup.setName("existingGroupName");
+        Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(existingGroup), Pageable.unpaged(), () -> 1L);
+
+        when(groupConnectorMock.findAll(any(), any()))
+                .thenReturn(existingGroups);
+
+        //when
+        Executable executable = () -> groupService.createGroup(input);
+
+        //then
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, executable);
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+        verify(groupConnectorMock, times(1))
+                .findAll(filter.capture(), any());
         verifyNoMoreInteractions(groupConnectorMock);
     }
 
@@ -266,11 +300,15 @@ class UserGroupServiceImplTest {
     }
 
     @Test
-    void updateGroup_exists() {
+    void updateGroup_exists_ok() {
         //given
         String id = "id";
         UserGroupOperations group = TestUtils.mockInstance(new DummyGroup(), "setId");
         UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
+        Page<UserGroupOperations> existingGroups = getPage(Collections.emptyList(), Pageable.unpaged(), () -> 0L);
+
+        when(groupConnectorMock.findAll(any(), any()))
+                .thenReturn(existingGroups);
         when(groupConnectorMock.findById(Mockito.anyString()))
                 .thenReturn(Optional.of(foundGroup));
         when(groupConnectorMock.save(any()))
@@ -284,9 +322,46 @@ class UserGroupServiceImplTest {
         verify(groupConnectorMock, times(1))
                 .findById(id);
         verify(groupConnectorMock, times(1))
+                .findAll(any(), any());
+        verify(groupConnectorMock, times(1))
                 .save(any());
         verifyNoMoreInteractions(groupConnectorMock);
     }
+
+    @Test
+void updateGroup_exists_conflict() {
+    //given
+    String id = "id";
+    UserGroupOperations group = TestUtils.mockInstance(new DummyGroup(), "setId");
+    group.setName("existingGroupName");
+    UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
+    foundGroup.setStatus(UserGroupStatus.ACTIVE);
+
+    UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setId");
+    existingGroup.setName("existingGroupName");
+    existingGroup.setId("differentId");
+    Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(existingGroup), Pageable.unpaged(), () -> 1L);
+
+    when(groupConnectorMock.findAll(any(), any()))
+            .thenReturn(existingGroups);
+    when(groupConnectorMock.findById(Mockito.anyString()))
+            .thenReturn(Optional.of(foundGroup));
+    when(groupConnectorMock.save(any()))
+            .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0, UserGroupOperations.class));
+
+    //when
+    Executable executable = () -> groupService.updateGroup(id, group);
+
+    //then
+    ResponseStatusException exception = assertThrows(ResponseStatusException.class, executable);
+    assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+
+    verify(groupConnectorMock, times(1))
+            .findById(id);
+    verify(groupConnectorMock, times(1))
+            .findAll(any(), any());
+    verifyNoMoreInteractions(groupConnectorMock);
+}
 
     @Test
     void addMember_nullId() {
