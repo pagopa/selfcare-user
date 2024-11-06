@@ -5,6 +5,7 @@ import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.user_group.connector.DummyGroup;
 import it.pagopa.selfcare.user_group.connector.api.UserGroupConnector;
 import it.pagopa.selfcare.user_group.connector.api.UserGroupOperations;
+import it.pagopa.selfcare.user_group.connector.exception.ResourceAlreadyExistsException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user_group.connector.exception.ResourceUpdateException;
 import it.pagopa.selfcare.user_group.connector.model.UserGroupFilter;
@@ -24,14 +25,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.TestSecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.ValidationException;
 import java.util.*;
@@ -107,7 +106,7 @@ class UserGroupServiceImplTest {
         verifyNoInteractions(groupConnectorMock);
     }
 
-  @Test
+    @Test
     void createGroup_ok() {
         //given
         SelfCareUser selfCareUser = SelfCareUser.builder("userId")
@@ -130,7 +129,7 @@ class UserGroupServiceImplTest {
 
         verify(groupConnectorMock, times(1))
                 .insert(any(UserGroupOperations.class));
-          verify(groupConnectorMock, times(1))
+        verify(groupConnectorMock, times(1))
                 .findAll(filter.capture(), any());
         verifyNoMoreInteractions(groupConnectorMock);
     }
@@ -159,8 +158,7 @@ class UserGroupServiceImplTest {
         Executable executable = () -> groupService.createGroup(input);
 
         //then
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, executable);
-        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+        assertThrows(ResourceAlreadyExistsException.class, executable);
 
         verify(groupConnectorMock, times(1))
                 .findAll(filter.capture(), any());
@@ -329,39 +327,38 @@ class UserGroupServiceImplTest {
     }
 
     @Test
-void updateGroup_exists_conflict() {
-    //given
-    String id = "id";
-    UserGroupOperations group = TestUtils.mockInstance(new DummyGroup(), "setId");
-    group.setName("existingGroupName");
-    UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
-    foundGroup.setStatus(UserGroupStatus.ACTIVE);
+    void updateGroup_exists_conflict() {
+        //given
+        String id = "id";
+        UserGroupOperations group = TestUtils.mockInstance(new DummyGroup(), "setId");
+        group.setName("existingGroupName");
+        UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
+        foundGroup.setStatus(UserGroupStatus.ACTIVE);
 
-    UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setId");
-    existingGroup.setName("existingGroupName");
-    existingGroup.setId("differentId");
-    Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(existingGroup), Pageable.unpaged(), () -> 1L);
+        UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setId");
+        existingGroup.setName("existingGroupName");
+        existingGroup.setId("differentId");
+        Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(existingGroup), Pageable.unpaged(), () -> 1L);
 
-    when(groupConnectorMock.findAll(any(), any()))
-            .thenReturn(existingGroups);
-    when(groupConnectorMock.findById(Mockito.anyString()))
-            .thenReturn(Optional.of(foundGroup));
-    when(groupConnectorMock.save(any()))
-            .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0, UserGroupOperations.class));
+        when(groupConnectorMock.findAll(any(), any()))
+                .thenReturn(existingGroups);
+        when(groupConnectorMock.findById(Mockito.anyString()))
+                .thenReturn(Optional.of(foundGroup));
+        when(groupConnectorMock.save(any()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0, UserGroupOperations.class));
 
-    //when
-    Executable executable = () -> groupService.updateGroup(id, group);
+        //when
+        Executable executable = () -> groupService.updateGroup(id, group);
 
-    //then
-    ResponseStatusException exception = assertThrows(ResponseStatusException.class, executable);
-    assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+        //then
+        assertThrows(ResourceAlreadyExistsException.class, executable);
 
-    verify(groupConnectorMock, times(1))
-            .findById(id);
-    verify(groupConnectorMock, times(1))
-            .findAll(any(), any());
-    verifyNoMoreInteractions(groupConnectorMock);
-}
+        verify(groupConnectorMock, times(1))
+                .findById(id);
+        verify(groupConnectorMock, times(1))
+                .findAll(any(), any());
+        verifyNoMoreInteractions(groupConnectorMock);
+    }
 
     @Test
     void addMember_nullId() {
