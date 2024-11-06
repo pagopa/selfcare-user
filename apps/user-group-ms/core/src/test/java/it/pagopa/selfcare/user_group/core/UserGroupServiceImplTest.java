@@ -147,7 +147,7 @@ class UserGroupServiceImplTest {
         UserGroupOperations input = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
         input.setName("existingGroupName");
 
-        UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setId", "setCreateAt", "setModifiedAt");
+        UserGroupOperations existingGroup = TestUtils.mockInstance(new DummyGroup(), "setCreateAt", "setModifiedAt");
         existingGroup.setName("existingGroupName");
         Page<UserGroupOperations> existingGroups = getPage(Collections.singletonList(existingGroup), Pageable.unpaged(), () -> 1L);
 
@@ -334,7 +334,7 @@ class UserGroupServiceImplTest {
         group.setName("existingGroupName");
 
         UserGroupOperations foundGroup = TestUtils.mockInstance(new DummyGroup());
-        foundGroup.setId("foundId");
+        foundGroup.setId(id);
         foundGroup.setName("existingGroupName");
         foundGroup.setStatus(UserGroupStatus.ACTIVE);
 
@@ -359,6 +359,8 @@ class UserGroupServiceImplTest {
                 .findById(id);
         verify(groupConnectorMock, times(1))
                 .findAll(any(), any());
+        verify(groupConnectorMock, times(1))
+                .save(any());
         verifyNoMoreInteractions(groupConnectorMock);
     }
 
