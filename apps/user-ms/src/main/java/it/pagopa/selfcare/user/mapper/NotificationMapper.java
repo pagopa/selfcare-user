@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.user.mapper;
 
-import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.StringUtils;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
