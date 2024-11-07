@@ -46,14 +46,30 @@ app_settings = [
   },
   {
     name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-d-eventhub-ns.servicebus.windows.net/sc-users"
+    value = "https://selc-d-eventhub-ns.servicebus.windows.net/"
+  },
+  {
+    name  = "EVENT_HUB_SC_USERS_TOPIC"
+    value = "sc-users"
+  },
+  {
+    name  = "EVENT_HUB_SELFCARE_FD_TOPIC"
+    value = "selfcare-fd"
   },
   {
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
   {
+    name  = "FD_SHARED_ACCESS_KEY_NAME"
+    value = "external-interceptor-wo"
+  },
+  {
     name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+    value = true
+  },
+  {
+    name = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
     value = true
   },
   {
@@ -81,5 +97,6 @@ secrets_names = {
   "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"             = "blob-storage-product-connection-string"
   "BLOB-STORAGE-CONTRACT-CONNECTION-STRING"            = "blob-storage-contract-connection-string"
   "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"               = "eventhub-sc-users-selfcare-wo-key-lc"
+  "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"               = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
 }
 

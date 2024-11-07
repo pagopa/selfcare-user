@@ -41,11 +41,31 @@ app_settings = [
     value = "user-ms",
   },
   {
+    name  = "EVENT_HUB_BASE_PATH"
+    value = "https://selc-p-eventhub-ns.servicebus.windows.net/"
+  },
+  {
+    name  = "EVENT_HUB_SC_USERS_TOPIC"
+    value = "sc-users"
+  },
+  {
+    name  = "EVENT_HUB_SELFCARE_FD_TOPIC"
+    value = "selfcare-fd"
+  },
+  {
     name  = "SHARED_ACCESS_KEY_NAME"
     value = "selfcare-wo"
   },
   {
+    name  = "FD_SHARED_ACCESS_KEY_NAME"
+    value = "external-interceptor-wo"
+  },
+  {
     name  = "USER_MS_EVENTHUB_USERS_ENABLED"
+    value = true
+  },
+  {
+    name = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
     value = true
   },
   {
@@ -55,10 +75,6 @@ app_settings = [
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
-  },
-  {
-    name  = "EVENT_HUB_BASE_PATH"
-    value = "https://selc-p-eventhub-ns.servicebus.windows.net/sc-users"
   },
   {
     name  = "USER_MS_RETRY_MIN_BACKOFF"
@@ -85,4 +101,5 @@ secrets_names = {
   "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"             = "blob-storage-product-connection-string"
   "BLOB-STORAGE-CONTRACT-CONNECTION-STRING"            = "blob-storage-contract-connection-string"
   "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"               = "eventhub-sc-users-selfcare-wo-key-lc"
+  "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"               = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
 }
