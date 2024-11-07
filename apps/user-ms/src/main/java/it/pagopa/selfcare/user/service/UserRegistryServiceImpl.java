@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 
 
@@ -40,8 +42,6 @@ import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 @Slf4j
 public class UserRegistryServiceImpl implements UserRegistryService {
     private static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
-    public static final String PROD_FD_GARANTITO = "prod-fd-garantito";
-    public static final String PROD_FD = "prod-fd";
 
     private final UserInstitutionService userInstitutionService;
     private final UserMapper userMapper;
@@ -153,7 +153,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     }
 
     private boolean checkIfExistActiveFdProduct(OnboardedProduct product) {
-        return List.of(PROD_FD, PROD_FD_GARANTITO).contains(product.getProductId()) && OnboardedProductState.ACTIVE.equals(product.getStatus());
+        return List.of(PROD_FD.getValue(), PROD_FD_GARANTITO.getValue()).contains(product.getProductId()) && OnboardedProductState.ACTIVE.equals(product.getStatus());
     }
 
     private String retrieveOldMail(UserResource userResource, String userMailUuid) {
