@@ -12,21 +12,25 @@
   <artifactId>user-apps</artifactId>
   <packaging>pom</packaging>
 
+  <properties>
+    <onboarding-sdk.version>0.4.1</onboarding-sdk.version>
+  </properties>
+
   <dependencies>
   <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>onboarding-sdk-azure-storage</artifactId>
-    <version>0.2.0</version>
+    <version>${onboarding-sdk.version}</version>
   </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>onboarding-sdk-common</artifactId>
-      <version>0.3.0</version>
+      <version>${onboarding-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>onboarding-sdk-product</artifactId>
-      <version>0.3.0</version>
+      <version>${onboarding-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
