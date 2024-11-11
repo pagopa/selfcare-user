@@ -25,7 +25,7 @@ jobs:
       - name: Get total lines changed
         shell: bash
         run: |
-          size=$(git diff --stat origin/main --diff-filter=d \
+          size=$(git diff --stat origin/${{ github.base_ref }} --diff-filter=d \
           | grep -v .lock \
           | awk -F"|" '{ print $2 }' \
           | awk '{ print $1 }' \
