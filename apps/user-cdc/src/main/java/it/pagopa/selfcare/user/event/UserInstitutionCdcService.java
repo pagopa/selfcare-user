@@ -220,6 +220,7 @@ public class UserInstitutionCdcService {
         log.info("Starting consumerToSendScUserEvent ... ");
 
         userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitutionChanged.getUserId())
+                .onItem().invoke(resource -> log.info("workContacts for user {} : {}",userInstitutionChanged.getUserId(),resource.getWorkContacts()))
                 .onFailure(this::checkIfIsRetryableException)
                 .retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                 .onItem().transformToUni(userResource -> Multi.createFrom().iterable(UserUtils.groupingProductAndReturnMinStateProduct(userInstitutionChanged.getProducts()))
