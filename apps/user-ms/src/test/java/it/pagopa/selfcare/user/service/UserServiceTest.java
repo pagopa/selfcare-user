@@ -1298,6 +1298,39 @@ class UserServiceTest {
     }
 
     @Test
+    void createUserFromOnboardingByUserIdInvalidRole() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole("INVALID");
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(InvalidRequestException.class, "Invalid role: INVALID. Allowed value are: [MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA]");
+    }
+
+
+    @Test
     void createUserFromOnboardingByUserIdUserWithBiggestActiveRoleOnProduct() {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");

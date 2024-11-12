@@ -339,8 +339,8 @@ public class UserController {
                                             @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createUserByUserId(userDto, userId, loggedUser))
-                .onItem().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
-                .onFailure(UserRoleAlreadyPresentException.class).recoverWithUni(throwable -> Uni.createFrom().item(Response.status(HttpStatus.SC_OK).build()));
+                .onItem().transform(ignore -> Response.status(HttpStatus.SC_CREATED).entity(userId).build())
+                .onFailure(UserRoleAlreadyPresentException.class).recoverWithUni(throwable -> Uni.createFrom().item(Response.status(HttpStatus.SC_OK).entity(userId).build()));
     }
 
     /**

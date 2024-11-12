@@ -481,9 +481,15 @@ public class UserServiceImpl implements UserService {
      * If the new role is equals or higher than the existing role, throw a UserRoleAlreadyPresentException to indicate that we need to keep the old role.
      */
     private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct) {
+        PartyRole newRole;
+        try {
+            newRole = PartyRole.valueOf(userDto.getProduct().getRole());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Invalid role: " + userDto.getProduct().getRole() + ". Allowed value are: " + Arrays.toString(PartyRole.values()));
+        }
         if (Objects.isNull(roleOnProduct)) {
             return createOrUpdateUserByUserId(userDto, userId, loggedUser);
-        }else if(PartyRole.valueOf(userDto.getProduct().getRole()).compareTo(roleOnProduct) < 0){
+        } else if (newRole.compareTo(roleOnProduct) < 0) {
             log.info("User {}, for product {}, has role {}, which is lower than {}. The old role will be deleted, and the new role will be created.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
             return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
                     .onItem().transformToUni(longValue -> createOrUpdateUserByUserId(userDto, userId, loggedUser));
