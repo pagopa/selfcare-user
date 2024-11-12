@@ -471,6 +471,15 @@ public class UserServiceImpl implements UserService {
                 .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
     }
 
+    /**
+     * The evaluateRoleAndCreateOrUpdateUserByUserId method is designed to evaluate the role of a user for a specific product
+     * and either create or update the user's role based on certain conditions.
+     * First, the method checks if the roleOnProduct is null. If it is, we need to create new role for the user on selected product.
+     * Next, the method compares the role specified in userDto with the existing roleOnProduct.
+     * If the new role is lower than the existing role (es. new role DELEGATE, old role MANAGER), it then calls
+     * we have to delete the old role, and subsequently we create new role for the user on selected product.
+     * If the new role is equals or higher than the existing role, throw a UserRoleAlreadyPresentException to indicate that we need to keep the old role.
+     */
     private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct) {
         if (Objects.isNull(roleOnProduct)) {
             return createOrUpdateUserByUserId(userDto, userId, loggedUser);
@@ -478,16 +487,16 @@ public class UserServiceImpl implements UserService {
             log.info("User {}, for product {}, has role {}, which is lower than {}. The old role will be deleted, and the new role will be created.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
             return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
                     .onItem().transformToUni(longValue -> createOrUpdateUserByUserId(userDto, userId, loggedUser));
-        }else if(PartyRole.valueOf(userDto.getProduct().getRole()).compareTo(roleOnProduct) > 0) {
-            log.info("User {}, for product {}, has role {}, which is biggest than {}. The old role is kept.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
-            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(String.format("User already has a role bigger than %s for the product [%s] we cannot create %s role",
+        } else {
+            log.info("User {}, for product {}, has role {}, which is equals or biggest than {}. The old role is kept.", userId, userDto.getProduct().getProductId(), roleOnProduct, userDto.getProduct().getRole());
+            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(String.format("User already has a role equals or bigger than %s for the product [%s] we cannot create %s role",
                     roleOnProduct, userDto.getProduct().getProductId(), userDto.getProduct().getRole())));
-        }else{
-            return Uni.createFrom().failure(new UserRoleAlreadyPresentException(String.format("User already has the requested role %s on product [%s]",
-                    userDto.getProduct().getRole(), userDto.getProduct().getProductId())));
         }
     }
 
+    /**
+     * This method retrieve the user role on a specific product if exists (status = ACTIVE).
+     */
     private PartyRole retrieveUserRoleOnProduct(UserInstitution userInstitution, String productId) {
         if (Objects.nonNull(userInstitution.getProducts()) && !userInstitution.getProducts().isEmpty()) {
             return userInstitution.getProducts().stream()

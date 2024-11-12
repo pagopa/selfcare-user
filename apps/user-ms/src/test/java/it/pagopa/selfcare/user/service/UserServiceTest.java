@@ -1266,7 +1266,7 @@ class UserServiceTest {
     }
 
     @Test
-    void createManagerByUserIdUserIsAlreadyManager() {
+    void createUserFromOnboardingByUserIdUserIsAlreadyManager() {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
@@ -1294,11 +1294,11 @@ class UserServiceTest {
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has the requested role MANAGER on product [test]");
+                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create MANAGER role");
     }
 
     @Test
-    void createManagerByUserIdUserWithBiggestActiveRoleOnProduct() {
+    void createUserFromOnboardingByUserIdUserWithBiggestActiveRoleOnProduct() {
         AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
         addUserRoleDto.setInstitutionId("institutionId");
         AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
@@ -1326,7 +1326,7 @@ class UserServiceTest {
 
         userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role bigger than MANAGER for the product [test] we cannot create SUB_DELEGATE role");
+                .assertFailedWith(UserRoleAlreadyPresentException.class, "User already has a role equals or bigger than MANAGER for the product [test] we cannot create SUB_DELEGATE role");
     }
 
     @Test
