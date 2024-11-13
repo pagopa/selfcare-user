@@ -195,6 +195,43 @@ public class UserRegistryServiceTest {
     }
 
     @Test
+    void updateUserRegistryAndSendNotificationToQueue_whenUserRegistryMustUpdateCheckMailUpdatedAt() {
+        ArgumentCaptor<UserInstitution> userInstitutionArgumentCaptor = ArgumentCaptor.forClass(UserInstitution.class);
+        final String userId = userResource.getId().toString();
+        final String institutionId = "institutionId";
+        when(userNotificationService.sendKafkaNotification(any(UserNotificationToSend.class))).thenReturn(Uni.createFrom().item(new UserNotificationToSend()));
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setName("example");
+        updateUserRequest.setEmail("example@example.it");
+
+        when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(userInstitutionArgumentCaptor.capture())).thenReturn(Uni.createFrom().item(userInstitution));
+        when(userRegistryApi.updateUsingPATCH(eq(userId), any(MutableUserFieldsDto.class))).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userId)).thenReturn(Uni.createFrom().item(userResource));
+
+        UniAssertSubscriber<List<UserInstitution>> subscriber = userRegistryService.updateUserRegistry(updateUserRequest, userId, institutionId)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+
+        //User should be updated for name and mail with a new MailUuid
+        ArgumentCaptor<MutableUserFieldsDto> userFieldsDtoArgumentCaptor = ArgumentCaptor.forClass(MutableUserFieldsDto.class);
+        verify(userRegistryApi, times(1))
+                .updateUsingPATCH(eq(userId), userFieldsDtoArgumentCaptor.capture());
+        assertEquals(updateUserRequest.getName(), userFieldsDtoArgumentCaptor.getValue().getName().getValue());
+        assertNotNull(userFieldsDtoArgumentCaptor.getValue().getWorkContacts());
+        final String userMailUuid = userFieldsDtoArgumentCaptor.getValue().getWorkContacts().keySet().stream().findFirst().orElse(null);
+        assertNotNull(userMailUuid);
+        assertEquals(updateUserRequest.getEmail(), userFieldsDtoArgumentCaptor.getValue().getWorkContacts().get(userMailUuid).getEmail().getValue());
+
+        //UserInstitution should update a new MailUuid
+        verify(userInstitutionService, times(1))
+                .persistOrUpdate(userInstitutionArgumentCaptor.capture());
+        assertEquals(userMailUuid, userInstitutionArgumentCaptor.getValue().getUserMailUuid());
+        assertNotNull(userInstitutionArgumentCaptor.getValue().getUserMailUpdatedAt());
+    }
+
+    @Test
     void testSendUpdateUserNotificationToQueue() {
         final String userId = userResource.getId().toString();
         final String institutionId = "institutionId";

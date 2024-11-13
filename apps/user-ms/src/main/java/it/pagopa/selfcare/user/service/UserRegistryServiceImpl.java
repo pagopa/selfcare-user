@@ -28,6 +28,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -178,7 +179,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
     private Multi<UserInstitution> updateUserInstitution(List<UserInstitution> userInstitutions, String mailUuid) {
         return Multi.createFrom().iterable(userInstitutions.stream()
-                        .peek(userInstitution -> userInstitution.setUserMailUuid(mailUuid))
+                        .peek(userInstitution -> {
+                            userInstitution.setUserMailUuid(mailUuid);
+                            userInstitution.setUserMailUpdatedAt(OffsetDateTime.now());
+                        })
                         .toList())
                 .onItem().transformToUniAndMerge(userInstitutionService::persistOrUpdate)
                 .onItem().invoke(() -> log.debug("UserInstitution updated successfully"))
