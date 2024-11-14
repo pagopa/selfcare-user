@@ -1,5 +1,6 @@
-package it.pagopa.selfcare.user;
+package it.pagopa.selfcare.user.event;
 
+import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
@@ -123,7 +124,7 @@ public class UserUtilsTest {
     }
 
     @Test
-    void retrieveFdProductIfItChanged_withValidProducts_shouldReturnMostRecentlyUpdatedProduct() {
+    void retrieveFdProduct_withValidProducts_shouldReturnMostRecentlyUpdatedProduct() {
         List<OnboardedProduct> products = new ArrayList<>();
         OnboardedProduct product1 = new OnboardedProduct();
         product1.setProductId("1");
@@ -139,24 +140,24 @@ public class UserUtilsTest {
 
         List<String> productIdToCheck = List.of("1", "2");
 
-        OnboardedProduct result = UserUtils.retrieveFdProductIfItChanged(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
 
         assertNotNull(result);
-        assertEquals("2", result.getProductId());
+        assertEquals("1", result.get(0).getProductId());
     }
 
     @Test
-    void retrieveFdProductIfItChanged_withEmptyProductList() {
+    void retrieveFdProduct_withEmptyProductList() {
         List<OnboardedProduct> products = Collections.emptyList();
         List<String> productIdToCheck = List.of("1", "2");
 
-        OnboardedProduct result = UserUtils.retrieveFdProductIfItChanged(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
 
         assertNull(result);
     }
 
     @Test
-    void retrieveFdProductIfItChanged_withNoFdProductIds() {
+    void retrieveFdProduct_withNoFdProductIds() {
         List<OnboardedProduct> products = new ArrayList<>();
         OnboardedProduct product1 = new OnboardedProduct();
         product1.setProductId("1");
@@ -172,13 +173,13 @@ public class UserUtilsTest {
 
         List<String> productIdToCheck = List.of("3", "4");
 
-        OnboardedProduct result = UserUtils.retrieveFdProductIfItChanged(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
 
-        assertNull(result);
+        assertEquals(0, result.size());
     }
 
     @Test
-    void retrieveFdProductIfItChanged_withProductsWithSameUpdatedAt() {
+    void retrieveFdProduct_withProductsWithSameUpdatedAt() {
         List<OnboardedProduct> products = new ArrayList<>();
         OnboardedProduct product1 = new OnboardedProduct();
         product1.setProductId("1");
@@ -194,9 +195,9 @@ public class UserUtilsTest {
 
         List<String> productIdToCheck = List.of("1", "2");
 
-        OnboardedProduct result = UserUtils.retrieveFdProductIfItChanged(products, productIdToCheck);
+        List<OnboardedProduct> result = UserUtils.retrieveFdProduct(products, productIdToCheck);
 
         assertNotNull(result);
-        assertEquals("2", result.getProductId());
+        assertEquals("1", result.get(0).getProductId());
     }
 }
