@@ -1,5 +1,6 @@
-package it.pagopa.selfcare.user;
+package it.pagopa.selfcare.user.event;
 
+import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
