@@ -87,13 +87,17 @@ public class UserUtils {
                         .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
                         .toList();
             }
-            return List.of(Objects.requireNonNull(products.stream()
+            OnboardedProduct onboardedProduct = products.stream()
                     .max(Comparator.comparing(OnboardedProduct::getUpdatedAt, nullsLast(naturalOrder()))
                             .thenComparing(OnboardedProduct::getCreatedAt, nullsLast(naturalOrder())))
-                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
-                    .orElse(null)));
+                    .filter(prod -> productIdToCheck.contains(prod.getProductId()))
+                    .orElse(null);
+
+            if(Objects.nonNull(onboardedProduct)) {
+                return List.of(onboardedProduct);
+            }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public static String getSASToken(String resourceUri, String keyName, String key) {
