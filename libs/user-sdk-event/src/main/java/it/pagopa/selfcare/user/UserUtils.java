@@ -84,7 +84,7 @@ public class UserUtils {
         if (Objects.nonNull(products) && !products.isEmpty()) {
             if(isUserMailChanged){
                 return products.stream()
-                        .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
+                        .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()) && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()))
                         .toList();
             }
             OnboardedProduct onboardedProduct = products.stream()
