@@ -131,13 +131,4 @@ public class UserUtils {
 
         return hash;
     }
-
-    public static List<OnboardedProduct> retrieveFdProduct(List<OnboardedProduct> products, List<String> productIdToCheck) {
-        if (Objects.nonNull(products) && !products.isEmpty()) {
-            return products.stream()
-                    .filter(onboardedProduct -> productIdToCheck.contains(onboardedProduct.getProductId()))
-                    .toList();
-        }
-        return null;
-    }
 }
