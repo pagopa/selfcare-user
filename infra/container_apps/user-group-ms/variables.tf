@@ -73,3 +73,11 @@ variable "suffix_increment" {
   description = "Suffix increment Container App Environment name"
   default     = ""
 }
+
+variable "autoscale_settings" {
+  type = list(object({
+    max_throughput = number
+  }))
+  description = "MongoDB autoscale settings"
+  default = []
+}
