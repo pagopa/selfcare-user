@@ -54,3 +54,7 @@ secrets_names = {
   "MONGODB_CONNECTION_URI"                = "mongodb-connection-string"
   "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
 }
+
+autoscale_settings = [{
+  max_throughput = 1000
+}]
