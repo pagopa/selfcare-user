@@ -27,7 +27,9 @@ import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeRespo
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
@@ -52,19 +54,19 @@ class UserControllerTest {
 
     static {
         userResource = new UserResource();
-        userResource.setEmail(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"));
-        userResource.setName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "name"));
-        userResource.setFamilyName(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "familyName"));
+        userResource.setEmail(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"));
+        userResource.setName(new NameCertifiableSchema(NameCertifiableSchema.CertificationEnum.NONE, "name"));
+        userResource.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.NONE, "familyName"));
         userResource.setFiscalCode("fiscalCode");
-        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email"))));
+        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"), null, null)));
 
         userDetailResponse = new UserDetailResponse();
         userDetailResponse.setId(UUID.randomUUID().toString());
-        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
-        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
-        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertifiableFieldResourceOfstring.CertificationEnum.NONE));
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", "NONE"));
+        userDetailResponse.setName(new CertifiableFieldResponse<>("name", "NONE"));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", "NONE"));
         userDetailResponse.setFiscalCode("fiscalCode");
-        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertifiableFieldResourceOfstring.CertificationEnum.NONE))));
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", "NONE"))));
     }
 
     /**

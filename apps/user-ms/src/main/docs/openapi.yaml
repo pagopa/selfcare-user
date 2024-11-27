@@ -993,12 +993,7 @@ components:
         value:
           type: string
         certified:
-          $ref: "#/components/schemas/CertificationEnum"
-    CertificationEnum:
-      enum:
-      - NONE
-      - SPID
-      type: string
+          type: string
     CreateUserDto:
       required:
       - institutionId
@@ -1182,8 +1177,6 @@ components:
         institutionRootName:
           type: string
     UpdateUserRequest:
-      required:
-      - email
       type: object
       properties:
         name:
@@ -1191,6 +1184,9 @@ components:
         familyName:
           type: string
         email:
+          type: string
+        mobilePhone:
+          pattern: "^\\+?[0-9]{9,15}$"
           type: string
     User:
       required:

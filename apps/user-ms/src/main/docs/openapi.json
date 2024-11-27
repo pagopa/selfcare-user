@@ -1387,13 +1387,9 @@
             "type" : "string"
           },
           "certified" : {
-            "$ref" : "#/components/schemas/CertificationEnum"
+            "type" : "string"
           }
         }
-      },
-      "CertificationEnum" : {
-        "enum" : [ "NONE", "SPID" ],
-        "type" : "string"
       },
       "CreateUserDto" : {
         "required" : [ "institutionId", "user", "product" ],
@@ -1620,7 +1616,6 @@
         }
       },
       "UpdateUserRequest" : {
-        "required" : [ "email" ],
         "type" : "object",
         "properties" : {
           "name" : {
@@ -1630,6 +1625,10 @@
             "type" : "string"
           },
           "email" : {
+            "type" : "string"
+          },
+          "mobilePhone" : {
+            "pattern" : "^\\+?[0-9]{9,15}$",
             "type" : "string"
           }
         }
