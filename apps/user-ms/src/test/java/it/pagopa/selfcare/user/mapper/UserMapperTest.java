@@ -37,7 +37,8 @@ public class UserMapperTest {
     void retrieveCertifiedMobilePhoneFromWorkContacts(){
         final UserResource userResource = new UserResource();
         final CertifiableFieldResourceOfstring email = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "email");
-        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, "mobilePhone");
+        String mobilePhone = "mobilePhone";
+        final CertifiableFieldResourceOfstring phone = new CertifiableFieldResourceOfstring(CertifiableFieldResourceOfstring.CertificationEnum.NONE, mobilePhone);
         WorkContactResource workContactResource = new WorkContactResource(email, phone);
         Map<String, WorkContactResource> workContactResourceMap = Map.of("contactsUuid", workContactResource);
         userResource.setWorkContacts(workContactResourceMap);
@@ -45,7 +46,7 @@ public class UserMapperTest {
         CertifiableFieldResponse<String> certifiedPhone = userMapper.retrieveCertifiedMobilePhoneFromWorkContacts(userResource, "contactsUuid");
 
         assertEquals(CertifiableFieldResourceOfstring.CertificationEnum.NONE,certifiedPhone.getCertified());
-        assertEquals("phone", certifiedPhone.getValue());
+        assertEquals(mobilePhone, certifiedPhone.getValue());
     }
 
     @Test
