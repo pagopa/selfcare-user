@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
@@ -62,11 +63,11 @@ class UserControllerTest {
 
         userDetailResponse = new UserDetailResponse();
         userDetailResponse.setId(UUID.randomUUID().toString());
-        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", "NONE"));
-        userDetailResponse.setName(new CertifiableFieldResponse<>("name", "NONE"));
-        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", "NONE"));
+        userDetailResponse.setEmail(new CertifiableFieldResponse<>("email", CertificationEnum.SPID));
+        userDetailResponse.setName(new CertifiableFieldResponse<>("name", CertificationEnum.SPID));
+        userDetailResponse.setFamilyName(new CertifiableFieldResponse<>("familyName", CertificationEnum.SPID));
         userDetailResponse.setFiscalCode("fiscalCode");
-        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", "NONE"))));
+        userDetailResponse.setWorkContacts(Map.of("userMailUuid", new WorkContactResponse(new CertifiableFieldResponse<String>("email", CertificationEnum.SPID))));
     }
 
     /**

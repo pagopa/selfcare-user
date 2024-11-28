@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UpdateUserRequest;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -97,7 +99,7 @@ public interface UserMapper {
         if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
             return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(),
                     Optional.ofNullable(userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification())
-                            .map(EmailCertifiableSchema.CertificationEnum::value).orElse(null));
+                            .map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null));
         }
         return null;
     }
@@ -105,23 +107,32 @@ public interface UserMapper {
     @Named("toNameCertifiableFieldResponse")
     default CertifiableFieldResponse<String> toNameCertifiableFieldResponse(NameCertifiableSchema resource){
         return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
-                Optional.ofNullable(r.getCertification()).map(NameCertifiableSchema.CertificationEnum::value).orElse(null)))
+                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
                 .orElse(null);
     }
 
     @Named("toFamilyNameCertifiableFieldResponse")
     default CertifiableFieldResponse<String> toFamilyNameCertifiableFieldResponse(FamilyNameCertifiableSchema resource){
         return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
-                Optional.ofNullable(r.getCertification()).map(FamilyNameCertifiableSchema.CertificationEnum::value).orElse(null)))
+                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
                 .orElse(null);
     }
 
     @Named("toEmailCertifiableFieldResponse")
     default CertifiableFieldResponse<String> toEmailCertifiableFieldResponse(EmailCertifiableSchema resource){
         return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
-                Optional.ofNullable(r.getCertification()).map(EmailCertifiableSchema.CertificationEnum::value).orElse(null)))
+                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
                 .orElse(null);
     }
+
+    default CertificationEnum mapToCertificationEnum(String certificationEnum){
+        return switch (certificationEnum) {
+            case "SPID" -> CertificationEnum.SPID;
+            case "NONE" -> CertificationEnum.NONE;
+            default -> throw new InvalidRequestException("Invalid certificationEnum");
+        };
+    }
+
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
     @Mapping(target = "familyName",  expression = "java(toFamilyNameCertifiableStringNotEquals(userResource.getFamilyName(), updateUserRequest.getFamilyName()))")

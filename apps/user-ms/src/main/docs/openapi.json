@@ -1387,9 +1387,13 @@
             "type" : "string"
           },
           "certified" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/CertificationEnum"
           }
         }
+      },
+      "CertificationEnum" : {
+        "enum" : [ "NONE", "SPID" ],
+        "type" : "string"
       },
       "CreateUserDto" : {
         "required" : [ "institutionId", "user", "product" ],

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.mapper;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.response.CertifiableFieldResponse;
 import it.pagopa.selfcare.user.controller.response.WorkContactResponse;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -38,7 +39,7 @@ public class UserMapperTest {
 
         CertifiableFieldResponse<String> certifiedMail = userMapper.retrieveCertifiedMailFromWorkContacts(userResource, "email");
 
-        assertEquals(EmailCertifiableSchema.CertificationEnum.NONE.value(),certifiedMail.getCertified());
+        assertEquals(CertificationEnum.NONE,certifiedMail.getCertified());
         assertEquals("email", certifiedMail.getValue());
     }
 

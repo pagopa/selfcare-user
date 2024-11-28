@@ -149,12 +149,21 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private static boolean existsWorkContactResourceForPhoneAndMail(Map.Entry<String, WorkContactResource> stringWorkContactResourceEntry, String emailToCompare, String mobilePhoneToCompare) {
 
         WorkContactResource workContact = stringWorkContactResourceEntry.getValue();
-        if (Objects.nonNull(workContact)) {
-            boolean isEqualsEmail = StringUtils.isBlank(emailToCompare) ? checkIfWorkContactMailIsNull(workContact.getEmail()) : checkIfWorkContactEmailIsEquals(workContact, emailToCompare);
-            boolean isEqualsPhone = StringUtils.isBlank(mobilePhoneToCompare) ? checkIfWorkContactPhoneIsNull(workContact.getMobilePhone()) : checkIfWorkContactMobilePhoneIsEquals(workContact, mobilePhoneToCompare);
-            return isEqualsEmail && isEqualsPhone;
-        }
-        return false;
+        return Optional.ofNullable(workContact)
+                .map(workContactResource -> isEqualsEmail(workContactResource, emailToCompare) && isEqualsPhone(workContactResource, mobilePhoneToCompare))
+                .orElse(false);
+    }
+
+    private static boolean isEqualsPhone(WorkContactResource workContact, String mobilePhoneToCompare) {
+        return Optional.ofNullable(mobilePhoneToCompare)
+                .map(phone -> checkIfWorkContactMobilePhoneIsEquals(workContact, phone))
+                .orElse(Objects.isNull(workContact.getMobilePhone()) || StringUtils.isBlank(workContact.getMobilePhone().getValue()));
+    }
+
+    private static Boolean isEqualsEmail(WorkContactResource workContact, String emailToCompare) {
+        return Optional.ofNullable(emailToCompare)
+                .map(email -> checkIfWorkContactEmailIsEquals(workContact, email))
+                .orElse(Objects.isNull(workContact.getEmail()) || StringUtils.isBlank(workContact.getEmail().getValue()));
     }
 
     private static boolean checkIfWorkContactMobilePhoneIsEquals(WorkContactResource workContact, String mobilePhoneToCompare) {
@@ -163,18 +172,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 && workContact.getMobilePhone().getValue().equalsIgnoreCase(mobilePhoneToCompare);
     }
 
-    private static boolean checkIfWorkContactPhoneIsNull(MobilePhoneCertifiableSchema mobilePhone) {
-        return Objects.isNull(mobilePhone) || StringUtils.isBlank(mobilePhone.getValue());
-    }
-
     private static boolean checkIfWorkContactEmailIsEquals(WorkContactResource workContact, String emailToCompare) {
         return Objects.nonNull(workContact.getEmail())
                 && StringUtils.isNotBlank(workContact.getEmail().getValue())
                 && workContact.getEmail().getValue().equalsIgnoreCase(emailToCompare);
-
-    }
-
-    private static boolean checkIfWorkContactMailIsNull(EmailCertifiableSchema email) {
-        return Objects.isNull(email) || StringUtils.isBlank(email.getValue());
     }
 }
