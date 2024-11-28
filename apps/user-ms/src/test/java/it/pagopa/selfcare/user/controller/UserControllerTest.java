@@ -28,8 +28,10 @@ import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeRespo
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.model.*;
 import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.MobilePhoneCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -59,7 +61,7 @@ class UserControllerTest {
         userResource.setName(new NameCertifiableSchema(NameCertifiableSchema.CertificationEnum.NONE, "name"));
         userResource.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.NONE, "familyName"));
         userResource.setFiscalCode("fiscalCode");
-        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"), null, null)));
+        userResource.setWorkContacts(Map.of("userMailUuid", new WorkContactResource(new EmailCertifiableSchema(EmailCertifiableSchema.CertificationEnum.NONE, "email"), new MobilePhoneCertifiableSchema(MobilePhoneCertifiableSchema.CertificationEnum.NONE, "123456788"), null)));
 
         userDetailResponse = new UserDetailResponse();
         userDetailResponse.setId(UUID.randomUUID().toString());
