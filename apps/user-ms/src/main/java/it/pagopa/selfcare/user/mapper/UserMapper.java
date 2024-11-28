@@ -43,6 +43,7 @@ public interface UserMapper {
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
 
     @Mapping(target = "email", expression = "java(retrieveCertifiedMailFromWorkContacts(userResource, userMailUuid))")
+    @Mapping(target = "mobilePhone", expression = "java(retrieveCertifiedMobilePhoneFromWorkContacts(userResource, userMailUuid))")
     @Mapping(source = "userResource.familyName", target = "familyName", qualifiedByName = "toFamilyNameCertifiableFieldResponse")
     @Mapping(source = "userResource.name", target = "name", qualifiedByName = "toNameCertifiableFieldResponse")
     @Mapping(target = "workContacts", expression = "java(toWorkContactResponse(userResource.getWorkContacts()))")
@@ -95,19 +96,19 @@ public interface UserMapper {
 
 
     @Named("retrieveCertifiedMailFromWorkContacts")
-    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid){
-        if(userResource.getWorkContacts()!=null && !userResource.getWorkContacts().isEmpty() && userResource.getWorkContacts().containsKey(userMailUuid)){
-            return new CertifiableFieldResponse<>(userResource.getWorkContacts().get(userMailUuid).getEmail().getValue(),
-                    Optional.ofNullable(userResource.getWorkContacts().get(userMailUuid).getEmail().getCertification())
-                            .map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null));
-        }
-        return null;
+    default CertifiableFieldResponse<String> retrieveCertifiedMailFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource)
+                .map(UserResource::getWorkContacts)
+                .map(workContacts -> workContacts.get(userMailUuid)).flatMap(resource -> Optional.ofNullable(resource.getEmail())
+                        .map(email -> new CertifiableFieldResponse<>(email.getValue(), mapToCertificationEnum(email.getCertification().value()))))
+                .orElse(null);
     }
 
-    @Named("toNameCertifiableFieldResponse")
-    default CertifiableFieldResponse<String> toNameCertifiableFieldResponse(NameCertifiableSchema resource){
-        return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
-                Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
+    @Named("retrieveCertifiedMobilePhoneFromWorkContacts")
+    default CertifiableFieldResponse<String> retrieveCertifiedMobilePhoneFromWorkContacts(UserResource userResource, String userMailUuid) {
+        return Optional.ofNullable(userResource.getWorkContacts())
+                .map(workContacts -> workContacts.get(userMailUuid)).flatMap(resource -> Optional.ofNullable(resource.getMobilePhone())
+                        .map(mobilePhone -> new CertifiableFieldResponse<>(mobilePhone.getValue(), mapToCertificationEnum(mobilePhone.getCertification().value()))))
                 .orElse(null);
     }
 
@@ -115,6 +116,13 @@ public interface UserMapper {
     default CertifiableFieldResponse<String> toFamilyNameCertifiableFieldResponse(FamilyNameCertifiableSchema resource){
         return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
                 Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
+                .orElse(null);
+    }
+
+    @Named("toNameCertifiableFieldResponse")
+    default CertifiableFieldResponse<String> toNameCertifiableFieldResponse(NameCertifiableSchema resource) {
+        return Optional.ofNullable(resource).map(r -> new CertifiableFieldResponse<>(r.getValue(),
+                        Optional.ofNullable(r.getCertification()).map(certificationEnum -> mapToCertificationEnum(certificationEnum.value())).orElse(null)))
                 .orElse(null);
     }
 
@@ -135,16 +143,16 @@ public interface UserMapper {
 
     MutableUserFieldsDto toMutableUserFieldsDto(UserResource userResource);
 
-    @Mapping(target = "familyName",  expression = "java(toFamilyNameCertifiableStringNotEquals(userResource.getFamilyName(), updateUserRequest.getFamilyName()))")
-    @Mapping(target = "name",  expression = "java(toNameCertifiableStringNotEquals(userResource.getName(), updateUserRequest.getName()))")
-    @Mapping(target = "workContacts",  expression = "java(toWorkContact(updateUserRequest.getEmail(), updateUserRequest.getMobilePhone(), idContact))")
+    @Mapping(target = "familyName", expression = "java(toFamilyNameCertifiableStringNotEquals(userResource.getFamilyName(), updateUserRequest.getFamilyName()))")
+    @Mapping(target = "name", expression = "java(toNameCertifiableStringNotEquals(userResource.getName(), updateUserRequest.getName()))")
+    @Mapping(target = "workContacts", expression = "java(toWorkContact(updateUserRequest.getEmail(), updateUserRequest.getMobilePhone(), idContact))")
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "birthDate", ignore = true)
     MutableUserFieldsDto toMutableUserFieldsDto(UpdateUserRequest updateUserRequest, UserResource userResource, String idContact);
 
     @Mapping(source = "user.birthDate", target = "birthDate", qualifiedByName = "toCertifiableLocalDate")
-    @Mapping(source = "user.familyName", target = "familyName",  qualifiedByName = "toFamilyNameCertifiableString")
-    @Mapping(source = "user.name", target = "name",  qualifiedByName = "toNameCertifiableString")
+    @Mapping(source = "user.familyName", target = "familyName", qualifiedByName = "toFamilyNameCertifiableString")
+    @Mapping(source = "user.name", target = "name", qualifiedByName = "toNameCertifiableString")
     @Mapping(source = "user.fiscalCode", target = "fiscalCode")
     @Mapping(source = "workContactResource", target = "workContacts")
     SaveUserDto toSaveUserDto(CreateUserDto.User user, Map<String, WorkContactResource> workContactResource);
