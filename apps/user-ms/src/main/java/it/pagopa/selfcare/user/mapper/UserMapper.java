@@ -39,6 +39,7 @@ public interface UserMapper {
     @Mapping(source = "userResource.familyName", target = "surname", qualifiedByName = "fromSurnameCertifiableString")
     @Mapping(source = "userResource.name", target = "name", qualifiedByName = "fromNameCertifiableString")
     @Mapping(target = "email", expression = "java(retrieveMailFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
+    @Mapping(target = "mobilePhone", expression = "java(retrieveMobilePhoneFromWorkContacts(userResource.getWorkContacts(), userMailUuid))")
     @Mapping(target = "workContacts", expression = "java(toWorkContacts(userResource.getWorkContacts()))")
     UserResponse toUserResponse(UserResource userResource, String userMailUuid);
 
@@ -91,6 +92,16 @@ public interface UserMapper {
                 .map(item -> map.get(userMailUuid))
                 .filter(workContactResource -> Objects.nonNull(workContactResource.getEmail()))
                 .map(workContactResource -> workContactResource.getEmail().getValue())
+                .orElse(null);
+    }
+
+    @Named("retrieveMobilePhoneFromWorkContacts")
+    default String retrieveMobilePhoneFromWorkContacts(Map<String, WorkContactResource> map, String userMailUuid){
+        return Optional.ofNullable(map)
+                .filter(item -> item.containsKey(userMailUuid))
+                .map(item -> map.get(userMailUuid))
+                .filter(workContactResource -> Objects.nonNull(workContactResource.getMobilePhone()))
+                .map(workContactResource -> workContactResource.getMobilePhone().getValue())
                 .orElse(null);
     }
 
