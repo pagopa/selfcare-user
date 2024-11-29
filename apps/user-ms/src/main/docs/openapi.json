@@ -1920,6 +1920,9 @@
           "email" : {
             "type" : "string"
           },
+          "mobilePhone" : {
+            "type" : "string"
+          },
           "role" : {
             "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
             "type" : "string"
