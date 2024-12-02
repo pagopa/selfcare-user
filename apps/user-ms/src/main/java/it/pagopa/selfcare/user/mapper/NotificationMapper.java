@@ -7,7 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
+import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
+import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
 import java.util.Collections;
@@ -54,8 +56,8 @@ public interface NotificationMapper {
     default UserToNotify mapUser(UserResource userResource, String userMailUuid, OnboardedProduct onboardedProduct) {
         UserToNotify userToNotify = new UserToNotify();
         userToNotify.setUserId(Optional.ofNullable(userResource.getId()).map(UUID::toString).orElse(null));
-        userToNotify.setName(Optional.ofNullable(userResource.getName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
-        userToNotify.setFamilyName(Optional.ofNullable(userResource.getFamilyName()).map(CertifiableFieldResourceOfstring::getValue).orElse(null));
+        userToNotify.setName(Optional.ofNullable(userResource.getName()).map(NameCertifiableSchema::getValue).orElse(null));
+        userToNotify.setFamilyName(Optional.ofNullable(userResource.getFamilyName()).map(FamilyNameCertifiableSchema::getValue).orElse(null));
         userToNotify.setEmail(Optional.ofNullable(userMailUuid).map(mailUuid -> retrieveMailFromWorkContacts(userResource, mailUuid)).orElse(null));
         userToNotify.setProductRole(onboardedProduct.getProductRole());
         userToNotify.setRole(Optional.ofNullable(onboardedProduct.getRole()).map(Enum::name).orElse(null));
@@ -67,7 +69,7 @@ public interface NotificationMapper {
         return Optional.ofNullable(userResource.getWorkContacts())
                 .flatMap(stringWorkContactResourceMap -> Optional.ofNullable(stringWorkContactResourceMap.get(userMailUuid))
                         .flatMap(workContactResource -> Optional.ofNullable(workContactResource.getEmail())
-                                .map(CertifiableFieldResourceOfstring::getValue)))
+                                .map(EmailCertifiableSchema::getValue)))
                 .orElse(null);
     }
 }
