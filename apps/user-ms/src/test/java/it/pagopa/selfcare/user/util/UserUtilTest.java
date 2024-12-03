@@ -22,10 +22,7 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
 
@@ -234,6 +231,7 @@ class UserUtilTest {
         Map<String, WorkContactResource> map = new HashMap<>();
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
+        workContactResource.setMobilePhone(MobilePhoneCertifiableSchema.builder().value("0000000000").build());
         map.put("MAIL_ID#123", workContactResource);
         return UserResource.builder()
                 .id(uuid)
