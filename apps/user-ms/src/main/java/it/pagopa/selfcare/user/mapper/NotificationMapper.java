@@ -78,4 +78,5 @@ public interface NotificationMapper {
                                 .map(MobilePhoneCertifiableSchema::getValue)))
                 .orElse(null);
     }
+
 }
