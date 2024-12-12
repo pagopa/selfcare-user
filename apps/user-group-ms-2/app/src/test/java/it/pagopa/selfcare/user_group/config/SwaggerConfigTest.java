@@ -27,12 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(classes = {
         SwaggerConfig.class,
-        CoreConfig.class,
         WebConfig.class,
 })
 @EnableOpenApi
 @EnableWebMvc
-@ComponentScan(basePackages = "it.pagopa.selfcare.user_group.controller")
+@ComponentScan(basePackages = {"it.pagopa.selfcare.user_group.controller","it.pagopa.selfcare.user_group.model"})
 @TestPropertySource(locations = "classpath:config/application.yml")
 class SwaggerConfigTest {
 

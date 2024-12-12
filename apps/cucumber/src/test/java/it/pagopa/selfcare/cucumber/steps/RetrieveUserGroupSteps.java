@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.cucumber.steps;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -12,11 +11,11 @@ import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
-import it.pagopa.selfcare.cucumber.dao.UserGroupRepository;
+import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.cucumber.model.UserGroupEntity;
 import it.pagopa.selfcare.cucumber.model.UserGroupStatus;
 import org.junit.jupiter.api.Assertions;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -29,22 +28,61 @@ import java.util.Objects;
 
 public class RetrieveUserGroupSteps extends UserGroupSteps {
 
-    @Autowired
-    private UserGroupRepository userGroupRepository;
+    @Before("@FirstRetrieveGroupScenario")
+    public void beforeFeature() throws IOException {
+        List<UserGroupEntity> groupsToInsert = objectMapper.readValue(new File("src/test/resources/dataPopulation/groupEntities.json"),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, UserGroupEntity.class));
+        userGroupRepository.insert(groupsToInsert);
+    }
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @After("@LastRetrieveGroupScenario")
+    public void afterFeature() {
+        userGroupRepository.deleteAllById(userGroupsIds);
+    }
 
-    List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a", "6759f8df78b6af202b222d2b");
+    @Override
+    @Then("[RETRIEVE] the response status should be {int}")
+    public void verifyResponseStatus(int status) {
+        super.verifyResponseStatus(status);
+    }
+
+    @Override
+    @Then("[RETRIEVE] the response should contain an error message {string}")
+    public void verifyErrorMessage(String expectedErrorMessage) {
+        super.verifyErrorMessage(expectedErrorMessage);
+    }
+
 
     @Given("I have a valid group ID to retrieve: {string}")
-    public void i_have_a_valid_group_ID(String validGroupId) {
+    public void iHaveAValidGroupId(String validGroupId) {
         userGroupId = validGroupId;
     }
 
     @Given("I have a non-existent group ID to retrieve {string}")
-    public void i_have_a_non_existent_group_ID(String nonExistentGroupId) {
+    public void iHaveANonExistentGroupId(String nonExistentGroupId) {
         userGroupId = nonExistentGroupId;
+    }
+
+    @Given("I have a filter with status {string} but no productId, institutionId or userId")
+    public void iHaveAFilterWithStatusButNoOr(String status) {
+        userGroupEntityFilter = new UserGroupEntity();
+        userGroupEntityFilter.setStatus(UserGroupStatus.valueOf(status));
+    }
+
+    @Given("I have a filter with sorting by {string} but no filter")
+    public void iHaveAFilterWithSortingByButNoFilter(String sortBy) {
+        Sort sort = Sort.by(Sort.Order.asc(sortBy));
+        pageable = PageRequest.of(0, 10, sort);
+    }
+
+    @And("I set the page number to {int} and page size to {int}")
+    public void iSetThePageNumberToAndPageSizeTo(int page, int size) {
+        pageable = Pageable.ofSize(size).withPage(page);
+    }
+
+    @Given("I have no filters")
+    public void iHaveNoFilters() {
+        userGroupEntityFilter = new UserGroupEntity();
     }
 
     @When("I send a GET request to {string}")
@@ -62,15 +100,33 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         }
     }
 
-
-    @When("I send a GET request to {string} to retrieve filtered userGroups")
-    public void iSendAGETRequestToRetrieveFilteredUserGroups(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
+    @When("I send a GET request to {string} to retrieve userGroups")
+    public void iSendAGETRequestToRetrieveUserGroups(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
-                .queryParams("productId", userGroupEntityFilter.getProductId(),
-                        "institutionId", userGroupEntityFilter.getInstitutionId(),
-                        "status", userGroupEntityFilter.getStatus())
+                .header("Authorization", "Bearer " + token);
+
+        if (Objects.nonNull(userGroupEntityFilter)) {
+            if (Objects.nonNull(userGroupEntityFilter.getProductId())) {
+                requestSpecification.queryParam("productId", userGroupEntityFilter.getProductId());
+            }
+            if (Objects.nonNull(userGroupEntityFilter.getInstitutionId())) {
+                requestSpecification.queryParam("institutionId", userGroupEntityFilter.getInstitutionId());
+            }
+            if (Objects.nonNull(userGroupEntityFilter.getStatus())) {
+                requestSpecification.queryParam("status", userGroupEntityFilter.getStatus());
+            }
+        }
+
+        if (Objects.nonNull(pageable)) {
+            requestSpecification.queryParam("size",pageable.getPageSize());
+            requestSpecification.queryParam("page",pageable.getPageNumber());
+            if(pageable.getSort().isSorted()){
+                requestSpecification.queryParam("sort", pageable.getSort().toString());
+            }
+        }
+
+        ExtractableResponse<?> response = requestSpecification
                 .when()
                 .get(url)
                 .then()
@@ -78,7 +134,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
 
         status = response.statusCode();
         if (status == 200) {
-            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {});
+            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {
+            });
             if (Objects.nonNull(userGroupEntityResponsePage) && !userGroupEntityResponsePage.getContent().isEmpty()) {
                 userGroupEntityResponse = userGroupEntityResponsePage.getContent().get(0);
                 userGroupId = userGroupEntityResponse.getId();
@@ -86,107 +143,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         } else {
             errorMessage = response.body().asString();
         }
-    }
-
-    @When("I send a GET request to {string} to filter userGroups by status")
-    public void iSendAGETRequestToToFilterUserGroupsByStatus(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
-                .queryParams("status", userGroupEntityFilter.getStatus())
-                .when()
-                .get(url)
-                .then()
-                .extract();
-
-        status = response.statusCode();
-        if (status == 200) {
-            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {});
-            if (Objects.nonNull(userGroupEntityResponsePage) && !userGroupEntityResponsePage.getContent().isEmpty()) {
-                userGroupEntityResponse = userGroupEntityResponsePage.getContent().get(0);
-            }
-            userGroupId = userGroupEntityResponse.getId();
-        } else {
-            errorMessage = response.body().asString();
-        }
-    }
-
-    @When("I send a GET request to {string} to retrieve not filtered userGroups")
-    public void iSendAGETRequestToToRetrieveNotFilteredUserGroups(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
-                .when()
-                .get(url)
-                .then()
-                .extract();
-
-        status = response.statusCode();
-        if (status == 200) {
-            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {});
-            if (Objects.nonNull(userGroupEntityResponsePage) && !userGroupEntityResponsePage.getContent().isEmpty()) {
-                userGroupEntityResponse = userGroupEntityResponsePage.getContent().get(0);
-            }
-            userGroupId = userGroupEntityResponse.getId();
-        } else {
-            errorMessage = response.body().asString();
-        }
-    }
-
-    @When("I send a GET request to {string} to retrieve sorted userGroups")
-    public void iSendAGETRequestToToRetrieveSortedUserGroups(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
-                .queryParams("sort", sort)
-                .when()
-                .get(url)
-                .then()
-                .extract();
-
-        status = response.statusCode();
-        if (status == 200) {
-            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {});
-            if (Objects.nonNull(userGroupEntityResponsePage) && !userGroupEntityResponsePage.getContent().isEmpty()) {
-                userGroupEntityResponse = userGroupEntityResponsePage.getContent().get(0);
-            }
-            userGroupId = userGroupEntityResponse.getId();
-        } else {
-            errorMessage = response.body().asString();
-        }
-    }
-
-    @When("I send a GET request to {string} to pageable object")
-    public void iSendAGETRequestToToPageableObject(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
-                .queryParams("page", pageable.getPageNumber(), "size", pageable.getPageSize())
-                .when()
-                .get(url)
-                .then()
-                .extract();
-
-        status = response.statusCode();
-        if (status == 200) {
-            userGroupEntityResponsePage = response.body().as(new TypeRef<>() {});
-            if (Objects.nonNull(userGroupEntityResponsePage) && !userGroupEntityResponsePage.getContent().isEmpty()) {
-                userGroupEntityResponse = userGroupEntityResponsePage.getContent().get(0);
-            }
-            userGroupId = userGroupEntityResponse.getId();
-        } else {
-            errorMessage = response.body().asString();
-        }
-    }
-
-    @Given("I have a filter with sorting by {string} but no filter")
-    public void iHaveAFilterWithSortingByButNoFilter(String sortBy) {
-        sort = sortBy;
-    }
-
-    @And("I set the page number to {int} and page size to {int}")
-    public void iSetThePageNumberToAndPageSizeTo(int page, int size) {
-        pageable = Pageable.ofSize(size).withPage(page);
     }
 
     @Then("the response should contain the group details")
@@ -200,13 +156,12 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(1, userGroupEntityResponse.getMembers().size());
         Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7", userGroupEntityResponse.getMembers().iterator().next());
         Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
-        Assertions.assertNull(userGroupEntityResponse.getModifiedAt());
         Assertions.assertEquals("4ba2832d-9c4c-40f3-9126-e1c72905ef14", userGroupEntityResponse.getCreatedBy());
-        Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
+        Assertions.assertNull(userGroupEntityResponse.getModifiedAt(), userGroupEntityResponse.getModifiedBy());
     }
 
     @And("the response should contain a paginated list of user groups of {int} items on page {int}")
-    public void theResponseShouldContainAPaginatedListOfUserGroups(int count,int page) {
+    public void theResponseShouldContainAPaginatedListOfUserGroups(int count, int page) {
         Assertions.assertEquals(count, userGroupEntityResponsePage.getContent().size());
         Assertions.assertEquals(3, userGroupEntityResponsePage.getTotalElements());
         Assertions.assertEquals(2, userGroupEntityResponsePage.getTotalPages());
@@ -222,13 +177,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         userGroupEntityFilter.setStatus(UserGroupStatus.valueOf(status));
     }
 
-    @Given("I have no filters")
-    public void iHaveNoFilters() {
-        userGroupEntityFilter = new UserGroupEntity();
-    }
-
     @And("the response should contains groupIds {string}")
-    public void theResponseShouldContainGroupIds( String ids) {
+    public void theResponseShouldContainGroupIds(String ids) {
         List<String> idsList = Arrays.asList(ids.split(","));
         Assertions.assertEquals(idsList, userGroupEntityResponsePage.getContent().stream().map(UserGroupEntity::getId).toList());
     }
@@ -243,34 +193,9 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(expectedItemsCount, userGroupEntityResponsePage.getContent().size());
     }
 
-    @And("the response of retrieve operation should contain an error message {string}")
-    public void verifyErrorMessage(String expectedErrorMessage) {
-        String[] errorMessageArray = expectedErrorMessage.split(",");
-        Arrays.stream(errorMessageArray).forEach(s -> Assertions.assertTrue(errorMessage.contains(s)));
-    }
-
     @Then("I should receive a response of retrieve user group operation with status code {int}")
-    public void i_should_receive_a_response_with_status_code(int expectedStatusCode) {
+    public void iShouldReceiveAResponseWithStatusCode(int expectedStatusCode) {
         Assertions.assertEquals(expectedStatusCode, status);
-    }
-
-
-    @Given("I have a filter with status {string} but no productId, institutionId or userId")
-    public void iHaveAFilterWithStatusButNoOr(String status) {
-        userGroupEntityFilter = new UserGroupEntity();
-        userGroupEntityFilter.setStatus(UserGroupStatus.valueOf(status));
-    }
-
-    @Before("@FirstRetrieveGroupScenario")
-    public void beforeFeature() throws IOException {
-        List<UserGroupEntity> groupsToInsert = objectMapper.readValue(new File("src/test/resources/dataPopulation/groupEntities.json"),
-                objectMapper.getTypeFactory().constructCollectionType(List.class, UserGroupEntity.class));
-        userGroupRepository.insert(groupsToInsert);
-    }
-
-    @After("@LastRetrieveGroupScenario")
-    public void afterFeature() {
-        userGroupRepository.deleteAllById(userGroupsIds);
     }
 }
 

@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.cucumber.steps;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.DataTableType;
@@ -10,25 +9,48 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
-import it.pagopa.selfcare.cucumber.dao.UserGroupRepository;
+import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.cucumber.model.UserGroupEntity;
 import it.pagopa.selfcare.cucumber.model.UserGroupStatus;
 import org.junit.jupiter.api.Assertions;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class CreateUserGroupSteps extends UserGroupSteps{
 
-    @Autowired
-    private UserGroupRepository userGroupRepository;
+    @Before("@DuplicateGroupName")
+    public void beforeScenarioOfCreateDuplicatedGroup() throws IOException {
+        List<UserGroupEntity> groupsToInsert = objectMapper.readValue(new File("src/test/resources/dataPopulation/groupEntities.json"),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, UserGroupEntity.class));
+        userGroupRepository.insert(groupsToInsert);
+    }
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @After("@DuplicateGroupName")
+    public void afterScenarioOfCreateDuplicatedGroup() {
+        userGroupRepository.deleteAllById(userGroupsIds);
+    }
 
-    List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a","6759f8df78b6af202b222d2b");
+    @After("@CreateNewGroup")
+    public void afterScenarioOfCreateGroup() {
+        userGroupRepository.deleteById(userGroupId);
+    }
+
+    @Override
+    @Then("[CREATE] the response status should be {int}")
+    public void verifyResponseStatus(int expectedStatusCode) {
+        super.verifyResponseStatus(expectedStatusCode);
+    }
+
+    @Override
+    @Then("[CREATE] the response should contain an error message {string}")
+    public void verifyErrorMessage(String expectedErrorMessage) {
+        super.verifyErrorMessage(expectedErrorMessage);
+    }
 
     @DataTableType
     public UserGroupEntity convertRequest(Map<String, String> entry) {
@@ -42,11 +64,16 @@ public class CreateUserGroupSteps extends UserGroupSteps{
         return userGroupEntity;
     }
 
-    @When("I send a POST request to {string} with the given details")
-    public void iSendAPOSTRequestToWithTheGivenDetails(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + token)
+    @When("I send a POST request to {string} with the given details, with authentication {string}")
+    public void iSendAPOSTRequestToWithTheGivenDetails(String url, String isAuthenticated) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        if(Boolean.parseBoolean(isAuthenticated)){
+            requestSpecification.header("Authorization", "Bearer " + token);
+        }
+
+        ExtractableResponse<?> response = requestSpecification
                 .body(userGroupDetails)
                 .when()
                 .post(url)
@@ -62,46 +89,17 @@ public class CreateUserGroupSteps extends UserGroupSteps{
         }
     }
 
-    @When("I send a POST request to {string} with the given details without authentication")
-    public void iSendAPOSTRequestToWithTheGivenDetailsWithoutAuthentication(String url) {
-        ExtractableResponse<?> response = RestAssured.given()
-                .contentType("application/json")
-                .header("Authorization", "Bearer " + null)
-                .body(userGroupDetails)
-                .when()
-                .post(url)
-                .then()
-                .extract();
-
-        status = response.statusCode();
-    }
-
     @Given("the following user group details:")
     public void givenUserGroupDetails(List<UserGroupEntity> userGroupEntityList) {
         if (userGroupEntityList != null && userGroupEntityList.size() == 1)
             this.userGroupDetails = userGroupEntityList.get(0);
     }
 
-    // Step per verificare lo stato della risposta
-    @Then("the response status should be {int}")
-    public void verifyResponseStatus(int expectedStatusCode) {
-        Assertions.assertEquals(expectedStatusCode, status);
-    }
-
-    // Step per verificare che la risposta contenga un gruppo utente valido
     @Then("the response should contain a valid user group resource with name {string}")
     public void verifyUserGroupName(String expectedName) {
         Assertions.assertEquals(expectedName, userGroupEntityResponse.getName());
     }
 
-    // Step per verificare un messaggio di errore nella risposta
-    @Then("the response should contain an error message {string}")
-    public void verifyErrorMessage(String expectedErrorMessage) {
-        String[] errorMessageArray = expectedErrorMessage.split(",");
-        Arrays.stream(errorMessageArray).forEach(s -> Assertions.assertTrue(errorMessage.contains(s)));
-    }
-
-    // Step per verificare che la risposta contenga un determinato campo
     @Then("the response should contain the productId {string}")
     public void verifyProductId(String expectedProductId) {
         Assertions.assertEquals(expectedProductId, userGroupEntityResponse.getProductId());
@@ -129,36 +127,17 @@ public class CreateUserGroupSteps extends UserGroupSteps{
 
     @And("the response should contain the createdAt notNull")
     public void theResponseShouldContainTheCreatedAtNotNull() {
-        Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
+        verifyNotNull(userGroupEntityResponse.getCreatedAt());
     }
-
 
     @And("the response should contain the modified data null")
     public void theResponseShouldContainTheModifiedDataNull() {
-        Assertions.assertNull(userGroupEntityResponse.getModifiedAt());
-        Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
+        verifyNull(userGroupEntityResponse.getModifiedAt(), userGroupEntityResponse.getModifiedBy());
     }
 
     @And("the response should contain the description {string}")
     public void theResponseShouldContainTheDescription(String expectedDescription) {
         Assertions.assertEquals(expectedDescription, userGroupEntityResponse.getDescription());
-    }
-
-    @Before("@DuplicateGroupName")
-    public void beforeScenarioOfCreateDuplicatedGroup() throws IOException {
-        List<UserGroupEntity> groupsToInsert = objectMapper.readValue(new File("src/test/resources/dataPopulation/groupEntities.json"),
-                objectMapper.getTypeFactory().constructCollectionType(List.class, UserGroupEntity.class));
-        userGroupRepository.insert(groupsToInsert);
-    }
-
-    @After("@DuplicateGroupName")
-    public void afterScenarioOfCreateDuplicatedGroup() {
-        userGroupRepository.deleteAllById(userGroupsIds);
-    }
-
-    @After("@CreateNewGroup")
-    public void afterScenarioOfCreateGroup() {
-        userGroupRepository.deleteById(userGroupId);
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.3",
   "info" : {
-    "title" : "user-group-ms-2",
+    "title" : "user-group-ms",
     "description" : "The services described in this section deal with the management of UserGroup entity, providing the necessary  methods for its creation, consultation and activation.",
     "version" : "1.0.0-SNAPSHOT"
   },
