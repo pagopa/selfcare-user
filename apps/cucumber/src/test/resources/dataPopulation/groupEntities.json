@@ -15,10 +15,10 @@
   {
     "id": "6759f8df78b6af202b222d2a",
     "institutionId": "9c8ae123-d990-4400-b043-67a60aff31bc",
-    "productId": "prod-pagopa",
-    "name": "pagopa group",
+    "productId": "prod-io",
+    "name": "io group 2",
     "description": "pagopa group description",
-    "status": "ACTIVE",
+    "status": "SUSPENDED",
     "members": [
       "75003d64-7b8c-4768-b20c-cf66467d44c7"
     ],

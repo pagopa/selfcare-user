@@ -31,6 +31,11 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
 
     List<String> userGroupsIds = List.of("6759f8df78b6af202b222d29", "6759f8df78b6af202b222d2a","6759f8df78b6af202b222d2b");
 
+    @Given("I have a valid group ID {string}")
+    public void i_have_a_valid_group_ID(String validGroupId) {
+        userGroupId = validGroupId;
+    }
+
     @Given("I retrieve to update Group a group Id for product {string} and institution {string}")
     public void iRetrieveAGroupIdForProductAndInstitution(String productId, String institutionId) {
         ExtractableResponse<?> response = RestAssured.given()
@@ -189,11 +194,6 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         }else {
             errorMessage = response.body().asString();
         }
-    }
-
-    @Given("I have a valid group ID {string}")
-    public void i_have_a_valid_group_ID(String validGroupId) {
-        userGroupId = validGroupId;
     }
 
     @Given("I have a non-existent group ID {string}")
