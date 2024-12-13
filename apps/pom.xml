@@ -74,6 +74,17 @@
       </modules>
     </profile>
     <profile>
+      <id>user-group-ms2</id>
+      <activation>
+        <file>
+          <exists>user-group-ms2/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>user-group-ms2</module>
+      </modules>
+    </profile>
+    <profile>
       <id>user-group-cdc</id>
       <activation>
         <file>
