@@ -15,7 +15,6 @@
         <module>apps</module>
         <module>libs</module>
         <module>test-coverage</module>
-        <module>apps/user-group-ms</module>
     </modules>
 
     <repositories>
