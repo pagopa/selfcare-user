@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.service;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
@@ -22,6 +23,8 @@ public interface UserInstitutionService {
     Multi<UserInstitutionResponse> findByUserId(String userId);
 
     Multi<UserInstitution> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size);
+
+    Uni<Long> countInstitutionProductRoles(String institutionId, ProductId productId, String productRole);
 
     Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter);
 

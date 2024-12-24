@@ -5,6 +5,7 @@ import io.quarkus.panache.common.Page;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.constant.SelfCareRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -227,6 +228,23 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Document query = queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION);
 
         return runUserInstitutionCountQuery(query);
+    }
+
+    @Override
+    public Uni<Long> countInstitutionProductRoles(String institutionId, ProductId productId, String productRole) {
+        Map<String, Object> userFilter = UserInstitutionFilter.builder()
+                .institutionId(institutionId)
+                .build().constructMap();
+        Map<String, Object> productFilter = OnboardedProductFilter.builder()
+                .productId(productId.getValue())
+                .productRole(productRole)
+                .status(List.of(ACTIVE, PENDING, TOBEVALIDATED))
+                .build().constructMap();
+
+        Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter), USER_INSTITUTION_COLLECTION);
+        log.debug("Query: {}", query);
+
+        return UserInstitution.count(query);
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
@@ -352,13 +353,21 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser) {
-        return userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode().trim()))
+        return checkNumberOfAdminsExceeded(userDto.getInstitutionId(), userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles())
+                .onItem().transformToUni(v -> userRegistryService.searchUsingPOST(USERS_WORKS_FIELD_LIST, new UserSearchDto(userDto.getUser().getFiscalCode().trim())))
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).retry().atMost(2)
                 .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).recoverWithUni(throwable -> Uni.createFrom().failure(new ResourceNotFoundException(throwable.getMessage())))
                 .onItem().transformToUni(userResource -> updateUserOnUserRegistryAndUserInstitutionByFiscalCode(userResource, userDto,loggedUser))
                 .onFailure(ResourceNotFoundException.class).recoverWithUni(throwable -> createUserOnUserRegistryAndUserInstitution(userDto,loggedUser))
                 .onFailure().invoke(exception -> log.error("Error during retrieve user from userRegistry: {} ", exception.getMessage(), exception));
+    }
 
+    private Uni<Void> checkNumberOfAdminsExceeded(String institutionId, String productId, List<String> productRoles) {
+        if (productId.equalsIgnoreCase(ProductId.PROD_PAGOPA.getValue()) && productRoles.contains("admin-psp")) {
+            return userInstitutionService.countInstitutionProductRoles(institutionId, ProductId.PROD_PAGOPA, "admin-psp")
+                    .flatMap(n -> n >= 3 ? Uni.createFrom().failure(new InvalidRequestException("Maximum number of 3 admin-psp reached for prod-pagopa")) : Uni.createFrom().voidItem());
+        }
+        return Uni.createFrom().voidItem();
     }
 
     /**
