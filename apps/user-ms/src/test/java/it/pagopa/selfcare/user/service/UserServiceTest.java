@@ -27,8 +27,9 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
+import it.pagopa.selfcare.user.exception.NumberOfAdminsExceededException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -48,13 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -1000,8 +995,10 @@ class UserServiceTest {
         // Prepare test data
         CreateUserDto createUserDto = new CreateUserDto();
         CreateUserDto.User user = new CreateUserDto.User();
+        CreateUserDto.Product product = new CreateUserDto.Product();
         user.setFiscalCode("fiscalCode");
         createUserDto.setUser(user);
+        createUserDto.setProduct(product);
         LoggedUser loggedUser = LoggedUser.builder().build();
 
         // Mock external dependencies
@@ -1047,6 +1044,52 @@ class UserServiceTest {
         subscriber.assertFailedWith(RuntimeException.class);
         verify(userRegistryApi).updateUsingPATCH(any(), any());
         verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_SuccessNumberOfAdminsNotExceededByFiscalCode() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
+        createUserProduct.setProductId("prod-pagopa");
+        createUserProduct.setProductRoles(List.of("admin", "admin-psp"));
+        createUserDto.setProduct(createUserProduct);
+        createUserDto.setUser(user);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        // Mock external dependencies
+        when(userRegistryApi.searchUsingPOST(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.countInstitutionProductRoles(any(), any(), any())).thenReturn(Uni.createFrom().item(2L));
+
+        // Call and verify the method
+        UniAssertSubscriber<CreateOrUpdateUserByFiscalCodeResponse> subscriber = userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create()).awaitItem();
+        CreateOrUpdateUserByFiscalCodeResponse response = subscriber.awaitItem().getItem();
+        assertEquals(userId.toString(), response.getUserId());
+    }
+
+    @Test
+    void testCreateOrUpdateUser_UpdateUser_NumberOfAdminsExceededByFiscalCode() {
+        // Prepare test data
+        CreateUserDto createUserDto = new CreateUserDto();
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setFiscalCode("fiscalCode");
+        CreateUserDto.Product createUserProduct = new CreateUserDto.Product();
+        createUserProduct.setProductId("prod-pagopa");
+        createUserProduct.setProductRoles(List.of("admin", "admin-psp"));
+        createUserDto.setProduct(createUserProduct);
+        createUserDto.setUser(user);
+        LoggedUser loggedUser = LoggedUser.builder().build();
+
+        // Mock external dependencies
+        when(userInstitutionService.countInstitutionProductRoles(any(), any(), any())).thenReturn(Uni.createFrom().item(3L));
+
+        // Call and verify the method
+        userService.createOrUpdateUserByFiscalCode(createUserDto, loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(NumberOfAdminsExceededException.class, "Maximum number of 3 admin-psp reached for prod-pagopa");
     }
 
     @Test
