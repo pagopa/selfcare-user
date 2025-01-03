@@ -17,6 +17,7 @@ import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
+import it.pagopa.selfcare.user.exception.NumberOfAdminsExceededException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
@@ -363,9 +364,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private Uni<Void> checkNumberOfAdminsExceeded(String institutionId, String productId, List<String> productRoles) {
-        if (productId.equalsIgnoreCase(ProductId.PROD_PAGOPA.getValue()) && productRoles.contains("admin-psp")) {
+        if (ProductId.PROD_PAGOPA.getValue().equalsIgnoreCase(productId) && productRoles.contains("admin-psp")) {
             return userInstitutionService.countInstitutionProductRoles(institutionId, ProductId.PROD_PAGOPA, "admin-psp")
-                    .flatMap(n -> n >= 3 ? Uni.createFrom().failure(new InvalidRequestException("Maximum number of 3 admin-psp reached for prod-pagopa")) : Uni.createFrom().voidItem());
+                    .flatMap(n -> n >= 3 ? Uni.createFrom().failure(new NumberOfAdminsExceededException("Maximum number of 3 admin-psp reached for prod-pagopa")) : Uni.createFrom().voidItem());
         }
         return Uni.createFrom().voidItem();
     }
