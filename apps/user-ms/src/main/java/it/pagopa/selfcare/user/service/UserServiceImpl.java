@@ -459,16 +459,31 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> queryParameter = userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters);
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().transformToUni(userInstitution -> {
-                    if (Objects.nonNull(userInstitution)) {
+                    if (Optional.ofNullable(userInstitution).isPresent()) {
                         log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
                         PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
-                        return evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct);
+                        return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
+                                .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct));
                     } else {
                         log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
                         return createOrUpdateUserByUserId(userDto, userId, loggedUser);
                     }
                 })
                 .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
+    }
+
+    /**
+     * Check if the user's mail uuid is still the same on UserInstitution and update it if not
+     */
+    private Uni<UserInstitution> checkAndUpdateUserMail(UserInstitution userInstitution, String userMailUuid) {
+        if (userMailUuid == null || userMailUuid.equals(userInstitution.getUserMailUuid())) {
+            log.info("UserMailUuid not changed for user {} and institution {}", userInstitution.getUserId(), userInstitution.getInstitutionId());
+            return Uni.createFrom().item(userInstitution);
+        }
+        userInstitution.setUserMailUuid(userMailUuid);
+        userInstitution.setUserMailUpdatedAt(OffsetDateTime.now());
+        log.info("Updating userMailUuid for user {} and institution {}", userInstitution.getUserId(), userInstitution.getInstitutionId());
+        return userInstitutionService.persistOrUpdate(userInstitution);
     }
 
     /**
