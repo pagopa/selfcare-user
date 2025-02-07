@@ -27,8 +27,8 @@ import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
-import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -48,13 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.openapi.quarkus.user_registry_json.model.BirthDateCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
-import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -152,6 +146,26 @@ class UserServiceTest {
         List<OnboardedProduct> products = new ArrayList<>();
         products.add(product);
         products.add(productTest);
+        userInstitution.setProducts(products);
+        return userInstitution;
+    }
+
+    private UserInstitution createUserInstitution_ADMIN_EA_IO(){
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId(userId.toString());
+        userInstitution.setInstitutionId("institutionId");
+        userInstitution.setUserMailUuid(workContractsKey);
+        userInstitution.setInstitutionRootName("institutionRootName");
+
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("prod-io");
+        product.setProductRole("admin");
+        product.setRole(ADMIN_EA);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
         userInstitution.setProducts(products);
         return userInstitution;
     }
@@ -1487,6 +1501,119 @@ class UserServiceTest {
                 .assertCompleted();
     }
 
+    @Test
+    void createUserByUserIdWithUpdatedMail() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        addUserRoleDto.setUserMailUuid("newUserMailUuid");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+        userInstitution.setUserMailUuid("oldUserMailUuid");
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(userInstitution))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(UserRoleAlreadyPresentException.class);
+        assertEquals("newUserMailUuid", userInstitution.getUserMailUuid());
+        assertNotNull(userInstitution.getUserMailUpdatedAt());
+    }
+
+    @Test
+    void createUserByUserIdWithoutUpdatedMail() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        addUserRoleDto.setUserMailUuid("userMailUuid");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+        userInstitution.setUserMailUuid("userMailUuid");
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(userInstitution))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(UserRoleAlreadyPresentException.class);
+        assertEquals("userMailUuid", userInstitution.getUserMailUuid());
+        assertNull(userInstitution.getUserMailUpdatedAt());
+    }
+
+    @Test
+    void createUserByUserIdWithNullUserMailFromRequest() {
+        AddUserRoleDto addUserRoleDto = new AddUserRoleDto();
+        addUserRoleDto.setInstitutionId("institutionId");
+        AddUserRoleDto.Product addUserRoleProduct = new AddUserRoleDto.Product();
+        addUserRoleProduct.setProductId("test");
+        addUserRoleProduct.setRole(MANAGER.name());
+        addUserRoleDto.setProduct(addUserRoleProduct);
+
+        LoggedUser loggedUser = LoggedUser.builder().build();
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId("test");
+        product.setProductRole("admin");
+        product.setRole(MANAGER);
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        UserInstitution userInstitution = new UserInstitution();
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+        List<OnboardedProduct> products = new ArrayList<>();
+        products.add(product);
+        products.add(onboardedProduct);
+        userInstitution.setProducts(products);
+        userInstitution.setUserMailUuid("userMailUuid");
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap()))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+        when(userInstitutionService.persistOrUpdate(userInstitution))
+                .thenReturn(Uni.createFrom().item(userInstitution));
+
+        userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailedWith(UserRoleAlreadyPresentException.class);
+        assertEquals("userMailUuid", userInstitution.getUserMailUuid());
+        assertNull(userInstitution.getUserMailUpdatedAt());
+    }
+
     private UserInstitution createUserInstitutionWithoutManagerRole() {
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct onboardedProduct = new OnboardedProduct();
@@ -1802,6 +1929,27 @@ class UserServiceTest {
 
     }
 
+    @Test
+    void testGetUserInstitutionWithPermissionQueryWithoutProductId_ADMIN_EA_IO() {
+        String institutionId = "institutionId";
+        String userId = "userId";
+
+        Map<String, Object> queryParameter;
+        queryParameter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter))
+                .thenReturn(Uni.createFrom().item(createUserInstitution_ADMIN_EA_IO()));
+
+        userService.getUserInstitutionWithPermission(userId, institutionId, null)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(getUserInstitutionWithAction_ADMIN_EA_IO())
+                .assertCompleted();
+
+        verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
+
+    }
+
     private UserInstitutionWithActions getUserInstitutionWithAction() {
         UserInstitutionWithActions userInstitutionWithActions = new UserInstitutionWithActions();
         OnboardedProductWithActions product = new OnboardedProductWithActions();
@@ -1813,6 +1961,33 @@ class UserServiceTest {
                 "Selc:ViewBilling",
                 "Selc:RequestProductAccess",
                 "Selc:ListAvailableProducts",
+                "Selc:ListActiveProducts",
+                "Selc:AccessProductBackoffice",
+                "Selc:ViewManagedInstitutions",
+                "Selc:ViewDelegations",
+                "Selc:ManageProductUsers",
+                "Selc:ListProductUsers",
+                "Selc:ManageProductGroups",
+                "Selc:CreateDelegation",
+                "Selc:ViewInstitutionData",
+                "Selc:UpdateInstitutionData"));
+        userInstitutionWithActions.setInstitutionRootName("institutionRootName");
+        userInstitutionWithActions.setUserMailUuid(workContractsKey);
+        userInstitutionWithActions.setInstitutionId("institutionId");
+        userInstitutionWithActions.setUserId(userId.toString());
+        userInstitutionWithActions.setProducts(List.of(product));
+        return userInstitutionWithActions;
+    }
+
+    private UserInstitutionWithActions getUserInstitutionWithAction_ADMIN_EA_IO() {
+        UserInstitutionWithActions userInstitutionWithActions = new UserInstitutionWithActions();
+        OnboardedProductWithActions product = new OnboardedProductWithActions();
+        product.setRole(ADMIN_EA.name());
+        product.setProductId("prod-io");
+        product.setProductRole("admin");
+        product.setStatus(ACTIVE);
+        product.setUserProductActions(List.of("Selc:UploadLogo",
+                "Selc:ViewBilling",
                 "Selc:ListActiveProducts",
                 "Selc:AccessProductBackoffice",
                 "Selc:ViewManagedInstitutions",
@@ -1853,4 +2028,96 @@ class UserServiceTest {
         verify(userInstitutionService).retrieveFirstFilteredUserInstitution(queryParameter);
 
     }
+
+    @Test
+    void testGetUsersCount() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+
+        when(userInstitutionService.countUsers(institutionId, productId, roles, status))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, status, 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, status);
+    }
+
+    @Test
+    void testGetUsersCountWithoutRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, null, null).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithEmptyRolesAndStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = new ArrayList<>();
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithRolesAndNoStatus() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = List.of(PartyRole.MANAGER, PartyRole.DELEGATE);
+        final List<OnboardedProductState> status = new ArrayList<>();
+
+        when(userInstitutionService.countUsers(institutionId, productId, roles, List.of(ACTIVE)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, roles, List.of(ACTIVE), 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, roles, List.of(ACTIVE));
+    }
+
+    @Test
+    void testGetUsersCountWithStatusAndNoRoles() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        final List<PartyRole> roles = new ArrayList<>();
+        final List<OnboardedProductState> status = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING);
+        final List<PartyRole> fullListOfRoles = List.of(PartyRole.values());
+
+        when(userInstitutionService.countUsers(institutionId, productId, fullListOfRoles, status))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        userService.getUsersCount(institutionId, productId, roles, status).subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertItem(new UsersCountResponse(institutionId, productId, fullListOfRoles, status, 2L))
+                .assertCompleted();
+
+        verify(userInstitutionService).countUsers(institutionId, productId, fullListOfRoles, status);
+    }
+
 }
