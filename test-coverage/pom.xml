@@ -91,27 +91,7 @@
             <dependencies>
                 <dependency>
                     <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-group-ms-app</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-group-ms-web</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-group-ms-core</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-group-ms-connector-dao</artifactId>
-                    <version>1.0.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>it.pagopa.selfcare</groupId>
-                    <artifactId>user-group-ms-connector-api</artifactId>
+                    <artifactId>user-group-ms</artifactId>
                     <version>1.0.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>

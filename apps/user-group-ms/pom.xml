@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selc-starter-parent</artifactId>
@@ -12,82 +13,68 @@
     </parent>
 
     <artifactId>user-group-ms</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <name>user-group-ms</name>
     <description>Microservice to manage Self Care User Group</description>
 
     <properties>
-        <selc-commons.version>2.5.1</selc-commons.version>
+        <selc-commons.version>2.5.4</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>user-group-ms-connector-api</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-bom</artifactId>
+                <version>7.20.1</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
-
             <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>user-group-ms-connector-api</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-                <type>test-jar</type>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.10.1</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>user-group-ms-core</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>user-group-ms-web</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-base</artifactId>
-                <version>${selc-commons.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-base</artifactId>
-                <version>${selc-commons.version}</version>
-                <type>test-jar</type>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-web</artifactId>
-                <version>${selc-commons.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>selc-commons-web</artifactId>
-                <version>${selc-commons.version}</version>
-                <type>test-jar</type>
-            </dependency>
-
-            <dependency>
-                <groupId>it.pagopa.selfcare</groupId>
-                <artifactId>user-group-ms-connector-dao</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
         <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-base</artifactId>
+            <version>${selc-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-base</artifactId>
+            <version>${selc-commons.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-web</artifactId>
+            <version>${selc-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-web</artifactId>
+            <version>${selc-commons.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -97,25 +84,81 @@
         </dependency>
 
         <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-commons-base</artifactId>
-            <type>test-jar</type>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>7.20.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>5.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured-common</artifactId>
+            <version>5.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-path</artifactId>
+            <version>5.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>xml-path</artifactId>
+            <version>5.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>1.10.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>7.20.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-spring</artifactId>
+            <version>7.19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.14.0</version>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <version>4.18.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <modules>
-        <module>core</module>
-        <module>web</module>
-        <module>app</module>
-        <module>connector-api</module>
-        <module>connector</module>
-    </modules>
-
-
-
     <build>
-
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -160,8 +203,35 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                    <outputDirectory>target</outputDirectory>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <skipIfEmpty>true</skipIfEmpty>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-
     </build>
 
     <repositories>
