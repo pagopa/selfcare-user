@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.event.mapper;
+package it.pagopa.selfcare.user.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -38,15 +38,13 @@ class NotificationMapperTest {
 
     @Test
     void mapUserForFdTest() {
-        UserResource userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductRole("Admin");
         onboardedProduct.setRole(PartyRole.MANAGER);
 
-        UserToNotify result = new NotificationMapperImpl().mapUserForFD(userResource,  onboardedProduct);
+        UserToNotify result = new NotificationMapperImpl().mapUserForFD("userId",  onboardedProduct);
 
-        assertEquals(userResource.getId().toString(), result.getUserId());
+        assertEquals("userId", result.getUserId());
         assertEquals(List.of("Admin"), result.getRoles());
         assertEquals("MANAGER", result.getRole());
     }
