@@ -1,7 +1,6 @@
-package it.pagopa.selfcare.user.event;
+package it.pagopa.selfcare.user;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
@@ -22,8 +21,8 @@ public class UserUtilsTest {
     void groupingProductAndReturnMinStateProduct_whenActiveAndDelete() {
 
         List<OnboardedProduct> products = new ArrayList<>();
-        products.add(dummyOnboardedProduct("example", OnboardedProductState.ACTIVE, 1));
-        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED, 1));
+        products.add(dummyOnboardedProduct("example", OnboardedProductState.ACTIVE));
+        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED));
 
         Collection<OnboardedProduct> actuals = UserUtils.groupingProductAndReturnMinStateProduct(products);
         assertEquals(1, actuals.size());
@@ -60,6 +59,7 @@ public class UserUtilsTest {
 
         assertNotNull(actuals);
         assertEquals(3, actuals.size());
+
         OnboardedProduct[] ps = products.toArray(new OnboardedProduct[0]);
         BiFunction<OnboardedProduct, OnboardedProduct, Boolean> getPredicate = (OnboardedProduct a, OnboardedProduct p) -> a.getStatus().equals(p.getStatus()) && a.getRole().equals(p.getRole());
         assertTrue(actuals.stream().anyMatch(act -> getPredicate.apply(act, ps[0])));
@@ -71,9 +71,9 @@ public class UserUtilsTest {
     void groupingProductAndReturnMinStateProduct_whenMoreDelete() {
 
         List<OnboardedProduct> products = new ArrayList<>();
-        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED, 1));
-        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED, 2));
-        OnboardedProduct expected = dummyOnboardedProduct("example", OnboardedProductState.DELETED, 3);
+        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED));
+        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED));
+        OnboardedProduct expected = dummyOnboardedProduct("example", OnboardedProductState.DELETED);
         products.add(expected);
 
         Collection<OnboardedProduct> actuals = UserUtils.groupingProductAndReturnMinStateProduct(products);
@@ -89,8 +89,8 @@ public class UserUtilsTest {
     void groupingProductAndReturnMinStateProduct_whenMoreProduct() {
 
         List<OnboardedProduct> products = new ArrayList<>();
-        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED, 1));
-        products.add(dummyOnboardedProduct("example-2", OnboardedProductState.DELETED, 2));
+        products.add(dummyOnboardedProduct("example", OnboardedProductState.DELETED));
+        products.add(dummyOnboardedProduct("example-2", OnboardedProductState.DELETED));
 
         Collection<OnboardedProduct> actuals = UserUtils.groupingProductAndReturnMinStateProduct(products);
         assertEquals(2, actuals.size());
@@ -99,12 +99,7 @@ public class UserUtilsTest {
     @Test
     void mapPropsForTrackEvent() {
 
-        TrackEventInput trackEventInput = TrackEventInput.builder()
-                .documentKey("documentKey")
-                .userId("userId")
-                .productId("productId")
-                .institutionId("institutionId")
-                .build();
+        TrackEventInput trackEventInput = TrackEventInput.builder().documentKey("documentKey").userId("userId").productId("productId").institutionId("institutionId").build();
 
         Map<String, String> maps = UserUtils.mapPropsForTrackEvent(trackEventInput);
         assertTrue(maps.containsKey("documentKey"));
@@ -114,17 +109,12 @@ public class UserUtilsTest {
     }
 
     OnboardedProduct dummyOnboardedProductWithRole(String productRole, OnboardedProductState state, PartyRole role) {
-        OnboardedProduct onboardedProduct = new OnboardedProduct();
-        onboardedProduct.setProductId("productId");
-        onboardedProduct.setProductRole(productRole);
+        OnboardedProduct onboardedProduct = dummyOnboardedProduct(productRole, state);
         onboardedProduct.setRole(role);
-        onboardedProduct.setCreatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
-        onboardedProduct.setUpdatedAt(OffsetDateTime.of(LocalDate.EPOCH, LocalTime.MIN, ZoneOffset.UTC));
-        onboardedProduct.setStatus(state);
         return onboardedProduct;
     }
 
-    OnboardedProduct dummyOnboardedProduct(String productRole, OnboardedProductState state, int day) {
+    OnboardedProduct dummyOnboardedProduct(String productRole, OnboardedProductState state) {
         OnboardedProduct onboardedProduct = new OnboardedProduct();
         onboardedProduct.setProductId("productId");
         onboardedProduct.setProductRole(productRole);
@@ -206,7 +196,7 @@ public class UserUtilsTest {
     @Test
     void retrieveFdProduct_mailChanges() {
         List<OnboardedProduct> products = new ArrayList<>();
-        OnboardedProduct product = dummyOnboardedProduct("example", OnboardedProductState.ACTIVE, 1);
+        OnboardedProduct product = dummyOnboardedProduct("example", OnboardedProductState.ACTIVE);
         product.setProductId("prod-fd");
         products.add(product);
         List<String> productIdToCheck = List.of("prod-fd", "2");
