@@ -13,14 +13,14 @@
   <packaging>pom</packaging>
 
   <properties>
-    <onboarding-sdk.version>0.4.1</onboarding-sdk.version>
+    <onboarding-sdk.version>0.3.2</onboarding-sdk.version>
   </properties>
 
   <dependencies>
   <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>onboarding-sdk-azure-storage</artifactId>
-    <version>${onboarding-sdk.version}</version>
+    <version>0.3.2</version>
   </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
