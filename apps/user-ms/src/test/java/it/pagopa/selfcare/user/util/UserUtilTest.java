@@ -46,8 +46,14 @@ class UserUtilTest {
         Map<String, WorkContactResource> map = new HashMap<>();
         WorkContactResource workContactResource = new WorkContactResource();
         workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
+        workContactResource.setMobilePhone(MobilePhoneCertifiableSchema.builder().value("0000000000").build());
         map.put("MAIL_ID#123", workContactResource);
-        return UserResource.builder().id(uuid).name(NameCertifiableSchema.builder().value("name").build()).familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build()).workContacts(map).build();
+        return UserResource.builder()
+                .id(uuid)
+                .name(NameCertifiableSchema.builder().value("name").build())
+                .familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build())
+                .workContacts(map)
+                .build();
     }
 
     private static UserInstitution getUserInstitution(String userId, String institutionId, String productId) {
@@ -252,19 +258,6 @@ class UserUtilTest {
         assertEquals(MAIL_ID_PREFIX + "mail1", result.get());
     }
 
-    private static UserResource getUserResource(UUID uuid) {
-        Map<String, WorkContactResource> map = new HashMap<>();
-        WorkContactResource workContactResource = new WorkContactResource();
-        workContactResource.setEmail(EmailCertifiableSchema.builder().value("test@test.it").build());
-        workContactResource.setMobilePhone(MobilePhoneCertifiableSchema.builder().value("0000000000").build());
-        map.put("MAIL_ID#123", workContactResource);
-        return UserResource.builder()
-                .id(uuid)
-                .name(NameCertifiableSchema.builder().value("name").build())
-                .familyName(org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema.builder().value("familyName").build())
-                .workContacts(map)
-                .build();
-    }
 
     @Test
     void buildUsersNotificationResponseTest() {
