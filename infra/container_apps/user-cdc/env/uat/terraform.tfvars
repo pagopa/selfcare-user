@@ -43,7 +43,7 @@ app_settings = [
   },
   {
     name  = "USER_CDC_SEND_EVENTS_WATCH_ENABLED"
-    value = "false"
+    value = "true"
   },
   {
     name = "USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED"
