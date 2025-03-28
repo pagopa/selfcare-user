@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
@@ -247,6 +248,40 @@ class InstitutionControllerTest {
                 .queryParam("roles", roles)
                 .queryParam("status", status)
                 .get("/{institutionId}/products/{productId}/users/count")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteUserInstitutionProductUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        Mockito.when(userService.deleteUserInstitutionProductUsers(institutionId, productId))
+                .thenReturn(Uni.createFrom().item(new DeletedUserCountResponse(institutionId, productId, 1L)));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .delete("/{institutionId}/products/{productId}/users")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void deleteUserInstitutionProductUsers_NotAuthorized() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("institutionId", institutionId)
+                .pathParam("productId", productId)
+                .delete("/{institutionId}/products/{productId}/users")
                 .then()
                 .statusCode(401);
     }

@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.controller.response.UserProductResponse;
 import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
@@ -123,4 +124,25 @@ public class InstitutionController {
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
     }
+
+    @Operation(
+            summary = "Logically delete all the users associated with a product of an institution",
+            description = "Set the status of all the users associated with a product of an institution to DELETED"
+    )
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = DeletedUserCountResponse.class), mediaType = "application/json")),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @DELETE
+    @Path(value = "/{institutionId}/products/{productId}/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<DeletedUserCountResponse> deleteUserInstitutionProductUsers(@PathParam(value = "institutionId") String institutionId,
+                                                                           @PathParam(value = "productId") String productId) {
+        return userService.deleteUserInstitutionProductUsers(institutionId.replaceAll("[^a-zA-Z0-9-_]", ""),
+                        productId.replaceAll("[^a-zA-Z0-9-_]", ""));
+    }
+
 }

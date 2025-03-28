@@ -626,6 +626,30 @@ class UserServiceTest {
     }
 
     @Test
+    void deleteUserInstitutionProductUsers() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().item(1L));
+        UniAssertSubscriber<DeletedUserCountResponse> subscriber = userService
+                .deleteUserInstitutionProductUsers(institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted().assertItem(new DeletedUserCountResponse(institutionId, productId, 1L));
+    }
+
+    @Test
+    void deleteUserInstitutionProductUsersFail() {
+        final String institutionId = "institutionId";
+        final String productId = "productId";
+        when(userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)).thenReturn(Uni.createFrom().failure(new RuntimeException()));
+        UniAssertSubscriber<DeletedUserCountResponse> subscriber = userService
+                .deleteUserInstitutionProductUsers(institutionId, productId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertFailedWith(RuntimeException.class);
+    }
+
+    @Test
     void findAllByIds() {
         //given
         List<String> userIds = List.of("userId");

@@ -205,6 +205,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Uni<DeletedUserCountResponse> deleteUserInstitutionProductUsers(String institutionId, String productId) {
+        return userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)
+                .onItem().invoke(modCount -> log.info("Updated {} userInstitution documents with institutionId {} and productId {} to status DELETED", modCount, institutionId, productId))
+                .onItem().transformToUni(modCount -> Uni.createFrom().item(new DeletedUserCountResponse(institutionId, productId, modCount)));
+    }
+
+    @Override
     public Uni<List<UserInstitutionResponse>> findAllByIds(List<String> userIds) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(formatQueryParameterList(userIds)).build().constructMap();
         return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters))
