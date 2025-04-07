@@ -49,21 +49,56 @@ services:
     networks:
       - develop-network
 
-  #user-ms:
-  #  build:
-  #    context: "../../."  # Indica il percorso dove si trova il codice del microservizio
-  #    dockerfile: "apps/user-ms/src/test/resources/Dockerfile-cucumber"   # Puoi includere un Dockerfile per la build del servizio
-  #  ports:
-  #    - '8080:8080'  # Porta del microservizio Quarkus
-  #  environment:
-  #    - USER_REGISTRY_URL=http://localhost:1080/user-registry-mock/v1
-  #    - JWT-PUBLIC-KEY=-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB-----END PUBLIC KEY-----
-  #    - MONGODB-CONNECTION-STRING=mongodb://localhost:27017
-  #  networks:
-  #    - develop-network
-  #  depends_on:
-  #    - mongodb  # Dipende da mongodb
-  #    - mockserver  # Dipende anche da mockserver
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - 2181:2181
+    networks:
+      - develop-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    networks:
+      - develop-network
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  notification-service:
+    build: "./src/test/resources/eventHubSubstitute"
+    depends_on:
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8087:8087"
+    networks:
+      - develop-network
+
+  init-kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - kafka
+      - zookeeper
+    networks:
+      - develop-network
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists  --replication-factor 1 --partitions 1 --topic sc-users
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
 
 networks:
   develop-network:
