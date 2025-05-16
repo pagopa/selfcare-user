@@ -34,8 +34,8 @@ jobs:
           servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
       - name: Build with Maven
-        working-directory: apps/institution-ms
-        run:  mvn test -Dtest=it.pagopa.selfcare.mscore.integration_test.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+        working-directory: apps/user-ms
+        run:  mvn test -Dtest=it.pagopa.selfcare.user.integration_test.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
