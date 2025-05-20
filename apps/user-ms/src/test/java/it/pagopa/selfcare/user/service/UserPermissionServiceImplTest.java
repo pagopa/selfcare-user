@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.service;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -15,8 +16,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 @QuarkusTest
 public class UserPermissionServiceImplTest {
@@ -31,9 +30,8 @@ public class UserPermissionServiceImplTest {
     private final String productId = "prod-io";
     private final String userId = "userId";
 
-
     @Test
-    public void testHasPermissionWithAnyPermission() {
+    void testHasPermissionWithAnyPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -51,7 +49,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    public void testHasPermissionWithADminPermissionOnlyWithProductId() {
+    void testHasPermissionWithADminPermissionOnlyWithProductId() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -60,6 +58,7 @@ public class UserPermissionServiceImplTest {
         userInstitution.setProducts(Collections.singletonList(product));
         Mockito.when(userInstitutionService.existsValidUserProduct(userId, null, productId, PermissionTypeEnum.ANY))
                 .thenReturn(Uni.createFrom().item(true));
+
         // Act
         Uni<Boolean> result = userPermissionService.hasPermission(null, productId, PermissionTypeEnum.ANY, userId);
         UniAssertSubscriber<Boolean> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -69,7 +68,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    public void testHasPermissionWithValidPermission() {
+    void testHasPermissionWithValidPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -87,7 +86,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    public void testHasPermissionWithInvalidPermission() {
+    void testHasPermissionWithInvalidPermission() {
         // Arrange
         UserInstitution userInstitution = new UserInstitution();
         OnboardedProduct product = new OnboardedProduct();
@@ -105,7 +104,7 @@ public class UserPermissionServiceImplTest {
     }
 
     @Test
-    public void testHasPermissionWithUserNotFound() {
+    void testHasPermissionWithUserNotFound() {
         // Arrange
         Mockito.when(userInstitutionService.existsValidUserProduct(eq(null), anyString(), anyString(), any(PermissionTypeEnum.class)))
                 .thenReturn(Uni.createFrom().item(false));
