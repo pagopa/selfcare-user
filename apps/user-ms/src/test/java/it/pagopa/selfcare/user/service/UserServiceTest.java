@@ -150,24 +150,6 @@ class UserServiceTest {
         return userInstitution;
     }
 
-    private UserInstitution createUserInstitution_withState(OnboardedProductState state){
-        UserInstitution userInstitution = new UserInstitution();
-        userInstitution.setId(ObjectId.get());
-        userInstitution.setUserId(userId.toString());
-        userInstitution.setInstitutionId("institutionId");
-        userInstitution.setUserMailUuid(workContractsKey);
-
-        OnboardedProduct product = new OnboardedProduct();
-        product.setProductId("prod-io");
-        product.setProductRole("admin");
-        product.setRole(MANAGER);
-        product.setStatus(state);
-        List<OnboardedProduct> products = new ArrayList<>();
-        products.add(product);
-        userInstitution.setProducts(products);
-        return userInstitution;
-    }
-
     private UserInstitution createUserInstitution_ADMIN_EA_IO(){
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setId(ObjectId.get());
@@ -873,12 +855,12 @@ class UserServiceTest {
 
         LoggedUser loggedUser = LoggedUser.builder().build();
 
-        UserResource userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
-        userResource.setWorkContacts(new HashMap<>());
+        UserResource user = new UserResource();
+        user.setId(UUID.randomUUID());
+        user.setWorkContacts(new HashMap<>());
 
         when(userRegistryApi.searchUsingPOST(any(), any()))
-                .thenReturn(Uni.createFrom().item(userResource));
+                .thenReturn(Uni.createFrom().item(user));
 
         when(userUtils.getMailUuidFromMail(any(), any()))
                 .thenReturn(Optional.of("mail-uuid"));
@@ -917,12 +899,12 @@ class UserServiceTest {
         CreateUserDto userDto = getCreateUserDto(productId, fiscalCode, institutionId, requestedRoles, DELEGATE.name());
         LoggedUser loggedUser = LoggedUser.builder().build();
 
-        UserResource userResource = new UserResource();
-        userResource.setId(UUID.randomUUID());
-        userResource.setWorkContacts(new HashMap<>());
+        UserResource user = new UserResource();
+        user.setId(UUID.randomUUID());
+        user.setWorkContacts(new HashMap<>());
 
         when(userRegistryApi.searchUsingPOST(any(), any()))
-                .thenReturn(Uni.createFrom().item(userResource));
+                .thenReturn(Uni.createFrom().item(user));
 
         when(userUtils.getMailUuidFromMail(any(), any()))
                 .thenReturn(Optional.of("mail-uuid"));
