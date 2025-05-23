@@ -35,5 +35,7 @@ jobs:
 
       - name: Run Integration Tests
         working-directory: apps/user-ms
-        run: mvn test -Dtest=it.pagopa.selfcare.user.integration_test.CucumberSuite
+        run: mvn -U test -Dtest=it.pagopa.selfcare.user.integration_test.CucumberSuite
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
