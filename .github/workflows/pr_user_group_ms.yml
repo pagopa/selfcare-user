@@ -15,13 +15,13 @@ on:
       - ready_for_review
     paths:
       - 'apps/user-group-ms/**'
-      - '.github/workflows/pr_ms.yml'
+      - '.github/workflows/pr_user_group_ms.yml'
       - '.github/workflows/call_code_review.yml'
 
 jobs:
   code_review:
     uses: ./.github/workflows/call_code_review.yml
-    name: User ms Code Review
+    name: User Group ms Code Review
     secrets: inherit
     with:
       pr_number: ${{ github.event.pull_request.number }}
