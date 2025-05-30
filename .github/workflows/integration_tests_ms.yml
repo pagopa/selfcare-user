@@ -13,11 +13,6 @@ on:
       - "apps/user-ms/**"
       - ".github/workflows/integration_tests_ms.yml"
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch su cui eseguire i test di integrazione'
-        required: true
-        default: 'main'
 
 jobs:
   integration_tests_ms:
@@ -38,7 +33,6 @@ jobs:
           java-distribution: 'temurin'
           maven-version: '3.9.5'
           cache-enabled: true
-          checkout-ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.event.inputs.branch }}
 
       - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
         with:
