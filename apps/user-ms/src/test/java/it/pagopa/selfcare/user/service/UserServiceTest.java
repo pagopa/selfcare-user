@@ -2281,7 +2281,6 @@ class UserServiceTest {
         String fiscalCode = "fiscalCode";
         String institutionId = "institutionId";
         String productId = "productId";
-        UUID userId = UUID.randomUUID();
         UserResource userDto = new UserResource();
         userDto.setId(userId);
 

@@ -152,7 +152,7 @@ public class InstitutionController {
             description = "Verify if a user is already onboarded on an institution and product given its fiscal code"
     )
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = UserProductResponse.class, type = SchemaType.ARRAY), mediaType = "application/json")),
+            @APIResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Boolean.class), mediaType = "application/json")),
             @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
             @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
