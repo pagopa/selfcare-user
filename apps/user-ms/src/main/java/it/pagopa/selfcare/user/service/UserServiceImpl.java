@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
     private static final String WORK_CONTACTS = "workContacts";
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
-    public static final String USER_FILED_LIST_WITHOUT_WORK_CONTACTS = "name,familyName,fiscalCode";
+    public static final String USER_FIELD_LIST_WITHOUT_WORK_CONTACTS = "name,familyName,fiscalCode";
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
 
@@ -854,7 +854,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId) {
-        return userRegistryService.searchUsingPOST(USER_FILED_LIST_WITHOUT_WORK_CONTACTS, new UserSearchDto(fiscalCode))
+        return userRegistryService.searchUsingPOST(USER_FIELD_LIST_WITHOUT_WORK_CONTACTS, new UserSearchDto(fiscalCode))
                 .flatMap(user -> userInstitutionService.existsValidUserProduct(
                         user.getId().toString(),
                         institutionId,
