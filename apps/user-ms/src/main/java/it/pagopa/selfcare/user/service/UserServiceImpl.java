@@ -498,10 +498,12 @@ public class UserServiceImpl implements UserService {
      * The evaluateRoleAndCreateOrUpdateUserByUserId method is designed to evaluate the role of a user for a specific product
      * and either create or update the user's role based on certain conditions.
      * First, the method checks if the roleOnProduct is null. If it is, we need to create new role for the user on selected product.
-     * Next, the method compares the role specified in userDto with the existing roleOnProduct.
-     * If the new role is lower than the existing role (es. new role DELEGATE, old role MANAGER), it then calls
-     * we have to delete the old role, and subsequently we create new role for the user on selected product.
-     * If the new role is equals or higher than the existing role, throw a UserRoleAlreadyPresentException to indicate that we need to keep the old role.
+     * Next, if the new role is MANAGER:
+     * - If the user already has the MANAGER role, no new role is created and the method completes successfully.
+     * - If the user has a different role, the existing role is marked as DELETED and a new MANAGER role is created
+     *   with the same status as the previous one.
+     * If the new role is not MANAGER and the user already has any role on the product, the method throws a
+     * UserRoleAlreadyPresentException to prevent assigning a conflicting role.
      */
     private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser, PartyRole roleOnProduct, OnboardedProductState currentStatus) {
         PartyRole newRole;
