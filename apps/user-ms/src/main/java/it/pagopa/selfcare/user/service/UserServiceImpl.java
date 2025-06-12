@@ -467,17 +467,17 @@ public class UserServiceImpl implements UserService {
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().transformToUni(userInstitution -> {
                     if (Optional.ofNullable(userInstitution).isPresent()) {
-                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", Encode.forJava(userId), userDto.getProduct().getProductId());
+                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
                         PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
                         OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
                         return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
                                 .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct, currentStatus));
                     } else {
-                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", Encode.forJava(userId), userDto.getProduct().getProductId());
+                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", Encode.forJava(userId), Encode.forJava(userDto.getProduct().getProductId()));
                         return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
                     }
                 })
-                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", Encode.forJava(userId), userDto.getInstitutionId(), exception.getMessage(), exception));
+                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", Encode.forJava(userId), Encode.forJava(userDto.getInstitutionId()), exception.getMessage(), exception));
     }
 
     /**
@@ -526,7 +526,7 @@ public class UserServiceImpl implements UserService {
                         .onItem().transformToUni(ignore -> createOrUpdateUserByUserId(userDto, userId, loggedUser, currentStatus));
             }
         } else {
-            log.info("User {} already has status {} for product {}. Cannot assign {} role.", Encode.forJava(userId), currentStatus, userDto.getProduct().getProductId(), newRole);
+            log.info("User {} already has status {} for product {}. Cannot assign {} role.", Encode.forJava(userId), Encode.forJava(String.valueOf(currentStatus)), Encode.forJava(userDto.getProduct().getProductId()), Encode.forJava(String.valueOf(newRole)));
             return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
                     String.format("User already has status %s for product [%s]. Cannot assign %s role.",
                             currentStatus, userDto.getProduct().getProductId(), newRole)));
