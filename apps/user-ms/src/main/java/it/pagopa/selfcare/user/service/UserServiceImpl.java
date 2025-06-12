@@ -467,17 +467,17 @@ public class UserServiceImpl implements UserService {
         return userInstitutionService.retrieveFirstFilteredUserInstitution(queryParameter)
                 .onItem().transformToUni(userInstitution -> {
                     if (Optional.ofNullable(userInstitution).isPresent()) {
-                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", userId, userDto.getProduct().getProductId());
+                        log.info("User with userId: {} has already onboarded for product {}. Proceeding with check role", Encode.forJava(userId), userDto.getProduct().getProductId());
                         PartyRole roleOnProduct = retrieveUserRoleOnProduct(userInstitution, userDto.getProduct().getProductId());
                         OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
                         return checkAndUpdateUserMail(userInstitution, userDto.getUserMailUuid())
                                 .onItem().transformToUni(ignore -> evaluateRoleAndCreateOrUpdateUserByUserId(userDto, userId, loggedUser, roleOnProduct, currentStatus));
                     } else {
-                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", userId, userDto.getProduct().getProductId());
+                        log.info("User with userId: {} has not onboarded for product {}. Proceeding with create", Encode.forJava(userId), userDto.getProduct().getProductId());
                         return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
                     }
                 })
-                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", userId, userDto.getInstitutionId(), exception.getMessage(), exception));
+                .onFailure().invoke(exception -> log.error("Error during createOrUpdateManagerByUserId for userId: {}, institutionId: {}: {}", Encode.forJava(userId), userDto.getInstitutionId(), exception.getMessage(), exception));
     }
 
     /**
@@ -514,19 +514,19 @@ public class UserServiceImpl implements UserService {
             return createOrUpdateUserByUserId(userDto, userId, loggedUser, ACTIVE);
         }
 
-        if (newRole == PartyRole.MANAGER) {
+        if (PartyRole.MANAGER.equals(newRole)) {
             if (PartyRole.MANAGER.equals(roleOnProduct)) {
-                log.info("User {} already has MANAGER role with status {}. No changes needed.", userId, currentStatus);
+                log.info("User {} already has MANAGER role with status {}. No changes needed.", Encode.forJava(userId), currentStatus);
                 return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
                         String.format("User already has MANAGER role with status %s for product [%s].", currentStatus, userDto.getProduct().getProductId())));
             } else {
-                log.info("User {} has role {} with status {}. Replacing with MANAGER role keeping same status.", userId, roleOnProduct, currentStatus);
+                log.info("User {} has role {} with status {}. Replacing with MANAGER role keeping same status.", Encode.forJava(userId), roleOnProduct, currentStatus);
                 return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(
                                 userId, userDto.getInstitutionId(), userDto.getProduct().getProductId(), null, null, DELETED)
                         .onItem().transformToUni(ignore -> createOrUpdateUserByUserId(userDto, userId, loggedUser, currentStatus));
             }
         } else {
-            log.info("User {} already has status {} for product {}. Cannot assign {} role.", userId, currentStatus, userDto.getProduct().getProductId(), newRole);
+            log.info("User {} already has status {} for product {}. Cannot assign {} role.", Encode.forJava(userId), currentStatus, userDto.getProduct().getProductId(), newRole);
             return Uni.createFrom().failure(new UserRoleAlreadyPresentException(
                     String.format("User already has status %s for product [%s]. Cannot assign %s role.",
                             currentStatus, userDto.getProduct().getProductId(), newRole)));
