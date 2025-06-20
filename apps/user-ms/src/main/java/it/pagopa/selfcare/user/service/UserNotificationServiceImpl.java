@@ -48,6 +48,8 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public static final String REQUESTER_SURNAME = "requesterSurname";
     public static final String PRODUCT_NAME = "productName";
     public static final String INSTITUTION_NAME = "institutionName";
+    public static final String NO_ROLE_FOUND = "no_role_found";
+    public static final String PRODUCT_ROLE = "productRole";
     @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;
@@ -146,7 +148,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
             }
 
             if(CollectionUtils.isNullOrEmpty(roleLabel)) {
-                roleLabel = List.of("no_role_found");
+                roleLabel = List.of(NO_ROLE_FOUND);
             }
 
             dataModel.put("productRoles", roleLabel.stream().limit(productRoleCodes.size() - 1L)
@@ -156,7 +158,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
             }
 
         } else {
-            String roleLabel = "no_role_found";
+            String roleLabel = NO_ROLE_FOUND;
             if (CollectionUtils.isNotEmpty(product.getAllRoleMappings())) {
                 roleLabel = product.getAllRoleMappings().values().stream()
                         .flatMap(List::stream)
@@ -164,9 +166,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
                         .filter(productRole -> productRole.getCode().equals(productRoleCodes.get(0)))
                         .map(ProductRole::getLabel)
                         .findAny()
-                        .orElse("no_role_found");
+                        .orElse(NO_ROLE_FOUND);
             }
-            dataModel.put("productRole", roleLabel);
+            dataModel.put(PRODUCT_ROLE, roleLabel);
         }
 
         return dataModel;
@@ -188,7 +190,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put("productRole", roleLabel.orElse("no_role_found"));
+        dataModel.put(PRODUCT_ROLE, roleLabel.orElse(NO_ROLE_FOUND));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
         dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
         dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
@@ -198,7 +200,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product, PartyRole role, String loggedUserName, String loggedUserSurname) {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put("productRole", evaluateRole(role));
+        dataModel.put(PRODUCT_ROLE, evaluateRole(role));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
         dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
         dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
@@ -215,7 +217,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return switch (role) {
             case MANAGER -> "Legale Rappresentante";
             case DELEGATE, ADMIN_EA -> "Amministratore";
-            default -> "no_role_found";
+            default -> NO_ROLE_FOUND;
         };
     }
 
