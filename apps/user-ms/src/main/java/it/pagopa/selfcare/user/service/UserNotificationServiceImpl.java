@@ -5,6 +5,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.utils.ProductUtils;
@@ -190,11 +191,35 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         return dataModel;
     }
 
+    private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product, PartyRole role, String loggedUserName, String loggedUserSurname) {
+        Map<String, String> dataModel = new HashMap<>();
+        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put("productRole", evaluateRole(role));
+        dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put("requesterName", Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put("requesterSurname", Optional.ofNullable(loggedUserSurname).orElse(""));
+        return dataModel;
+    }
+
     private Uni<Void> buildDataModelAndSendEmail(org.openapi.quarkus.user_registry_json.model.UserResource user, UserInstitution institution, Product product, String templateName, String subject, String productRole, String loggedUserName, String loggedUserSurname) {
         String email = retrieveMail(user, institution);
         Map<String, String> dataModel = buildEmailDataModel(institution, product, productRole, loggedUserName, loggedUserSurname);
         return this.sendEmailNotification(templateName, subject, email, dataModel);
     }
+
+    private String evaluateRole(PartyRole role) {
+        return switch (role) {
+            case MANAGER -> "Legale Rappresentante";
+            case DELEGATE, ADMIN_EA -> "Amministratore";
+            default -> "no_role_found";
+        };
+    }
+
+    @Override
+    public Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product, PartyRole productRole, String loggedUserName, String loggedUserSurname) {
+        String email = retrieveMail(user, institution);
+        Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product, productRole, loggedUserName, loggedUserSurname);
+        return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);}
 
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {
         return Uni.createFrom().item(getContent(templateName, dataModel))
