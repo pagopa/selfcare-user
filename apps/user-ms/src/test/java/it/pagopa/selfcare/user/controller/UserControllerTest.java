@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.SendMailDto;
+import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -340,7 +341,7 @@ class UserControllerTest {
                 .then()
                 .statusCode(200);
 
-        Mockito.verify(userService).retrieveBindings(any(), any(), any());
+        verify(userService).retrieveBindings(any(), any(), any());
 
     }
 
@@ -355,7 +356,7 @@ class UserControllerTest {
                 .then()
                 .statusCode(401);
 
-        Mockito.verify(userService, Mockito.never()).retrieveBindings(any(), any(), any());
+        verify(userService, Mockito.never()).retrieveBindings(any(), any(), any());
     }
 
 
@@ -802,6 +803,40 @@ class UserControllerTest {
                 .statusCode(400);
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendMailOtp() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-otp";
+        SendEmailOtpDto mailDto = createSendEmailOtpDto();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam(PATH_USER_ID, "userId")
+                .body(mailDto)
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(202);
+
+        verify(userService, times(1)).sendEmailOtp(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendMailOtp_invalidRequestBody() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-otp";
+        SendEmailOtpDto mailDto = new SendEmailOtpDto();
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(mailDto)
+                .pathParam(PATH_USER_ID, "userId")
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(400);
+    }
+
     private CreateUserDto buildCreateUserDto() {
         CreateUserDto userDto = new CreateUserDto();
         userDto.setInstitutionId("institutionId");
@@ -871,6 +906,13 @@ class UserControllerTest {
         sendMailDto.setInstitutionName("institutionName");
         sendMailDto.setProductId(PROD_PAGOPA.getValue());
         sendMailDto.setRole(MANAGER);
+        return sendMailDto;
+    }
+
+    private SendEmailOtpDto createSendEmailOtpDto() {
+        SendEmailOtpDto sendMailDto = new SendEmailOtpDto();
+        sendMailDto.setOtp("123456");
+        sendMailDto.setInstitutionalEmail("test@test.com");
         return sendMailDto;
     }
 }

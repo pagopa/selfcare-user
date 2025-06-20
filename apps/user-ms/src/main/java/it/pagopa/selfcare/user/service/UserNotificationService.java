@@ -19,4 +19,6 @@ public interface UserNotificationService {
     Uni<Void> sendCreateUserNotification(String institutionDescription, List<String> roleLabels, UserResource userResource, UserInstitution userInstitution, Product product, LoggedUser loggedUser);
 
     Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product, PartyRole productRole, String loggedUserName, String loggedUserSurname);
+
+    Uni<Void> sendOtpNotification(String institutionalEmail, String name, String otp);
 }

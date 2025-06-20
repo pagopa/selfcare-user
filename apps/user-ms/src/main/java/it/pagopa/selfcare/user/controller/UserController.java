@@ -9,6 +9,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.SendMailDto;
+import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -429,6 +430,25 @@ public class UserController {
                                             @Context SecurityContext ctx) {
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.sendMail(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getRole(), loggedUser));
+    }
+
+    @APIResponses({
+            @APIResponse(responseCode = "202", description = "Email send accepted!"),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @Operation(description = "The sendEmailOtp function is used to send email containing a One Time Password for account verification", summary = "Send an email with OTP")
+    @POST
+    @Path(value = "/{userId}/send-mail-otp")
+    @Tag(name = "User")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> sendEmailOtp(@PathParam(value = "userId") String userId,
+                                      @Valid SendEmailOtpDto sendEmailOtpDto,
+                                      @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.sendEmailOtp(userId, sendEmailOtpDto.getInstitutionalEmail(), sendEmailOtpDto.getOtp()))
+                .map(response -> Response
+                        .status(HttpStatus.SC_ACCEPTED).build());
     }
 
     private Uni<LoggedUser> readUserIdFromToken(SecurityContext ctx) {
