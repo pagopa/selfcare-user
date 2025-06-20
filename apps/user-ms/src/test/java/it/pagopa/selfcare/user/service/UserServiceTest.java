@@ -934,9 +934,9 @@ class UserServiceTest {
 
     @Test
     void testSendMail() {
-        UserResource userResource = mock(UserResource.class);
+        UserResource user = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
-                .thenReturn(Uni.createFrom().item(userResource));
+                .thenReturn(Uni.createFrom().item(user));
 
         Product product = mock(Product.class);
         when(productService.getProduct(any())).thenReturn(product);

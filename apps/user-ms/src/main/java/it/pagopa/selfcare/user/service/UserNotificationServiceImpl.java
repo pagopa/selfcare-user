@@ -44,6 +44,10 @@ import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_N
 @ApplicationScoped
 public class UserNotificationServiceImpl implements UserNotificationService {
 
+    public static final String REQUESTER_NAME = "requesterName";
+    public static final String REQUESTER_SURNAME = "requesterSurname";
+    public static final String PRODUCT_NAME = "productName";
+    public static final String INSTITUTION_NAME = "institutionName";
     @Inject
     @RestClient
     EventHubRestClient eventHubRestClient;
@@ -122,11 +126,11 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     private Map<String, String> buildCreateEmailDataModel(LoggedUser loggedUser, Product product, String institutionDescription, List<String> productRoleCodes) {
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("requesterName", Optional.ofNullable(loggedUser.getName()).orElse(""));
-        dataModel.put("requesterSurname", Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUser.getName()).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUser.getFamilyName()).orElse(""));
 
-        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
-        dataModel.put("institutionName", Optional.ofNullable(institutionDescription).orElse(""));
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institutionDescription).orElse(""));
         if (productRoleCodes.size() > 1) {
             List<String> roleLabel = new ArrayList<>();
 
@@ -183,21 +187,21 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         }
 
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("productRole", roleLabel.orElse("no_role_found"));
-        dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put("requesterName", Optional.ofNullable(loggedUserName).orElse(""));
-        dataModel.put("requesterSurname", Optional.ofNullable(loggedUserSurname).orElse(""));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
         return dataModel;
     }
 
     private Map<String, String> buildEmailDataModelUserRequest(UserInstitution institution, Product product, PartyRole role, String loggedUserName, String loggedUserSurname) {
         Map<String, String> dataModel = new HashMap<>();
-        dataModel.put("productName", Optional.ofNullable(product.getTitle()).orElse(""));
+        dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put("productRole", evaluateRole(role));
-        dataModel.put("institutionName", Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put("requesterName", Optional.ofNullable(loggedUserName).orElse(""));
-        dataModel.put("requesterSurname", Optional.ofNullable(loggedUserSurname).orElse(""));
+        dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put(REQUESTER_NAME, Optional.ofNullable(loggedUserName).orElse(""));
+        dataModel.put(REQUESTER_SURNAME, Optional.ofNullable(loggedUserSurname).orElse(""));
         return dataModel;
     }
 
