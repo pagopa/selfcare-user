@@ -30,6 +30,7 @@ import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeRespo
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
 
