@@ -906,6 +906,7 @@ class UserControllerTest {
         sendMailDto.setInstitutionName("institutionName");
         sendMailDto.setProductId(PROD_PAGOPA.getValue());
         sendMailDto.setRole(MANAGER);
+        sendMailDto.setUserRequestUid("loggedUserId");
         return sendMailDto;
     }
 
