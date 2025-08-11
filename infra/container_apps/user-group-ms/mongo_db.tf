@@ -19,7 +19,7 @@ resource "azurerm_management_lock" "mongodb_selc_user_group" {
 }
 
 module "mongodb_collection_user-groups" {
-  source = "github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.50.1"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v7.26.5"
 
   name                = "UserGroups"
   resource_group_name = local.mongo_db.mongodb_rg_name

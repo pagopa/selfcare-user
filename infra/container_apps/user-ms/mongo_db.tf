@@ -12,7 +12,7 @@ resource "azurerm_management_lock" "mongodb_selc_user" {
 }
 
 module "mongodb_collection_user_institutions" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.39.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v7.26.5"
 
   name                = "userInstitutions"
   resource_group_name = local.mongo_db.mongodb_rg_name
@@ -34,7 +34,7 @@ module "mongodb_collection_user_institutions" {
 }
 
 module "mongodb_collection_user_info" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//cosmosdb_mongodb_collection?ref=v7.39.0"
+  source = "git::https://github.com/pagopa/terraform-azurerm-v4.git//cosmosdb_mongodb_collection?ref=v7.26.5"
 
   name                = "userInfo"
   resource_group_name = local.mongo_db.mongodb_rg_name
