@@ -124,7 +124,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     @Override
     public UserGroupOperations getUserGroupMe(String id, String memberId) {
         log.trace("getUserGroupMe start");
-        log.debug("getUserGroupMe id = {}", Encode.forJava(id));
+        log.debug("getUserGroupMe id = {}, memberId = {}", Encode.forJava(id), Encode.forJava(memberId));
         Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
         Assert.hasText(memberId, MEMBER_ID_REQUIRED);
         final UserGroupOperations foundGroup = findById(id).orElseThrow(ResourceNotFoundException::new);
