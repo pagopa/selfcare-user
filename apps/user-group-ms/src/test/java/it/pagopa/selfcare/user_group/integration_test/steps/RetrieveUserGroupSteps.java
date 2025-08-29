@@ -150,8 +150,9 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals("9c8ae123-d990-4400-b043-67a60aff31bc", userGroupEntityResponse.getInstitutionId());
         Assertions.assertEquals("prod-test", userGroupEntityResponse.getProductId());
         Assertions.assertEquals("ACTIVE", userGroupEntityResponse.getStatus().name());
-        Assertions.assertEquals(1, userGroupEntityResponse.getMembers().size());
-        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7", userGroupEntityResponse.getMembers().iterator().next());
+        Assertions.assertEquals(2, userGroupEntityResponse.getMembers().size());
+        Assertions.assertTrue(userGroupEntityResponse.getMembers().contains("75003d64-7b8c-4768-b20c-cf66467d44c7"));
+        Assertions.assertTrue(userGroupEntityResponse.getMembers().contains("97a511a7-2acc-47b9-afed-2f3c65753b4a"));
         Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
         Assertions.assertEquals("4ba2832d-9c4c-40f3-9126-e1c72905ef14", userGroupEntityResponse.getCreatedBy());
         Assertions.assertNull(userGroupEntityResponse.getModifiedBy());

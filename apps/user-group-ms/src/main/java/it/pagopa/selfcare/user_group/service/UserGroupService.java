@@ -19,6 +19,8 @@ public interface UserGroupService {
 
     UserGroupOperations getUserGroup(String id);
 
+    UserGroupOperations getUserGroupMe(String id, String memberId);
+
     Page<UserGroupOperations> getUserGroups(UserGroupFilter filter, Pageable pageable);
 
     void deleteGroup(String id);

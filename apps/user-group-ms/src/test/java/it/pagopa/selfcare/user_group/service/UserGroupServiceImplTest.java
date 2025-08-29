@@ -36,10 +36,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.validation.ValidationException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -471,6 +468,83 @@ class UserGroupServiceImplTest {
         //when
         UserGroupOperations result = groupService.getUserGroup(groupId);
         //then
+        assertNotNull(result);
+        verify(userGroupRepository).findById(groupId);
+        verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_nullId() {
+        final Executable executable = () -> groupService.getUserGroupMe(null, "memberId");
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
+        assertEquals("A user group id is required", exception.getMessage());
+        verifyNoInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_emptyId() {
+        final Executable executable = () -> groupService.getUserGroupMe("", "memberId");
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
+        assertEquals("A user group id is required", exception.getMessage());
+        verifyNoInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_nullMemberId() {
+        final Executable executable = () -> groupService.getUserGroupMe("groupId", null);
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
+        assertEquals("A member id is required", exception.getMessage());
+        verifyNoInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_emptyMemberId() {
+        final Executable executable = () -> groupService.getUserGroupMe("groupId", "");
+        final IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
+        assertEquals("A member id is required", exception.getMessage());
+        verifyNoInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_groupNotFound() {
+        final String groupId = "groupId";
+        final String memberId = "memberId";
+
+        when(userGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+
+        final Executable executable = () -> groupService.getUserGroupMe(groupId, memberId);
+        assertThrows(ResourceNotFoundException.class, executable);
+        verify(userGroupRepository).findById(groupId);
+        verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_memberIdNotFound() {
+        final String groupId = "groupId";
+        final String memberId = "memberId";
+
+        final UserGroupEntity group = new UserGroupEntity();
+        group.setId(groupId);
+        group.setMembers(Set.of("x", "y"));
+        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+
+        final Executable executable = () -> groupService.getUserGroupMe(groupId, memberId);
+        assertThrows(ResourceNotFoundException.class, executable);
+        verify(userGroupRepository).findById(groupId);
+        verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
+    }
+
+    @Test
+    void getUserGroupMe_success() {
+        final String groupId = "groupId";
+        final String memberId = "memberId";
+
+        final UserGroupEntity group = new UserGroupEntity();
+        group.setId(groupId);
+        group.setMembers(Set.of("x", memberId, "y"));
+        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+
+        UserGroupOperations result = groupService.getUserGroupMe(groupId, memberId);
         assertNotNull(result);
         verify(userGroupRepository).findById(groupId);
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);

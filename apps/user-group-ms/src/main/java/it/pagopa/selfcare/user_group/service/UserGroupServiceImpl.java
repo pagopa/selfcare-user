@@ -122,6 +122,21 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
+    public UserGroupOperations getUserGroupMe(String id, String memberId) {
+        log.trace("getUserGroupMe start");
+        log.debug("getUserGroupMe id = {}", id);
+        Assert.hasText(id, USER_GROUP_ID_REQUIRED_MESSAGE);
+        Assert.hasText(memberId, MEMBER_ID_REQUIRED);
+        final UserGroupOperations foundGroup = findById(id).orElseThrow(ResourceNotFoundException::new);
+        final UserGroupOperations memberGroup = Optional.of(foundGroup)
+                .filter(g -> g.getMembers().contains(memberId))
+                .orElseThrow(ResourceNotFoundException::new);
+        log.debug("getUserGroupMe result = {}", memberGroup);
+        log.trace("getUserGroupMe end");
+        return memberGroup;
+    }
+
+    @Override
     public Page<UserGroupOperations> getUserGroups(UserGroupFilter filter, Pageable pageable) {
         log.trace("getUserGroups start");
         log.debug("getUserGroups filter = {}, pageable = {}", filter, pageable);

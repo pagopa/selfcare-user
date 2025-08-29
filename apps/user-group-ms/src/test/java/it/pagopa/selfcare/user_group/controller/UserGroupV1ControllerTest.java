@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.user_group.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.user_group.api.UserGroupOperations;
 import it.pagopa.selfcare.user_group.config.WebTestConfig;
 import it.pagopa.selfcare.user_group.exception.ResourceNotFoundException;
@@ -17,12 +18,11 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import it.pagopa.selfcare.user_group.model.DummyCreateUserGroupDto;
-import it.pagopa.selfcare.user_group.model.DummyUpdateUserGroupDto;
 
 import java.util.List;
 import java.util.Set;
@@ -279,6 +279,35 @@ class UserGroupV1ControllerTest {
                 .get(BASE_URL + "/groupId")
                 .contentType(APPLICATION_JSON_VALUE)
                 .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+        //then
+        UserGroupResource group = mapper.readValue(result.getResponse().getContentAsString(), UserGroupResource.class);
+        assertNotNull(group);
+    }
+
+    @Test
+    void getUserGroupMe() throws Exception {
+        //given
+        String InstitutionId = "institutionId";
+        String productId = "productId";
+        final SelfCareUser user = SelfCareUser.builder("userId").build();
+        final Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(groupServiceMock.getUserGroupMe(Mockito.anyString(), Mockito.anyString()))
+                .thenAnswer(invocationOnMock -> {
+                    String id = invocationOnMock.getArgument(0, String.class);
+                    UserGroupOperations group = mockInstance(new GroupDto(), "setId");
+                    group.setId(id);
+                    group.setMembers(Set.of(randomUUID().toString(), randomUUID().toString()));
+                    return group;
+                });
+        //when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/me/groupId")
+                        .principal(authentication)
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
         //then

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.model.Page;
 import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.commons.web.model.mapper.PageMapper;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -162,6 +164,21 @@ public class UserGroupV1Controller {
         return groupResource;
     }
 
+    @GetMapping(value = "/me/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.getUserGroupMe}")
+    public UserGroupResource getUserGroupMe(@ApiParam("${swagger.user-group.model.id}")
+                                            @PathVariable("id") String id,
+                                            Authentication authentication) {
+        log.trace("getUserGroupMe start");
+        log.debug("getUserGroupMe id = {}", Encode.forJava(id));
+        final SelfCareUser user = (SelfCareUser) authentication.getPrincipal();
+        final UserGroupOperations group = groupService.getUserGroupMe(id, user.getId());
+        final UserGroupResource groupResource = userGroupMapper.toResource(group);
+        log.debug("getUserGroupMe result = {}", groupResource);
+        log.trace("getUserGroupMe end");
+        return groupResource;
+    }
 
     @Tag(name = "support")
     @Tag(name = "external-v2")
