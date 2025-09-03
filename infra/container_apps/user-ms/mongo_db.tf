@@ -25,6 +25,10 @@ module "mongodb_collection_user_institutions" {
     unique = true
     },
     {
+      keys   = ["institutionId"]
+      unique = false
+    },
+    {
       keys   = ["userId", "institutionId"]
       unique = false
     }
