@@ -43,6 +43,10 @@ module "mongodb_collection_user-groups" {
     {
       keys   = ["members"]
       unique = false
+    },
+    {
+      keys   = ["name"]
+      unique = false
     }
   ]
 
