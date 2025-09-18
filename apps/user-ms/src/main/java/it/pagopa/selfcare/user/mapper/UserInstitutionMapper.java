@@ -60,6 +60,7 @@ public interface UserInstitutionMapper {
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
+                    onboardedProduct.setToAddOnAggregates(product.getToAddOnAggregates());
                     if(StringUtils.isNotBlank(product.getRole())) {
                         onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
                     }
@@ -79,6 +80,7 @@ public interface UserInstitutionMapper {
                     onboardedProduct.setProductId(product.getProductId());
                     onboardedProduct.setTokenId(product.getTokenId());
                     onboardedProduct.setProductRole(role);
+                    onboardedProduct.setToAddOnAggregates(product.getToAddOnAggregates());
                     if(StringUtils.isNotBlank(product.getRole())) {
                         onboardedProduct.setRole(PartyRole.valueOf(product.getRole()));
                     }
