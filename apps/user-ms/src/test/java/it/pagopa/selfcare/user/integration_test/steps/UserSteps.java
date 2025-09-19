@@ -224,8 +224,8 @@ public class UserSteps {
         }
     }
 
-    @And("The userInstitution with field toAddOnAggregates {string} was saved")
-    public void theUserInstitutionWithFieldToAddOnAggregatesWasSaved(String arg0) {
+    @And("The userInstitution with field toAddOnAggregates was saved with value {string}")
+    public void checkUserInstitutionWithFieldToAddOnAggregates(String arg0) {
         boolean toAddOnAggregates = Boolean.parseBoolean(arg0);
         UserInstitution.find("institutionId = ?1", mockInstitutionId2)
                 .firstResult()

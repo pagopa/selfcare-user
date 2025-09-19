@@ -3075,7 +3075,7 @@ Feature: User
       | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
     When I send a POST request to "users/{userId}"
     Then The status code is 201
-    And The userInstitution with field toAddOnAggregates "true" was saved
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
   ######################### END POST /{userId} #########################
 
   ######################### BEGIN POST /{userId}/onboarding #########################
@@ -3559,7 +3559,7 @@ Feature: User
       """
     When I send a POST request to "users/"
     Then The status code is 201
-    And The userInstitution with field toAddOnAggregates "true" was saved
+    And The userInstitution with field toAddOnAggregates was saved with value "true"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with ACTIVE status (existing userInstitution with existing product)
