@@ -186,7 +186,12 @@ public class UserGroupV1Controller {
                                                  Pageable pageable) {
         log.trace("getUserGroups start");
         log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", Encode.forJava(institutionId), Encode.forJava(productId), pageable, status);
-        UserGroupFilter filter = new UserGroupFilter(institutionId, productId, memberId, status);
+        UserGroupFilter filter = UserGroupFilter.builder()
+                .institutionId(institutionId)
+                .productId(productId)
+                .userId(memberId.toString())
+                .status(status)
+                .build();
         Page<UserGroupResource> result = PageMapper.map(groupService.getUserGroups(filter, pageable)
                 .map(userGroupMapper::toResource));
         log.debug("getUserGroups result = {}", result);
@@ -224,6 +229,20 @@ public class UserGroupV1Controller {
         log.debug("deleteMemberFromUserGroups memberId = {}, institutionId = {}, productId = {}", memberId, Encode.forJava(institutionId), Encode.forJava(productId));
         groupService.deleteMembers(memberId.toString(), institutionId, productId);
         log.trace("deleteMemberFromUserGroups end");
+    }
+
+
+    @PutMapping(value = "/members")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.addMembers}")
+    public void addMembersToUserGroupWithParentInstitutionId(@RequestBody
+                                                      @Valid
+                                                      AddMembersToUserGroupDto groupDto) {
+        log.trace("addMembersToUserGroup start");
+        log.debug("addMembersToUserGroup institutionId = {}, parentInstitutionId = {}, productId = {}",
+                Encode.forJava(groupDto.getInstitutionId()), Encode.forJava(groupDto.getParentInstitutionId()), Encode.forJava(groupDto.getProductId()));
+        groupService.addMembers(groupDto.getInstitutionId(), groupDto.getParentInstitutionId(), groupDto.getProductId(), groupDto.getMembers());
+        log.trace("addMemberToUserGroup end");
     }
 
 }
