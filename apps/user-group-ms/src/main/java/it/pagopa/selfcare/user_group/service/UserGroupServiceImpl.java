@@ -271,7 +271,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private void insertMembers(String id, Set<UUID> memberIds) {
         log.trace("insertMembers start");
-        log.debug("insertMembers id = {}, memberIds = {}", id, memberIds);
+        log.debug("insertMembers id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
 
         // convert UUIDs
         Object[] userIdsAsStrings = memberIds.stream()
