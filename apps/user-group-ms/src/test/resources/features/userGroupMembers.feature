@@ -90,6 +90,33 @@ Feature: User Group Members
     And the response should contain 1 item
     And the response should contain all members
 
+  Scenario: Attempt to add members without institutionId
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId | parentInstitutionId                  | members                                                                   |
+      | prod-test |               | 5d1ae124-d870-4400-b043-67a60aff32cb | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.institutionId,must not be blank"
+
+  Scenario: Attempt to add members without parentInstitutionId
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId                        | parentInstitutionId | members                                                                   |
+      | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc |                     | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.parentInstitutionId,must not be blank"
+
+  Scenario: Attempt to add members with empty member list
+    Given [MEMBERS] user login with username "j.doe" and password "test"
+    And the following add members to user group request details:
+      | productId | institutionId                        | parentInstitutionId                  | members |
+      | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc | 5d1ae124-d870-4400-b043-67a60aff32cb |         |
+    When I send a PUT request to "/v1/user-groups/members" to add members to a group
+    Then [MEMBERS] the response status should be 400
+    And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.members,must not be empty"
+
   @LastGroupMembersScenario
   Scenario: Attempt to add members to a non-existent group
     Given [MEMBERS] user login with username "j.doe" and password "test"
