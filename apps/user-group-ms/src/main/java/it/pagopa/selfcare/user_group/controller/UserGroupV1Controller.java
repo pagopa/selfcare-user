@@ -229,6 +229,8 @@ public class UserGroupV1Controller {
 
     @PutMapping(value = "/members")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Tag(name = "UserGroup")
+    @Tag(name = "internal-v1")
     @ApiOperation(value = "", notes = "${swagger.user-group.groups.api.addMembers}")
     public void addMembersToUserGroupWithParentInstitutionId(@RequestBody
                                                       @Valid

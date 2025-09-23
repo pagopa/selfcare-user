@@ -234,7 +234,7 @@
     },
     "/v1/user-groups/members" : {
       "put" : {
-        "tags" : [ "UserGroup" ],
+        "tags" : [ "UserGroup", "internal-v1" ],
         "summary" : "addMembersToUserGroupWithParentInstitutionId",
         "description" : "Service to add a members to a specific UserGroup entity by its institutionId, parentInstitutionId and productId",
         "operationId" : "addMembersToUserGroupWithParentInstitutionIdUsingPUT",
