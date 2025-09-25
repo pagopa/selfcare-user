@@ -37,6 +37,10 @@ module "mongodb_collection_user-groups" {
       unique = false
     },
     {
+      keys   = ["parentInstitutionId"]
+      unique = false
+    },
+    {
       keys   = ["productId"]
       unique = false
     },
