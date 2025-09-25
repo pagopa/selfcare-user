@@ -75,6 +75,7 @@ Feature: Get User Group
     When I send a GET request to "/v1/user-groups" to retrieve userGroups
     Then [RETRIEVE] the response status should be 200
     And the response should contain a paginated list of user groups of 2 items on page 1
+    And the response page should contain a group with parent institution id
 
   @LastRetrieveGroupScenario
   Scenario: No user groups found for the provided filters

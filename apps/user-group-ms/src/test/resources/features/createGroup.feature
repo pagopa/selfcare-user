@@ -49,6 +49,17 @@ Feature: Create User Group
     Then [CREATE] the response status should be 409
     And [CREATE] the response should contain an error message "A group with the same name already exists in ACTIVE or SUSPENDED state"
 
+  # Scenario negativo: Gruppo già esistente con stesso institutionId-parentInstitutionId-productId (conflitto)
+  @DuplicateGroupName
+  Scenario: Attempt to create a user group with a duplicate institutionId-parentInstitutionId-productId
+    Given [CREATE] user login with username "j.doe" and password "test"
+    And the following user group details:
+      | name                   | description | productId | institutionId                        | parentInstitutionId                  | status  | members                                                                   |
+      | io group with parent 2 | TestGroup   | prod-test | 9c7ae123-d990-4400-b043-67a60aff31bc | 5d1ae124-d870-4400-b043-67a60aff32cb |ACTIVE   | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a POST request to "/v1/user-groups" with the given details
+    Then [CREATE] the response status should be 409
+    And [CREATE] the response should contain an error message "A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state"
+
   # Scenario negativo: Dettagli del gruppo mancanti (name non fornito)
   Scenario: Attempt to create a user group with missing required fields (name)
     Given [CREATE] user login with username "j.doe" and password "test"

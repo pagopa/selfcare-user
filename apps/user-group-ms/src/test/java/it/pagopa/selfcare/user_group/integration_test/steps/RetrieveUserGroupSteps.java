@@ -201,6 +201,20 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(page, userGroupEntityResponsePage.getNumber());
     }
 
+    @Then("the response page should contain a group with parent institution id")
+    public void the_response_page_should_contain_a_group_with_parent_institution_id() {
+        List<UserGroupEntity> groups = userGroupEntityResponsePage.getContent();
+
+        Assertions.assertFalse(groups.isEmpty(), "Expected response page to contain at least one group");
+
+        boolean hasParentInstitutionId = groups.stream()
+                .anyMatch(group -> group.getParentInstitutionId() != null);
+
+        Assertions.assertTrue(hasParentInstitutionId,
+                "Expected at least one group to have a parentInstitutionId");
+    }
+
+
     @Given("I have valid filters institutionId {string} productId {string} and status {string}")
     public void iHaveValidFiltersAndAnd(String institutionId, String productId, String status) {
         userGroupEntityFilter = new UserGroupEntity();

@@ -54,6 +54,7 @@ public class CreateUserGroupSteps extends UserGroupSteps {
     public UserGroupEntity convertRequest(Map<String, String> entry) {
         UserGroupEntity userGroupEntity = new UserGroupEntity();
         userGroupEntity.setInstitutionId(entry.get("institutionId"));
+        userGroupEntity.setParentInstitutionId(entry.get("parentInstitutionId"));
         userGroupEntity.setProductId(entry.get("productId"));
         userGroupEntity.setName(entry.get("name"));
         userGroupEntity.setDescription(entry.get("description"));
