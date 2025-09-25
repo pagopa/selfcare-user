@@ -352,7 +352,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     private Page<UserGroupOperations> findAll(UserGroupFilter filter, Pageable pageable) {
         log.trace("findAll start");
-        log.debug("findAll institutionId = {}, parentInstitutionId = {}, productId = {}, userId = {}, pageable = {}", filter.getInstitutionId(), filter.getParentInstitutionId(), filter.getProductId(), filter.getUserId(), pageable);
+        log.debug("findAll institutionId = {}, parentInstitutionId = {}, productId = {}, userId = {}, pageable = {}",
+                Encode.forJava(filter.getInstitutionId()), Encode.forJava(filter.getParentInstitutionId()),
+                Encode.forJava(filter.getProductId()), Encode.forJava(filter.getUserId()), Encode.forJava(pageable.toString()));
         if (pageable.getSort().isSorted() && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("Sorting not allowed without productId or institutionId");
         }
