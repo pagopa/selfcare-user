@@ -108,6 +108,11 @@ public class CreateUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(expectedInstitutionId, userGroupEntityResponse.getInstitutionId());
     }
 
+    @Then("the response should contain the parent institutionId {string}")
+    public void verifyParentInstitutionId(String expectedParentInstitutionId) {
+        Assertions.assertEquals(expectedParentInstitutionId, userGroupEntityResponse.getParentInstitutionId());
+    }
+
     @And("the response should contain the status {string}")
     public void theResponseShouldContainTheStatus(String expectedStatus) {
         Assertions.assertEquals(expectedStatus, userGroupEntityResponse.getStatus().name());
