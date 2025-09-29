@@ -8,6 +8,10 @@ import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserInstitutionCdcService;
@@ -38,6 +42,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
@@ -78,6 +83,8 @@ public class UserInstitutionCdcServiceTest {
     @InjectMock
     UserInstitutionRepository userInstitutionRepository;
 
+    @InjectMock
+    ProductService productService;
 
     @Test
     void consumerToSendScUserEvent() {
@@ -369,6 +376,14 @@ public class UserInstitutionCdcServiceTest {
         ));
         delegationsPagoPa.setPageInfo(PageInfo.builder().pageNo(0L).pageSize(1000L).totalPages(1L).totalElements(3L).build());
         when(delegationApi.getDelegationsUsingGET2(null, parentInstitutionId, "prod-pagopa", null, null, null, 0, null)).thenReturn(Uni.createFrom().item(delegationsPagoPa));
+
+        final Product p = new Product();
+        final ProductRoleInfo pri = new ProductRoleInfo();
+        final ProductRole pr = new ProductRole();
+        pr.setCode("admin");
+        pri.setRoles(List.of(pr));
+        p.setRoleMappings(Map.of(PartyRole.ADMIN_EA, pri));
+        when(productService.getProduct(any())).thenReturn(p);
 
         when(userApi.createUserByUserId(any(), any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
         when(userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(any())).thenReturn(Uni.createFrom().item(Response.status(Response.Status.OK).build()));
