@@ -26,6 +26,10 @@ app_settings = [
   {
     name  = "APPLICATIONINSIGHTS_ROLE_NAME"
     value = "user-cdc",
+  },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-p-product"
   }
 ]
 
