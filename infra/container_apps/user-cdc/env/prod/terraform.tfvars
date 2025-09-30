@@ -37,6 +37,10 @@ app_settings = [
     value = "true"
   },
   {
+    name = "USER_CDC_ADD_ON_AGGREGATES_WATCH_ENABLED"
+    value = "true"
+  },
+  {
     name  = "EVENT_HUB_BASE_PATH"
     value = "https://selc-p-eventhub-ns.servicebus.windows.net/"
   },
@@ -59,6 +63,14 @@ app_settings = [
   {
     name  = "USER_REGISTRY_URL"
     value = "https://api.pdv.pagopa.it/user-registry/v1"
+  },
+  {
+    name  = "STORAGE_CONTAINER_PRODUCT"
+    value = "selc-p-product"
+  },
+  {
+    name  = "INTERNAL_API_URL"
+    value = "https://api.selfcare.pagopa.it/external/internal/v1"
   }
 ]
 
@@ -69,5 +81,6 @@ secrets_names = {
   "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"    = "eventhub-sc-users-selfcare-wo-key-lc"
   "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
   "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"    = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
+  "INTERNAL_API_KEY"                        = "internal-api-key"
 }
 
