@@ -38,23 +38,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         userGroupRepository.deleteAllById(userGroupsIds);
     }
 
-    @DataTableType
-    public AddMembersToUserGroupDto convertAddMembersRequest(Map<String, String> entry) {
-        AddMembersToUserGroupDto request = new AddMembersToUserGroupDto();
-        request.setInstitutionId(entry.get("institutionId"));
-        request.setParentInstitutionId(entry.get("parentInstitutionId"));
-        request.setProductId(entry.get("productId"));
-
-        Set<UUID> members = Optional.ofNullable(entry.get("members"))
-                .map(s -> Arrays.stream(s.split(","))
-                        .map(UUID::fromString)
-                        .collect(Collectors.toSet()))
-                .orElse(Set.of());
-        request.setMembers(members);
-
-        return request;
-    }
-
 
     @Override
     @Then("[RETRIEVE] the response status should be {int}")
