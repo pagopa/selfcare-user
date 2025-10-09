@@ -151,7 +151,6 @@ Feature: User Group Members
     Then [MEMBERS] the response status should be 400
     And [MEMBERS] the response should contain an error message "addMembersToUserGroupDto.name,must not be blank"
 
-  @LastGroupMembersScenario
   Scenario: Attempt to add members without group description
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And the following add members to user group request details:
@@ -208,7 +207,7 @@ Feature: User Group Members
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And the following members to delete from user group request details:
       | productId  | institutionId | parentInstitutionId | members                                                                   |
-      | product123 | notfound      | inst456             | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+      | product123 | notfound      | inst567             | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
     When I send a DELETE request to "/v1/user-groups/members" to delete members from a group
     Then [MEMBERS] the response status should be 404
     And [MEMBERS] the response should contain an error message "Not Found"
