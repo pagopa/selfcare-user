@@ -13,7 +13,7 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.response.ResponseOptions;
 import io.restassured.specification.RequestSpecification;
-import it.pagopa.selfcare.user_group.model.AddMembersToUserGroupDto;
+import it.pagopa.selfcare.user_group.model.DeleteMembersFromUserGroupDto;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
 import org.junit.jupiter.api.Assertions;
@@ -36,6 +36,23 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     @After("@LastRetrieveGroupScenario")
     public void afterFeature() {
         userGroupRepository.deleteAllById(userGroupsIds);
+    }
+
+    @DataTableType
+    public DeleteMembersFromUserGroupDto convertDeleteMembersRequest(Map<String, String> entry) {
+        DeleteMembersFromUserGroupDto request = new DeleteMembersFromUserGroupDto();
+        request.setInstitutionId(entry.get("institutionId"));
+        request.setParentInstitutionId(entry.get("parentInstitutionId"));
+        request.setProductId(entry.get("productId"));
+
+        Set<UUID> members = Optional.ofNullable(entry.get("members"))
+                .map(s -> Arrays.stream(s.split(","))
+                        .map(UUID::fromString)
+                        .collect(Collectors.toSet()))
+                .orElse(Set.of());
+        request.setMembers(members);
+
+        return request;
     }
 
 
@@ -178,8 +195,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     @And("the response should contain a paginated list of user groups of {int} items on page {int}")
     public void theResponseShouldContainAPaginatedListOfUserGroups(int count, int page) {
         Assertions.assertEquals(count, userGroupEntityResponsePage.getContent().size());
-        Assertions.assertEquals(4, userGroupEntityResponsePage.getTotalElements());
-        Assertions.assertEquals(2, userGroupEntityResponsePage.getTotalPages());
+        Assertions.assertEquals(5, userGroupEntityResponsePage.getTotalElements());
+        Assertions.assertEquals(3, userGroupEntityResponsePage.getTotalPages());
         Assertions.assertEquals(2, userGroupEntityResponsePage.getSize());
         Assertions.assertEquals(page, userGroupEntityResponsePage.getNumber());
     }
@@ -222,10 +239,11 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(expectedItemsCount, userGroupEntityResponsePage.getContent().size());
     }
 
-    @Then("the response should contain all members")
-    public void the_response_should_contain_all_members() {
-        Assertions.assertEquals(3, userGroupEntityResponse.getMembers().size());
-        Assertions.assertEquals("[525db33f-967f-4a82-8984-c606225e714a, 75003d64-7b8c-4768-b20c-cf66467d44c7, a1b7c86b-d195-41d8-8291-7c3467abfd30]", userGroupEntityResponse.getMembers().toString());
+    @Then("the response should contain the following list of members:")
+    public void the_response_should_contain_all_members(List<String> expectedValues) {
+        Set<String> expectedMembers = new HashSet<>(expectedValues);
+        Set<String> actualMembers = userGroupEntityResponse.getMembers();
+        Assertions.assertEquals(expectedMembers, actualMembers);
     }
 
     @Then("I should receive a response of retrieve user group operation with status code {int}")

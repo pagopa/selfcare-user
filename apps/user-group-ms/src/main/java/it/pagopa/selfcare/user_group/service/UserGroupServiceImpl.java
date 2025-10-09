@@ -132,6 +132,24 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.trace("createGroupOrAddMembers end");
     }
 
+    @Override
+    public void deleteMembersWithParentInstitutionId(String institutionId, String parentInstitutionId, String productId, Set<UUID> members) {
+        log.trace("deleteMembersWithParentInstitutionId start");
+        log.debug("deleteMembersWithParentInstitutionId institutionId = {}, parentInstitutionId = {}, members = {}",
+                Encode.forJava(institutionId), Encode.forJava(parentInstitutionId), Encode.forJava(members.toString()));
+        Assert.notNull(institutionId, USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(parentInstitutionId, USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
+        Assert.notNull(members, MEMBERS_REQUIRED);
+        UserGroupFilter userGroupFilter = UserGroupFilter.builder()
+                .institutionId(institutionId)
+                .parentInstitutionId(parentInstitutionId)
+                .productId(productId)
+                .build();
+        String groupId = findGroupId(userGroupFilter);
+        removeMembersWithParentInstitutionId(groupId, members);
+        log.trace("deleteMembersWithParentInstitutionId end");
+    }
+
 
     @Override
     public void deleteMember(String groupId, String memberId) {
@@ -305,6 +323,64 @@ public class UserGroupServiceImpl implements UserGroupService {
         }
         log.trace("insertMember end");
     }
+
+    private String findGroupId(UserGroupFilter userGroupFilter) {
+        Page<UserGroupOperations> foundGroups = findAll(userGroupFilter, Pageable.unpaged());
+
+        long total = foundGroups.getTotalElements();
+        if (total == 0) {
+            throw new ResourceNotFoundException();
+        }
+        if (total > 1) {
+            throw new IllegalStateException("Expected a single UserGroup, but found " + total);
+        }
+
+        return foundGroups.getContent().get(0).getId();
+    }
+
+    private void insertMembers(String id, Set<UUID> memberIds) {
+        log.trace("insertMembers start");
+        log.debug("insertMembers id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
+
+        // convert UUIDs
+        Object[] userIdsAsStrings = memberIds.stream()
+                .map(UUID::toString)
+                .toArray();
+
+        mongoTemplate.updateFirst(
+                createActiveGroupQuery(id),
+                new Update()
+                        .addToSet(UserGroupEntity.Fields.members).each(userIdsAsStrings)
+                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                UserGroupEntity.class);
+
+        log.trace("insertMembers end");
+    }
+
+    private void removeMembersWithParentInstitutionId(String id, Set<UUID> memberIds) {
+        log.trace("removeMembersWithParentInstitutionId start");
+        log.debug("removeMembersWithParentInstitutionId id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
+
+        Object[] userIdsAsStrings = memberIds.stream()
+                .map(UUID::toString)
+                .toArray();
+
+        UpdateResult updateResult = mongoTemplate.updateFirst(
+                createActiveGroupQuery(id),
+                new Update()
+                        .pullAll(UserGroupEntity.Fields.members, userIdsAsStrings)
+                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
+                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                UserGroupEntity.class);
+
+        if (updateResult.getModifiedCount() == 0) {
+            log.warn("No member to delete from UserGroup");
+        }
+
+        log.trace("removeMembersWithParentInstitutionId end");
+    }
+
 
     private void removeMemberFromActiveGroup(String id, String memberId) {
         log.trace("deleteMember start");
