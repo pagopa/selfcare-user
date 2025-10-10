@@ -255,5 +255,10 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     public void createUserLoginWithUsernameAndPassword(String user, String pass) {
         super.login(user, pass);
     }
+
+    @Then("[RETRIEVE] the response should contain a valid user group resource with name {string}")
+    public void verifyUserGroupName(String expectedName) {
+        Assertions.assertEquals(expectedName, userGroupEntityResponse.getName());
+    }
 }
 

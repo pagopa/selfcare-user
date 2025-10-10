@@ -19,6 +19,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -43,7 +44,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     private static final String USER_GROUP_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group institution id is required";
     private static final String USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE = "A user group parent institution id is required";
     private static final String MEMBERS_REQUIRED = "Members are required";
+    private static final String GROUP_NAME_REQUIRED = "A group name is required";
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
+    private static final String GROUP_NAME_FORBIDDEN = "Group name cannot start with 'Ente Aggregatore'";
     private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
     private static final String GROUP_PARENT_ALREADY_EXISTS = "A group with the same institutionId-parentInstitutionId-productId already exists in ACTIVE or SUSPENDED state";
     private final List<String> allowedSortingParams;
@@ -99,36 +102,20 @@ public class UserGroupServiceImpl implements UserGroupService {
 
         Query query = new Query(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
                 .and(UserGroupEntity.Fields.productId).is(userGroupOperations.getProductId())
+                .and(UserGroupEntity.Fields.parentInstitutionId).is(userGroupOperations.getParentInstitutionId())
                 .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED)));
 
-        List<UserGroupEntity> foundGroups = mongoTemplate.find(query, UserGroupEntity.class);
+        Update update = new Update()
+                .setOnInsert(UserGroupEntity.Fields.name, "Ente Aggregatore " + userGroupOperations.getName())
+                .setOnInsert(UserGroupEntity.Fields.description, userGroupOperations.getDescription())
+                .setOnInsert(UserGroupEntity.Fields.status, UserGroupStatus.ACTIVE)
+                .addToSet(UserGroupEntity.Fields.members).each(userGroupOperations.getMembers());
 
-        List<UserGroupEntity> groupsWithParentId = foundGroups.stream()
-                .filter(g -> userGroupOperations.getParentInstitutionId().equals(g.getParentInstitutionId()))
-                .toList();
+        FindAndModifyOptions options = FindAndModifyOptions.options()
+                .returnNew(true)
+                .upsert(true);
 
-        if (groupsWithParentId.isEmpty()) {
-            // Creating a new group
-            log.info("No group found, creating new one for institutionId={}, parentInstitutionId={}, productId={}",
-                    Encode.forJava(userGroupOperations.getInstitutionId()),
-                    Encode.forJava(userGroupOperations.getParentInstitutionId()),
-                    Encode.forJava(userGroupOperations.getProductId()));
-
-            checkGroupNameUniqueness(userGroupOperations.getId(), userGroupOperations.getName(), foundGroups);
-            userGroupOperations.setStatus(UserGroupStatus.ACTIVE);
-            insertUserGroupEntity(userGroupOperations);
-
-        } else if (groupsWithParentId.size() == 1) {
-            // Adding members to existing group
-            log.info("Existing group found, adding members to group id={}",
-                    Encode.forJava(foundGroups.get(0).getId()));
-
-            addMembersToExistingGroup(userGroupOperations, foundGroups.get(0).getId());
-
-        } else {
-            throw new IllegalStateException("Expected a single UserGroup, but found " + foundGroups.size());
-        }
-
+        mongoTemplate.findAndModify(query, update, options, UserGroupEntity.class);
         log.trace("createGroupOrAddMembers end");
     }
 
@@ -264,6 +251,10 @@ public class UserGroupServiceImpl implements UserGroupService {
         return insert;
     }
     private void checkGroupUniqueness(String currentGroupId, String groupName, String productId, String institutionId, String parentInstitutionId) {
+
+        Assert.notNull(groupName, GROUP_NAME_REQUIRED);
+        Assert.isTrue(!groupName.startsWith("Ente Aggregatore"), GROUP_NAME_FORBIDDEN);
+
         Query query = new Query(
                 Criteria.where(UserGroupEntity.Fields.institutionId).is(institutionId)
                         .and(UserGroupEntity.Fields.productId).is(productId)
@@ -336,26 +327,6 @@ public class UserGroupServiceImpl implements UserGroupService {
         }
 
         return foundGroups.getContent().get(0).getId();
-    }
-
-    private void insertMembers(String id, Set<UUID> memberIds) {
-        log.trace("insertMembers start");
-        log.debug("insertMembers id = {}, memberIds = {}", Encode.forJava(id), Encode.forJava(memberIds.toString()));
-
-        // convert UUIDs
-        Object[] userIdsAsStrings = memberIds.stream()
-                .map(UUID::toString)
-                .toArray();
-
-        mongoTemplate.updateFirst(
-                createActiveGroupQuery(id),
-                new Update()
-                        .addToSet(UserGroupEntity.Fields.members).each(userIdsAsStrings)
-                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
-                UserGroupEntity.class);
-
-        log.trace("insertMembers end");
     }
 
     private void removeMembersWithParentInstitutionId(String id, Set<UUID> memberIds) {
@@ -444,19 +415,6 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("findAll result = {}", result);
         log.trace("findAll end");
         return result;
-    }
-
-    private void addMembersToExistingGroup(UserGroupOperations userGroupOperations, String groupId) {
-        Object[] userIdsAsStrings = userGroupOperations.getMembers().toArray();
-
-        mongoTemplate.updateFirst(
-                new Query(Criteria.where(UserGroupEntity.Fields.ID).is(groupId)),
-                new Update()
-                        .addToSet(UserGroupEntity.Fields.members).each(userIdsAsStrings)
-                        .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
-                UserGroupEntity.class
-        );
     }
 
     private Criteria constructCriteria(UserGroupFilter filter) {

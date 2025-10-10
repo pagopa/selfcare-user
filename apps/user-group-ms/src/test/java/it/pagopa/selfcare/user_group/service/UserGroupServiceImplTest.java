@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.*;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
@@ -750,6 +751,7 @@ class UserGroupServiceImplTest {
         UserGroupOperations group = mock(UserGroupOperations.class);
         UserGroupEntity foundGroup = mock(UserGroupEntity.class);
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
+        when(group.getName()).thenReturn("groupName");
         when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
         when(userGroupRepository.save(any(UserGroupEntity.class))).thenReturn(foundGroup);
         //when
@@ -767,6 +769,7 @@ class UserGroupServiceImplTest {
         UserGroupOperations group = mock(UserGroupOperations.class);
         UserGroupEntity foundGroup = mock(UserGroupEntity.class);
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
+        when(group.getName()).thenReturn("Group Name");
         when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
         when(userGroupRepository.save(any(UserGroupEntity.class))).thenThrow(new DuplicateKeyException("Duplicate key"));
         //when
@@ -903,17 +906,9 @@ class UserGroupServiceImplTest {
         entity.setId("group123");
         entity.setParentInstitutionId(parentInstitutionId);
 
-        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
-                .thenReturn(List.of(entity));
-        when(auditorAware.getCurrentAuditor()).thenReturn(Optional.of("testUser"));
-
         groupService.createGroupOrAddMembers(userGroup);
 
-        verify(mongoTemplateMock).updateFirst(
-                any(),
-                any(Update.class),
-                eq(UserGroupEntity.class)
-        );
+        verify(mongoTemplateMock).findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(UserGroupEntity.class));
     }
 
     @Test
@@ -941,92 +936,6 @@ class UserGroupServiceImplTest {
         userGroup.setDescription("description");
 
         assertThrows(IllegalArgumentException.class,
-                () -> groupService.createGroupOrAddMembers(userGroup));
-    }
-
-    @Test
-    void addMembers_noGroupFound_createNewGroup() {
-        String institutionId = "inst1";
-        String parentInstitutionId = "parent1";
-        String productId = "prod1";
-        String name = "groupName";
-        String description = "groupDescription";
-        String member = UUID.randomUUID().toString();
-        Set<String> members = Set.of(member);
-
-        GroupDto userGroup = new GroupDto();
-        userGroup.setInstitutionId(institutionId);
-        userGroup.setParentInstitutionId(parentInstitutionId);
-        userGroup.setMembers(members);
-        userGroup.setProductId(productId);
-        userGroup.setName(name);
-        userGroup.setDescription(description);
-
-        UserGroupEntity entity = new UserGroupEntity();
-        entity.setId("group123");
-
-        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
-                .thenReturn(Collections.emptyList());
-        when(auditorAware.getCurrentAuditor()).thenReturn(Optional.of("testUser"));
-        when(userGroupRepository.insert(any(UserGroupEntity.class))).thenReturn(new UserGroupEntity());
-
-        groupService.createGroupOrAddMembers(userGroup);
-
-        verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
-        verify(userGroupRepository).insert(any(UserGroupEntity.class));
-    }
-
-    @Test
-    void addMembers_noGroupFound_tryToCreateNewGroup_NameUniqueness() {
-        String institutionId = "inst1";
-        String parentInstitutionId = "parent1";
-        String productId = "prod1";
-        String name = "groupName";
-        String description = "groupDescription";
-        String member = UUID.randomUUID().toString();
-        Set<String> members = Set.of(member);
-
-        GroupDto userGroup = new GroupDto();
-        userGroup.setInstitutionId(institutionId);
-        userGroup.setParentInstitutionId(parentInstitutionId);
-        userGroup.setMembers(members);
-        userGroup.setProductId(productId);
-        userGroup.setName(name);
-        userGroup.setDescription(description);
-
-        UserGroupEntity entity = new UserGroupEntity();
-        entity.setId("group123");
-        entity.setName("groupName");
-
-        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
-                .thenReturn(List.of(entity));
-
-        assertThrows(ResourceAlreadyExistsException.class,
-                () -> groupService.createGroupOrAddMembers(userGroup));
-    }
-
-    @Test
-    void addMembers_multipleGroupsFound_shouldThrowIllegalState() {
-        Set<String> members = Set.of(UUID.randomUUID().toString());
-        GroupDto userGroup = new GroupDto();
-        userGroup.setInstitutionId("institutionId");
-        userGroup.setParentInstitutionId("parentInstitutionId");
-        userGroup.setMembers(members);
-        userGroup.setProductId("productId");
-        userGroup.setName("name");
-        userGroup.setDescription("description");
-
-        UserGroupEntity e1 = new UserGroupEntity();
-        e1.setId("id1");
-        e1.setParentInstitutionId("parentInstitutionId");
-        UserGroupEntity e2 = new UserGroupEntity();
-        e2.setId("id2");
-        e2.setParentInstitutionId("parentInstitutionId");
-
-        when(mongoTemplateMock.find(any(Query.class), eq(UserGroupEntity.class)))
-                .thenReturn(List.of(e1, e2));
-
-        assertThrows(IllegalStateException.class,
                 () -> groupService.createGroupOrAddMembers(userGroup));
     }
 
