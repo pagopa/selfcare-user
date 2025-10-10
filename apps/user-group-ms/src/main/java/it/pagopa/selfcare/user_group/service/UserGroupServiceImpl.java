@@ -112,7 +112,6 @@ public class UserGroupServiceImpl implements UserGroupService {
                 .addToSet(UserGroupEntity.Fields.members).each(userGroupOperations.getMembers());
 
         FindAndModifyOptions options = FindAndModifyOptions.options()
-                .returnNew(true)
                 .upsert(true);
 
         mongoTemplate.findAndModify(query, update, options, UserGroupEntity.class);
