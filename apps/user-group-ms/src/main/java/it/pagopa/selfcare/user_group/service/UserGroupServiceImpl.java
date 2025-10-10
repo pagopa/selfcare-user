@@ -48,7 +48,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     private static final String MEMBER_ID_REQUIRED = "A member id is required";
     private static final String GROUP_NAME_FORBIDDEN = "Group name cannot start with 'Ente Aggregatore'";
     private static final String GROUP_NAME_ALREADY_EXISTS = "A group with the same name already exists in ACTIVE or SUSPENDED state";
-    public static final String ENTE_AGGREGATORE_PLACEHOLDER = "Ente Aggregatore ";
+    private static final String ENTE_AGGREGATORE_PLACEHOLDER = "Ente Aggregatore ";
     private final List<String> allowedSortingParams;
     private final UserGroupRepository repository;
     private final MongoTemplate mongoTemplate;
