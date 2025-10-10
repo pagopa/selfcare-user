@@ -38,6 +38,16 @@ Feature: Create User Group
     And the response should contain the createdAt notNull
     And the response should contain the modified data null
 
+  # Scenario negativo: Nome del gruppo non permesso
+  Scenario: Attempt to create a user group with a duplicate name
+    Given [CREATE] user login with username "j.doe" and password "test"
+    And the following user group details:
+      | name                      | description | productId | institutionId                        | status | members                                                                   |
+      | Ente Aggregatore io group | TestGroup   | prod-test | 9c8ae123-d990-4400-b043-67a60aff31bc | ACTIVE | 525db33f-967f-4a82-8984-c606225e714a,a1b7c86b-d195-41d8-8291-7c3467abfd30 |
+    When I send a POST request to "/v1/user-groups" with the given details
+    Then [CREATE] the response status should be 500
+    And [CREATE] the response should contain an error message "Group name cannot start with 'Ente Aggregatore'"
+
   # Scenario negativo: Nome del gruppo già esistente (conflitto)
   @DuplicateGroupName
   Scenario: Attempt to create a user group with a duplicate name
