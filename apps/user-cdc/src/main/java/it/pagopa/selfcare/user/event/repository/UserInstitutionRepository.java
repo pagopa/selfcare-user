@@ -171,9 +171,9 @@ public class UserInstitutionRepository {
                 .map(Collections::min);
     }
 
-    public Uni<Void> propagateUserToAggregate(UserInstitution parentUser, OnboardedProduct parentProduct,
-                                              String aggregateId, String aggregateDescription,
-                                              PartyRole roleToPropagate, String productRoleToPropagate) {
+    public Uni<UserInstitution> propagateUserToAggregate(UserInstitution parentUser, OnboardedProduct parentProduct,
+                                                         String aggregateId, String aggregateDescription,
+                                                         PartyRole roleToPropagate, String productRoleToPropagate) {
         assert parentProduct.getRoleId() != null; // The roleId is required on the parent
         assert parentProduct.getToAddOnAggregates() != null; // The toAddOnAggregates is required on the parent
         final String userIdField = UserInstitution.Fields.userId.name();
@@ -202,7 +202,8 @@ public class UserInstitutionRepository {
                     cloningMapper.copy(parentProduct, product);
                     product.setRole(roleToPropagate);
                     product.setProductRole(productRoleToPropagate);
-                    return u.update().replaceWithVoid();
+                    return u.update().onItem().transformToUni(up ->
+                            Uni.createFrom().item((UserInstitution) up));
                 }).orElseGet(() -> {
                     // Create new user institution
                     log.info("propagateUserToAggregate: Creating new UserInstitution with roleId {} for userId {} and aggregateId {}",
@@ -219,7 +220,8 @@ public class UserInstitutionRepository {
                     user.setUserId(parentUser.getUserId());
                     user.setUserMailUuid(parentUser.getUserMailUuid());
                     user.setUserMailUpdatedAt(parentUser.getUserMailUpdatedAt());
-                    return UserInstitution.persist(user);
+                    return UserInstitution.persist(user).onItem().transformToUni(v ->
+                            Uni.createFrom().item(user));
                 }));
     }
 

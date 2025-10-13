@@ -34,6 +34,7 @@ import it.pagopa.selfcare.user.model.FdUserNotificationToSend;
 import it.pagopa.selfcare.user.model.NotificationUserType;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
+import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -45,6 +46,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.internal_json.model.AddMembersToUserGroupDto;
 import org.openapi.quarkus.internal_json.model.DelegationResponse;
+import org.openapi.quarkus.internal_json.model.DeleteMembersFromUserGroupDto;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
 import java.time.Duration;
@@ -384,12 +386,12 @@ public class UserInstitutionCdcService {
                 .filter(p -> Boolean.TRUE.equals(p.getToAddOnAggregates()) && p.getRoleId() != null)
                 .forEach(p -> {
                     final String parentInstitutionId = userInstitutionChanged.getInstitutionId();
-                    final String userId = userInstitutionChanged.getUserId();
+                    final String parentName = userInstitutionChanged.getInstitutionDescription();
                     getDelegations(parentInstitutionId, p.getProductId())
                             .onItem().transformToUniAndConcatenate(d ->
                                     upsertUserOnAggregate(userInstitutionChanged, p, d)
-                                            .onItem().transformToUni(r ->
-                                                    addUserToAggregatorGroup(d.getInstitutionId(), parentInstitutionId, p.getProductId(), userId)
+                                            .onItem().transformToUni(updatedUser ->
+                                                    keepOrDeleteUserFromAggregatorGroup(updatedUser, parentInstitutionId, parentName, p.getProductId())
                                                             .onFailure().recoverWithNull()
                                             )
                                             .onFailure().recoverWithNull()
@@ -434,7 +436,7 @@ public class UserInstitutionCdcService {
                 });
     }
 
-    private Uni<Void> upsertUserOnAggregate(UserInstitution parentUser, OnboardedProduct parentProduct, DelegationResponse delegation) {
+    private Uni<UserInstitution> upsertUserOnAggregate(UserInstitution parentUser, OnboardedProduct parentProduct, DelegationResponse delegation) {
         final String aggregateId = delegation.getInstitutionId();
         final String aggregateDescription = delegation.getInstitutionName();
         final String aggregateInstitutionType = delegation.getInstitutionType();
@@ -479,23 +481,46 @@ public class UserInstitutionCdcService {
         }
     }
 
-    private Uni<Response> addUserToAggregatorGroup(String institutionId, String parentInstitutionId, String productId, String userId) {
+    private Uni<Response> keepOrDeleteUserFromAggregatorGroup(UserInstitution updatedUser, String parentInstitutionId, String parentName, String productId) {
+        final String institutionId = updatedUser.getInstitutionId();
+        final String userId = updatedUser.getUserId();
+
         if (!addOnAggregatesGroupProducts.contains(productId)) {
-            log.info("Skipping adding user {} to group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            log.info("Skipping adding user {} to group of institution {} and parentInstitutionId {}: Function not enabled for the product {}", userId, institutionId, parentInstitutionId, productId);
             return Uni.createFrom().item(Response.status(Response.Status.OK).build());
         }
 
-        log.info("Adding user {} to group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
-        final AddMembersToUserGroupDto addMembersToUserGroupDto = AddMembersToUserGroupDto.builder()
-                .institutionId(institutionId)
-                .parentInstitutionId(parentInstitutionId)
-                .productId(productId)
-                .members(Set.of(UUID.fromString(userId)))
-                .build();
-        return userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(addMembersToUserGroupDto)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
-                .onFailure().invoke(t -> log.error("Error adding user {} to group of institution {} with parentInstitutionId {}: {}", userId, institutionId, parentInstitutionId, t.getMessage()))
-                .onItem().invoke(r -> log.info("Added user {} on group of institution {} with parentInstitutionId {} - status {}", userId, institutionId, parentInstitutionId, r.getStatus()));
+        final boolean isUserActiveOrSuspended = updatedUser.getProducts().stream().anyMatch(p ->
+                productId.equals(p.getProductId()) &&
+                (OnboardedProductState.ACTIVE.equals(p.getStatus()) || OnboardedProductState.SUSPENDED.equals(p.getStatus()))
+        );
+
+        if (isUserActiveOrSuspended) {
+            log.info("Keeping user {} inside group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            final AddMembersToUserGroupDto addMembersToUserGroupDto = AddMembersToUserGroupDto.builder()
+                    .institutionId(institutionId)
+                    .parentInstitutionId(parentInstitutionId)
+                    .description("Questo gruppo contiene gli utenti dell'Ente Aggregatore '" + parentName + "'")
+                    .name(parentName)
+                    .productId(productId)
+                    .members(Set.of(UUID.fromString(userId)))
+                    .build();
+            return userGroupApi.addMembersToUserGroupWithParentInstitutionIdUsingPUT(addMembersToUserGroupDto)
+                    .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                    .onFailure().invoke(t -> log.error("Error adding user {} to group of institution {} with parentInstitutionId {} and productId {}: {}", userId, institutionId, parentInstitutionId, productId, t.getMessage()))
+                    .onItem().invoke(r -> log.info("Added user {} to group of institution {} with parentInstitutionId {} and productId {} - status {}", userId, institutionId, parentInstitutionId, productId, r.getStatus()));
+        } else {
+            log.info("Removing user {} from group of institution {}, parentInstitutionId {} and product {}", userId, institutionId, parentInstitutionId, productId);
+            DeleteMembersFromUserGroupDto deleteMembersFromUserGroupDto = new DeleteMembersFromUserGroupDto();
+            deleteMembersFromUserGroupDto.setInstitutionId(institutionId);
+            deleteMembersFromUserGroupDto.setParentInstitutionId(parentInstitutionId);
+            deleteMembersFromUserGroupDto.setProductId(productId);
+            deleteMembersFromUserGroupDto.setMembers(Set.of(UUID.fromString(userId)));
+            return userGroupApi.deleteMembersFromUserGroupWithParentInstitutionIdUsingDELETE(deleteMembersFromUserGroupDto)
+                    .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
+                    .onFailure().invoke(t -> log.error("Error removing user {} from group of institution {} with parentInstitutionId {}: {}", userId, institutionId, parentInstitutionId, t.getMessage()))
+                    .onItem().invoke(r -> log.info("Removed user {} from group of institution {} with parentInstitutionId {} and productId {} - status {}", userId, institutionId, parentInstitutionId, productId, r.getStatus()));
+        }
     }
 
 }
