@@ -569,9 +569,11 @@ public class UserServiceImpl implements UserService {
         OnboardedProductState currentStatus = retrieveUserStatusOnProduct(userInstitution, userDto.getProduct().getProductId());
 
         if (roleOnProduct.equals(newRole)) {
-            log.info("User {} already has {} role with status {}. Updating mail and toAddOnAggregates.", Encode.forJava(newRole.toString()), Encode.forJava(userId), currentStatus);
+            log.info("User {} already has {} role with status {}. Updating mail and toAddOnAggregates.",
+                    Encode.forJava(newRole.toString()), Encode.forJava(userId), currentStatus);
+
             return updateUserMailAndToAddOnAggregates(userInstitution, userDto)
-                    .onItem().transformToUni(ignore -> Uni.createFrom().failure(
+                    .flatMap(ignore -> Uni.createFrom().failure(
                             new UserRoleAlreadyPresentException(
                                     String.format("User already has %s role with status %s for product [%s].",
                                             roleOnProduct, currentStatus, userDto.getProduct().getProductId()))));
