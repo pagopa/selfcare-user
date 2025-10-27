@@ -3439,7 +3439,7 @@ Feature: User
     And The response body contains the list "[0].products" of size 1
     And The response body contains at path "[0].products" the following list of objects in any order:
       | productId                     | tokenId                                       | role                  | productRole               | status     |
-      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED     |
+      | prod-io                       | 7a3df825-8317-4601-9fea-12283b7ed97f          | DELEGATE              | referente amministrativo  | SUSPENDED  |
     And The response body contains field "[0].products[0].roleId"
 
   Scenario: Unsuccessfully update or create a user by userId after check if user is a manager for the specified product (with wrong userId)
