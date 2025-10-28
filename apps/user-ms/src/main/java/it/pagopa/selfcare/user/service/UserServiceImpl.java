@@ -533,7 +533,7 @@ public class UserServiceImpl implements UserService {
                             product.setToAddOnAggregates(dtoProduct.getToAddOnAggregates());
                             product.setUpdatedAt(OffsetDateTime.now());
                             log.info("Updated product {} for user {}: toAddOnAggregates={}, updatedAt={}",
-                                    productId, userInstitution.getUserId(), dtoProduct.getToAddOnAggregates(), product.getUpdatedAt());
+                            Encode.forJava(productId), Encode.forJava(userInstitution.getUserId()), Encode.forJava(String.valueOf(dtoProduct.getToAddOnAggregates())), Encode.forJava(String.valueOf(product.getUpdatedAt())));
                         })
                 );
 
