@@ -30,7 +30,7 @@ module "mongodb_collection_user_institutions" {
     },
     {
       keys   = ["userId", "institutionId"]
-      unique = false
+      unique = true
     }
   ]
 
