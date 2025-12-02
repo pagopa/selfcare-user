@@ -4441,6 +4441,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:ViewContract                 |
 
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-io-sign)
     Given User login with username "j.doe" and password "test"
@@ -4856,6 +4857,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE)
@@ -4894,6 +4896,7 @@ Feature: User
       | Selc:ListProductGroups            |
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod pago-pa)
@@ -4928,6 +4931,7 @@ Feature: User
       | Selc:ManageProductGroups          |
       | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
+      | Selc:ViewContract                 |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod io)
