@@ -20,7 +20,7 @@
   <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>onboarding-sdk-azure-storage</artifactId>
-    <version>0.14.0</version>
+    <version>${onboarding-sdk.version}</version>
   </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
