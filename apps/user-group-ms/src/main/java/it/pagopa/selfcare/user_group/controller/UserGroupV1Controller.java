@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -188,7 +189,7 @@ public class UserGroupV1Controller {
                                                  @RequestParam(value = "sort", required = false) String sort) {
         log.trace("getUserGroups start");
         final Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 20, sort != null ? userGroupMapper.toSort(sort) : Sort.unsorted());
-        log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", Encode.forJava(institutionId), Encode.forJava(productId), pageable, status);
+        log.debug("getUserGroups institutionId = {}, productId = {}, pageable = {}, status = {}", Encode.forJava(institutionId), Encode.forJava(productId), pageable, Encode.forJava(Objects.toString(status)));
         UserGroupFilter filter = new UserGroupFilter(institutionId, productId, memberId, status, parentInstitutionId);
         Page<UserGroupResource> result = PageMapper.map(groupService.getUserGroups(filter, pageable)
                 .map(userGroupMapper::toResource));
