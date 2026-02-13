@@ -174,12 +174,12 @@ public class UserGroupV1Controller {
                                                  @RequestParam(value = "status", required = false) List<UserGroupStatus> status,
                                                  @Parameter(description = "${swagger.user-group.model.parentInstitutionId}")
                                                  @RequestParam(value = "parentInstitutionId", required = false) String parentInstitutionId,
-                                                 @Parameter(description = "The page number to access (0 indexed, defaults to 0)", allowReserved = true)
+                                                 @Parameter(description = "${swagger.pageable.page}", allowReserved = true)
                                                  @RequestParam(value = "page", required = false) Integer page,
-                                                 @Parameter(description = "Number of records per page (defaults to 20, max 2000)", allowReserved = true)
+                                                 @Parameter(description = "${swagger.pageable.size}", allowReserved = true)
                                                  @RequestParam(value = "size", required = false) Integer size,
                                                  @Parameter(
-                                                         description = "Sorting criteria in the format: property(,asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+                                                         description = "${swagger.pageable.sort}",
                                                          allowReserved = true,
                                                          style = ParameterStyle.FORM,
                                                          explode = Explode.DEFAULT,
