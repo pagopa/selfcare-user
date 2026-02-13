@@ -57,7 +57,7 @@ public class UserGroupV1Controller {
             })
     public UserGroupResource createGroup(@RequestBody @Valid CreateUserGroupDto group) {
         log.trace("createGroup start");
-        log.debug("createGroup group = {}", group);
+        log.debug("createGroup group = {}", Encode.forJava(group.toString()));
         UserGroupOperations groupOperations = groupService.createGroup(userGroupMapper.fromDto(group));
         UserGroupResource result = userGroupMapper.toResource(groupOperations);
         log.debug("createGroup result = {}", result);
