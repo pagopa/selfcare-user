@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.util;
+package it.pagopa.selfcare.user.util.product;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -16,11 +16,8 @@ public class ProductIdValidator
     public boolean isValid(String value, ConstraintValidatorContext context) {
 
         if (value == null || value.isBlank()) {
-            return true; // opzionale
+            return true;
         }
-
-        normalizer.normalizeAndValidateIfPresent(value);
-
-        return true;
+        return normalizer.isAllowed(value);
     }
 }

@@ -9,10 +9,11 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserPermissionService;
 import it.pagopa.selfcare.user.util.UserUtils;
+import it.pagopa.selfcare.user.util.product.ProductCache;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -30,10 +31,21 @@ class UserPermissionControllerTest {
     @InjectMock
     UserUtils userUtils;
 
+    @InjectMock
+    ProductCache productCache;
+
+    @BeforeEach
+    void setup() {
+
+        when(productCache.isAllowed("prod-io")).thenReturn(true);
+        when(productCache.mapToParent("prod-io")).thenReturn("prod-io");
+        when(productCache.isAllowed("no-existing-prod")).thenReturn(false);
+    }
+
     private final String institutionIdField = "institutionId";
     private final String productIdField = "productId";
     private final String institutionId = UUID.randomUUID().toString();
-    private final  String productId = "prod-io";
+    private final String productId = "prod-io";
     private final String userId = UUID.randomUUID().toString();
 
     @Test
@@ -48,6 +60,25 @@ class UserPermissionControllerTest {
                 .get("/")
                 .then()
                 .statusCode(401);
+
+        // Verify that the methods were not called
+        verifyNoInteractions(userPermissionService);
+    }
+
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testGetPermission_noExistingProduct() {
+        // Mock input parameters
+
+        // Perform the API call without providing the permission query parameter
+        given()
+                .queryParam(institutionIdField, institutionId)
+                .queryParam(productIdField, "no-existing-product")
+                .when()
+                .get("/")
+                .then()
+                .statusCode(400);
 
         // Verify that the methods were not called
         verifyNoInteractions(userPermissionService);

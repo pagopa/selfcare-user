@@ -1,5 +1,6 @@
-package it.pagopa.selfcare.user.util;
+package it.pagopa.selfcare.user.util.product;
 
+import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -11,6 +12,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = ProductIdValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
+@JacksonAnnotationsInside
 @JsonDeserialize(using = ProductIdDeserializer.class)
 public @interface ProductIdParam {
 

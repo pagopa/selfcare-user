@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.user.util;
+package it.pagopa.selfcare.user.util.product;
 
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
@@ -42,7 +42,7 @@ public class ProductIdParamConverterProvider implements ParamConverterProvider {
 
         @Override
         public String fromString(String value) {
-            return normalizer.normalizeAndValidateIfPresent(value);
+            return normalizer.normalize(value);
         }
 
         @Override
