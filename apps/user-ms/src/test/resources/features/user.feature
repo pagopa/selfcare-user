@@ -153,12 +153,12 @@ Feature: User
       | status        | 404                                                                |
       | title         | User having userId 97a511a7-2acc-47b9-afed-2f3c65753b4a not found  |
 
-  Scenario: Unsuccessfully get user info given userId and no existing productId
+  Scenario: Unsuccessfully get user info given userId and non-existent productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id            | 97a511a7-2acc-47b9-afed-2f3c65753b4a                               |
     And The following query params:
-      | productId     | no-existing-prod                                                   |
+      | productId     | non-existent-prod                                                  |
     When I send a GET request to "users/{id}"
     Then The status code is 400
     And The response body contains string:
@@ -867,12 +867,12 @@ Feature: User
       | title                      | USER TO UPDATE NOT FOUND                            |
 
   # productid non esistente
-  Scenario: Unsuccessfully delete logically the association institution and product because of no existing product id
+  Scenario: Unsuccessfully delete logically the association institution and product because of non-existent product id
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | userId                     | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                |
       | institutionId              | f2e4d6c8-9876-5432-ba10-abcdef123456                |
-      | productId                  | no-existing-prod                                   |
+      | productId                  | non-existent-prod                                   |
     When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
     Then The status code is 400
     And The response body contains string:
@@ -1751,13 +1751,13 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  Scenario: Unsuccessfully update user status with no existing productId
+  Scenario: Unsuccessfully update user status with non-existent productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | productId       | no-existing-prod                                            |
+      | productId       | non-existent-prod                                           |
     When I send a PUT request to "users/{id}/status"
     Then The status code is 400
     And The response body contains string:
@@ -1940,10 +1940,10 @@ Feature: User
     Then The status code is 200
     And The response body contains the list "users" of size 0
 
-  Scenario: Unsuccessfully retrieve all SC-User for DataLake with no existing productId filter
+  Scenario: Unsuccessfully retrieve all SC-User for DataLake with non-existent productId filter
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | no-existing-prod |
+      | productId | non-existent-prod |
     When I send a GET request to "users/notification"
     Then The status code is 400
     And The response body contains string:
@@ -2947,12 +2947,12 @@ Feature: User
     And The response body contains string:
       | Something has gone wrong in the server                                           |
 
-  Scenario: Unsuccessfully update user product status with no existing productId
+  Scenario: Unsuccessfully update user product status with non-existent productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                 |
       | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
-      | productId                  | no-existing-prod                                     |
+      | productId                  | non-existent-prod                                    |
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
@@ -4239,7 +4239,7 @@ Feature: User
     And The response body contains the list "" of size 0
 
   @RemoveUserInstitutionWithMockUser3
-  Scenario: Unsuccessfully create a new user or update an existing one (with no existing productId)
+  Scenario: Unsuccessfully create a new user or update an existing one (with non-existent productId)
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21          |
@@ -4258,7 +4258,7 @@ Feature: User
             "institutionEmail": "prova@email.com"
           },
           "product": {
-              "productId": "no-existing-prod",
+              "productId": "non-existent-prod",
               "role": "DELEGATE",
               "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
               "productRoles": [
@@ -5445,14 +5445,14 @@ Feature: User
       | title                             | User having userId [35a78332-d038-4bfa-8e85-2cba7f6b7bf7] and institutionId [d0d28367-1695-4c50-a260-6fda526e9aab] not found    |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
-  Scenario: Unsuccessfully retrieves userInstitution data with list of actions permitted for each user's product (with no existing productId filter)
+  Scenario: Unsuccessfully retrieves userInstitution data with list of actions permitted for each user's product (with non-existent productId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-ciban"
     And The following path params:
       | userId                            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                                                                                            |
       | institutionId                     | d0d28367-1695-4c50-a260-6fda526e9aab                                                                                            |
     And The following query params:
-      | productId                         | no-existing-prod                                                                                                                |
+      | productId                         | non-existent-prod                                                                                                               |
     When I send a GET request to "users/{userId}/institutions/{institutionId}"
     Then The status code is 400
     And The response body contains string:

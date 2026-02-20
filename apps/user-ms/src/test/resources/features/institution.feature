@@ -545,11 +545,11 @@ Feature: Institution
       | title                         | USERS TO UPDATE NOT FOUND                      |
 
 
-  Scenario: Unsuccessfully update user's onboarded product creation date (no existing productId)
+  Scenario: Unsuccessfully update user's onboarded product creation date (non-existent productId)
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
-      | productId                     | no-existing-prod                               |
+      | productId                     | non-existent-prod                              |
     And The following query params:
       | createdAt                     | 2024-03-18T12:34:56Z                           |
       | userIds                       | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7           |
@@ -780,7 +780,7 @@ Feature: Institution
     And The response body contains string:
       | false |
 
-  Scenario: Unsuccessfully retrieve check user with no existing product
+  Scenario: Unsuccessfully retrieve check user with non-existent product
     Given User login with username "r.balboa" and password "test"
     And The following request body:
       """
@@ -790,7 +790,7 @@ Feature: Institution
       """
     And The following path params:
       | institutionId  | a1b2c3d4-5678-90ab-cdef-1234567890ab  |
-      | productId      | no-existing-prod                      |
+      | productId      | non-existent-prod                     |
     When I send a POST request to "institutions/{institutionId}/product/{productId}/check-user"
     Then The status code is 400
 

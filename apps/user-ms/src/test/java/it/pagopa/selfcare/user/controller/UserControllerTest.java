@@ -69,7 +69,7 @@ class UserControllerTest {
         when(productCache.isAllowed("prod-dashboard-psp")).thenReturn(true);
         when(productCache.mapToParent("prod-dashboard-psp")).thenReturn("prod-pagopa");
 
-        when(productCache.isAllowed("no-existing-prod")).thenReturn(false);
+        when(productCache.isAllowed("non-existent-prod")).thenReturn(false);
     }
 
     private static final UserResource userResource;
@@ -119,7 +119,7 @@ class UserControllerTest {
     void getUsersEmailByInstitution_noExistingProduct() {
 
         var institutionId = "institutionId";
-        var productId = "no-existing-prod";
+        var productId = "non-existent-prod";
 
         given()
                 .when()
@@ -987,7 +987,7 @@ class UserControllerTest {
         user.setName("name");
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
-        product.setProductId("no-existing-prod");
+        product.setProductId("non-existent-prod");
         product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));

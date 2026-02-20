@@ -39,7 +39,7 @@ class UserPermissionControllerTest {
 
         when(productCache.isAllowed("prod-io")).thenReturn(true);
         when(productCache.mapToParent("prod-io")).thenReturn("prod-io");
-        when(productCache.isAllowed("no-existing-prod")).thenReturn(false);
+        when(productCache.isAllowed("non-existent-prod")).thenReturn(false);
     }
 
     private final String institutionIdField = "institutionId";
@@ -74,7 +74,7 @@ class UserPermissionControllerTest {
         // Perform the API call without providing the permission query parameter
         given()
                 .queryParam(institutionIdField, institutionId)
-                .queryParam(productIdField, "no-existing-product")
+                .queryParam(productIdField, "non-existent-product")
                 .when()
                 .get("/")
                 .then()
