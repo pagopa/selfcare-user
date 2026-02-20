@@ -33,8 +33,6 @@ import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static io.smallrye.jwt.config.ConfigLogging.log;
-
 @Authenticated
 @Path("/institutions")
 @Tag(name = "Institution")
@@ -167,7 +165,6 @@ public class InstitutionController {
     public Uni<Boolean> checkUser(@PathParam(value = "institutionId") String institutionId,
                                   @ProductIdParam @PathParam(value = "productId") String productId,
                                   @Valid SearchUserDto searchUserDto) {
-        log.info("product %s".formatted(productId));
         return userService.checkUser(searchUserDto.getFiscalCode(), institutionId, productId);
     }
 

@@ -319,7 +319,6 @@ public class UserController {
     public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
                                                 @Valid AddUserRoleDto userDto,
                                                 @Context SecurityContext ctx) {
-        log.info("PRODUCT ID IN SERVICE: {}", userDto.getProduct().getProductId());
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser, OnboardedProductState.ACTIVE))
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
@@ -373,7 +372,6 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
                                                   @Context SecurityContext ctx) {
-        log.info("PRODUCT ID IN SERVICE: {}", userDto.getProduct().getProductId());
         return readUserIdFromToken(ctx)
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response
