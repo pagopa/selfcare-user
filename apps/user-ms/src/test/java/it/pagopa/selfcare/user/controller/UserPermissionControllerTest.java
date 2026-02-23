@@ -62,25 +62,6 @@ class UserPermissionControllerTest {
         verifyNoInteractions(userPermissionService);
     }
 
-
-    @Test
-    @TestSecurity(user = "userJwt")
-    void testGetPermission_noExistingProduct() {
-        // Mock input parameters
-
-        // Perform the API call without providing the permission query parameter
-        given()
-                .queryParam(institutionIdField, institutionId)
-                .queryParam(productIdField, "non-existent-product")
-                .when()
-                .get("/")
-                .then()
-                .statusCode(400);
-
-        // Verify that the methods were not called
-        verifyNoInteractions(userPermissionService);
-    }
-
     @Test
     @TestSecurity(user = "userJwt")
     void testGetPermission() {

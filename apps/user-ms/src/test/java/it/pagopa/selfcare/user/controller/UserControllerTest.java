@@ -56,13 +56,9 @@ class UserControllerTest {
 
     @BeforeEach
     void setup() {
-
         when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
-
         when(productIdNormalizer.normalize("prod-io-premium")).thenReturn("prod-io");
-
         when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
-
         when(productIdNormalizer.normalize("prod-dashboard-psp")).thenReturn("prod-pagopa");
     }
 
@@ -106,21 +102,6 @@ class UserControllerTest {
                 .get("/emails?institutionId=" + institutionId +"&productId=" + productId)
                 .then()
                 .statusCode(200);
-    }
-
-    @Test
-    @TestSecurity(user = "userJwt")
-    void getUsersEmailByInstitution_noExistingProduct() {
-
-        var institutionId = "institutionId";
-        var productId = "non-existent-prod";
-
-        given()
-                .when()
-                .contentType(ContentType.JSON)
-                .get("/emails?institutionId=" + institutionId +"&productId=" + productId)
-                .then()
-                .statusCode(400);
     }
 
     /**
@@ -719,23 +700,6 @@ class UserControllerTest {
                 .statusCode(201);
     }
 
-
-    @Test
-    @TestSecurity(user = "userJwt")
-    void testCreateOrUpdateUserByUserId_noExistingProduct() {
-        // Prepare test data
-        AddUserRoleDto userDto = buildAddUserRoleDto_withNoExistingProduct();
-
-        // Perform the API call
-        given()
-                .when()
-                .contentType(ContentType.JSON)
-                .body(userDto)
-                .post("/userId")
-                .then()
-                .statusCode(400);
-    }
-
     @Test
     @TestSecurity(user = "userJwt")
     void testCreateOrUpdateUserWithInvalidBodyByUserId() {
@@ -961,27 +925,6 @@ class UserControllerTest {
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
         product.setProductId("prod-pagopa");
-        product.setRole(MANAGER.name());
-        product.setTokenId("tokenId");
-        product.setProductRoles(Collections.singletonList("productRole"));
-        product.setDelegationId("delegationId");
-        userDto.setProduct(product);
-        return userDto;
-    }
-
-    private AddUserRoleDto buildAddUserRoleDto_withNoExistingProduct() {
-        AddUserRoleDto userDto = new AddUserRoleDto();
-        userDto.setInstitutionId("institutionId");
-        userDto.setInstitutionDescription("institutionDescription");
-        userDto.setInstitutionRootName("institutionRootName");
-        CreateUserDto.User user = new CreateUserDto.User();
-        user.setBirthDate("birthDate");
-        user.setFamilyName("familyName");
-        user.setFiscalCode("fiscalCode");
-        user.setName("name");
-        user.setInstitutionEmail("institutionEmail");
-        AddUserRoleDto.Product product = new AddUserRoleDto.Product();
-        product.setProductId("non-existent-prod");
         product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));

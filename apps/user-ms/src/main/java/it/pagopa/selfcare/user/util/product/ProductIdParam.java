@@ -2,7 +2,6 @@ package it.pagopa.selfcare.user.util.product;
 
 import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
@@ -13,10 +12,4 @@ import java.lang.annotation.*;
 @JacksonAnnotationsInside
 @JsonDeserialize(using = ProductIdDeserializer.class)
 public @interface ProductIdParam {
-
-    String message() default "Invalid productId";
-
-    Class<?>[] groups() default {};
-
-    Class<? extends Payload>[] payload() default {};
 }

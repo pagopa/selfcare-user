@@ -38,9 +38,7 @@ class InstitutionControllerTest {
 
     @BeforeEach
     void setup() {
-
         when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
-
         when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
     }
 

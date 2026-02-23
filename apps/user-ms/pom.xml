@@ -215,10 +215,6 @@
             <version>${quarkus-cucumber-version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-scheduler-api</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
