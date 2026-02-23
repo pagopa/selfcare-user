@@ -9,7 +9,7 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserPermissionService;
 import it.pagopa.selfcare.user.util.UserUtils;
-import it.pagopa.selfcare.user.util.product.ProductCache;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -32,14 +32,11 @@ class UserPermissionControllerTest {
     UserUtils userUtils;
 
     @InjectMock
-    ProductCache productCache;
+    ProductIdNormalizer productIdNormalizer;
 
     @BeforeEach
     void setup() {
-
-        when(productCache.isAllowed("prod-io")).thenReturn(true);
-        when(productCache.mapToParent("prod-io")).thenReturn("prod-io");
-        when(productCache.isAllowed("non-existent-prod")).thenReturn(false);
+        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
     }
 
     private final String institutionIdField = "institutionId";

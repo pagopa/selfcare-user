@@ -17,7 +17,7 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
-import it.pagopa.selfcare.user.util.product.ProductCache;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -34,16 +34,14 @@ import static org.mockito.Mockito.when;
 @TestHTTPEndpoint(InstitutionController.class)
 class InstitutionControllerTest {
     @InjectMock
-    ProductCache productCache;
+    ProductIdNormalizer productIdNormalizer;
 
     @BeforeEach
     void setup() {
 
-        when(productCache.isAllowed("prod-io")).thenReturn(true);
-        when(productCache.mapToParent("prod-io")).thenReturn("prod-io");
+        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
 
-        when(productCache.mapToParent("prod-pagopa")).thenReturn("prod-pagopa");
-        when(productCache.isAllowed("prod-pagopa")).thenReturn(true);
+        when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
     }
 
     @InjectMock

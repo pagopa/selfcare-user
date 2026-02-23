@@ -27,7 +27,7 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
-import it.pagopa.selfcare.user.util.product.ProductCache;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,24 +52,18 @@ class UserControllerTest {
     private UserRegistryService userRegistryService;
 
     @InjectMock
-    ProductCache productCache;
+    ProductIdNormalizer productIdNormalizer;
 
     @BeforeEach
     void setup() {
 
-        when(productCache.isAllowed("prod-io")).thenReturn(true);
-        when(productCache.mapToParent("prod-io")).thenReturn("prod-io");
+        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
 
-        when(productCache.isAllowed("prod-io-premium")).thenReturn(true);
-        when(productCache.mapToParent("prod-io-premium")).thenReturn("prod-io");
+        when(productIdNormalizer.normalize("prod-io-premium")).thenReturn("prod-io");
 
-        when(productCache.isAllowed("prod-pagopa")).thenReturn(true);
-        when(productCache.mapToParent("prod-pagopa")).thenReturn("prod-pagopa");
+        when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
 
-        when(productCache.isAllowed("prod-dashboard-psp")).thenReturn(true);
-        when(productCache.mapToParent("prod-dashboard-psp")).thenReturn("prod-pagopa");
-
-        when(productCache.isAllowed("non-existent-prod")).thenReturn(false);
+        when(productIdNormalizer.normalize("prod-dashboard-psp")).thenReturn("prod-pagopa");
     }
 
     private static final UserResource userResource;

@@ -1,14 +1,21 @@
 package it.pagopa.selfcare.user.util.product;
 
+import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.exception.ProductNotFoundException;
+import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import java.util.Optional;
 
 @ApplicationScoped
 public class ProductIdNormalizer {
 
-    private final ProductCache productCache;
+    private final ProductService productService;
 
-    public ProductIdNormalizer(ProductCache productCache) {
-        this.productCache = productCache;
+    @Inject
+    public ProductIdNormalizer(ProductService productService) {
+        this.productService = productService;
     }
 
     public String normalize(String productId) {
@@ -17,10 +24,15 @@ public class ProductIdNormalizer {
             return productId;
         }
 
-        return productCache.mapToParent(productId);
-    }
+        try {
+            Product product = productService.getProduct(productId);
 
-    public boolean isAllowed(String productId) {
-        return productCache.isAllowed(productId);
+            return Optional.ofNullable(product)
+                    .map(Product::getParentId)
+                    .filter(parent -> parent != null && !parent.isBlank())
+                    .orElse(productId);
+        } catch (ProductNotFoundException ex) {
+            return productId;
+        }
     }
 }
