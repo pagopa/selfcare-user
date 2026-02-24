@@ -28,6 +28,11 @@ class ProductIdNormalizerTest {
     }
 
     @Test
+    void shouldReturnBlankWhenProductIdIsBlank() {
+        assertEquals(" ", normalizer.normalize(" "));
+    }
+
+    @Test
     void shouldReturnSameIdWhenProductHasNoParent() {
         String productId = "prod-1";
 
@@ -54,6 +59,18 @@ class ProductIdNormalizerTest {
         assertEquals(parentId, normalizer.normalize(productId));
     }
 
+    @Test
+    void shouldReturnSameIdWhenParentIsBlank() {
+        String productId = "prod-1";
+
+        Product product = new Product();
+        product.setId(productId);
+        product.setParentId(" ");
+
+        when(productService.getProduct(productId)).thenReturn(product);
+
+        assertEquals(productId, normalizer.normalize(productId));
+    }
 
     @Test
     void shouldReturnSameIdWhenProductNotFound() {
