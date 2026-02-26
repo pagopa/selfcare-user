@@ -9,10 +9,11 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.service.UserPermissionService;
 import it.pagopa.selfcare.user.util.UserUtils;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -30,10 +31,18 @@ class UserPermissionControllerTest {
     @InjectMock
     UserUtils userUtils;
 
+    @InjectMock
+    ProductIdNormalizer productIdNormalizer;
+
+    @BeforeEach
+    void setup() {
+        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
+    }
+
     private final String institutionIdField = "institutionId";
     private final String productIdField = "productId";
     private final String institutionId = UUID.randomUUID().toString();
-    private final  String productId = "prod-io";
+    private final String productId = "prod-io";
     private final String userId = UUID.randomUUID().toString();
 
     @Test

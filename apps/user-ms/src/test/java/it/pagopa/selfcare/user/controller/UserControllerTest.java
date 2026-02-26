@@ -27,7 +27,9 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserRegistryService;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
+import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.*;
@@ -48,6 +50,17 @@ class UserControllerTest {
     private UserService userService;
     @InjectMock
     private UserRegistryService userRegistryService;
+
+    @InjectMock
+    ProductIdNormalizer productIdNormalizer;
+
+    @BeforeEach
+    void setup() {
+        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
+        when(productIdNormalizer.normalize("prod-io-premium")).thenReturn("prod-io");
+        when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
+        when(productIdNormalizer.normalize("prod-dashboard-psp")).thenReturn("prod-pagopa");
+    }
 
     private static final UserResource userResource;
 
@@ -81,7 +94,7 @@ class UserControllerTest {
                 .thenReturn(Uni.createFrom().item(List.of("test@test.it")));
 
         var institutionId = "institutionId";
-        var productId = "productId";
+        var productId = "prod-io";
 
         given()
                 .when()
@@ -98,7 +111,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void getUsersEmailWithNullInstitutionId() {
 
-        var productId = "productId";
+        var productId = "prod-pagopa";
 
         given()
                 .when()
@@ -115,7 +128,7 @@ class UserControllerTest {
     void getUsersEmailByInstitutionNotAuthorized() {
 
         var institutionId = "institutionId";
-        var productId = "productId";
+        var productId = "prod-pagopa";
 
         given()
                 .when()
@@ -272,8 +285,8 @@ class UserControllerTest {
 
         var user = "user1";
         var institution = "institution1";
-        var product = "product1";
-        when(userService.deleteUserInstitutionProduct("user1", "institution1", "product1"))
+        var product = "prod-io-premium";
+        when(userService.deleteUserInstitutionProduct("user1", "institution1", "prod-io"))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -301,7 +314,7 @@ class UserControllerTest {
 
         var user = "user123";
         var institution = "institution123";
-        var product = "prod-pagopa";
+        var product = "prod-dashboard-psp";
 
         when(userService.deleteUserInstitutionProduct("user123", "institution123", "prod-pagopa"))
                 .thenReturn(Uni.createFrom().voidItem());
@@ -379,7 +392,7 @@ class UserControllerTest {
 
     @Test
     void testGetUsersNotAuthorized() {
-        var productId = "productId";
+        var productId = "prod-pagopa";
 
         given().when()
                 .contentType(ContentType.JSON)
@@ -394,10 +407,10 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUsers() {
-        when(userService.findPaginatedUserNotificationToSend(0, 100, "productId"))
+        when(userService.findPaginatedUserNotificationToSend(0, 100, "prod-io"))
                 .thenReturn(Uni.createFrom().item( List.of(new UserNotificationToSend())));
 
-        var productId = "productId";
+        var productId = "prod-io";
 
         given()
                 .when()
@@ -532,7 +545,7 @@ class UserControllerTest {
 
         var user = "user1";
         var institution = "institution1";
-        var product = "product1";
+        var product = "prod-pagopa";
         Mockito.when(userService.updateUserProductStatus(eq(user), eq(institution), eq(product),  eq(OnboardedProductState.ACTIVE), eq(null), any()))
                 .thenThrow(InvalidRequestException.class);
 
@@ -603,8 +616,6 @@ class UserControllerTest {
     }
 
 
-
-
     @Test
     @TestSecurity(user = "userJwt")
     void testCreateOrUpdateUserByFiscalCode() {
@@ -623,6 +634,28 @@ class UserControllerTest {
                 .post("/")
                 .then()
                 .statusCode(200);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testCreateOrUpdateUserByFiscalCode_withChildProduct() {
+        // Prepare test data
+        CreateUserDto userDto = buildCreateUserDto_withChildProduct();
+
+        // Mock the userService.createOrUpdateUser method
+        when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
+                .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
+
+        // Perform the API call
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .body(userDto)
+                .post("/")
+                .then()
+                .statusCode(200);
+
+        verify(userService).createOrUpdateUserByFiscalCode(eq(buildCreateUserDto()), any());
     }
 
     @Test
@@ -752,11 +785,11 @@ class UserControllerTest {
         String PATH_INSTITUTION_ID = "institutionId";
         String PATH_GET_INSTITUTION_ID = "/{userId}/institutions/{institutionId}";
 
-        when(userService.getUserInstitutionWithPermission("userId", "institutionId", "productId"))
+        when(userService.getUserInstitutionWithPermission("userId", "institutionId", "prod-pagopa"))
                 .thenReturn(Uni.createFrom().item(new UserInstitutionWithActions()));
 
         Map<String, Object> queryParam = new HashMap<>();
-        queryParam.put("productId", "productId");
+        queryParam.put("productId", "prod-dashboard-psp");
 
         given()
                 .when()
@@ -850,7 +883,28 @@ class UserControllerTest {
         user.setInstitutionEmail("institutionEmail");
         userDto.setUser(user);
         CreateUserDto.Product product = new CreateUserDto.Product();
-        product.setProductId("productId");
+        product.setProductId("prod-io");
+        product.setRole(MANAGER.name());
+        product.setTokenId("tokenId");
+        product.setProductRoles(Collections.singletonList("productRole"));
+        userDto.setProduct(product);
+        return userDto;
+    }
+
+    private CreateUserDto buildCreateUserDto_withChildProduct() {
+        CreateUserDto userDto = new CreateUserDto();
+        userDto.setInstitutionId("institutionId");
+        userDto.setInstitutionDescription("institutionDescription");
+        userDto.setInstitutionRootName("institutionRootName");
+        CreateUserDto.User user = new CreateUserDto.User();
+        user.setBirthDate("birthDate");
+        user.setFamilyName("familyName");
+        user.setFiscalCode("fiscalCode");
+        user.setName("name");
+        user.setInstitutionEmail("institutionEmail");
+        userDto.setUser(user);
+        CreateUserDto.Product product = new CreateUserDto.Product();
+        product.setProductId("prod-io-premium");
         product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
@@ -870,7 +924,7 @@ class UserControllerTest {
         user.setName("name");
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
-        product.setProductId("productId");
+        product.setProductId("prod-pagopa");
         product.setRole(MANAGER.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
@@ -891,7 +945,7 @@ class UserControllerTest {
         user.setName("name");
         user.setInstitutionEmail("institutionEmail");
         AddUserRoleDto.Product product = new AddUserRoleDto.Product();
-        product.setProductId("productId");
+        product.setProductId("prod-io");
         product.setRole(PartyRole.DELEGATE.name());
         product.setTokenId("tokenId");
         product.setProductRoles(Collections.singletonList("productRole"));
