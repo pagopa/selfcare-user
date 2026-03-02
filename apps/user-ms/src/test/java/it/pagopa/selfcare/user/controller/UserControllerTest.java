@@ -51,15 +51,11 @@ class UserControllerTest {
     @InjectMock
     private UserRegistryService userRegistryService;
 
-    @InjectMock
-    ProductIdNormalizer productIdNormalizer;
-
     @BeforeEach
     void setup() {
-        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
-        when(productIdNormalizer.normalize("prod-io-premium")).thenReturn("prod-io");
-        when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
-        when(productIdNormalizer.normalize("prod-dashboard-psp")).thenReturn("prod-pagopa");
+        ProductIdNormalizer.clearParentIds();
+        ProductIdNormalizer.addParentId("prod-io-premium", "prod-io");
+        ProductIdNormalizer.addParentId("prod-dashboard-psp", "prod-pagopa");
     }
 
     private static final UserResource userResource;

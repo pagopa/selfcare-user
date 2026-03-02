@@ -1,84 +1,92 @@
 package it.pagopa.selfcare.user.util;
 
-import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
-import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class ProductIdNormalizerTest {
 
-    @InjectMock
-    ProductService productService;
+    @BeforeEach
+    void setup() {
+        ProductIdNormalizer.clearParentIds();
+        ProductIdNormalizer.addParentId("child", "parent");
 
-    @Inject
-    ProductIdNormalizer normalizer;
+        ProductService productService = Mockito.mock(ProductService.class);
+
+        Product prod1 = new Product();
+        prod1.setId("prod1");
+
+        Product prod2 = new Product();
+        prod2.setId("prod2");
+        prod2.setParentId("prod1");
+
+        Mockito.when(productService.getProducts(false, true))
+                .thenReturn(List.of(prod1, prod2));
+
+        QuarkusMock.installMockForType(productService, ProductService.class);
+    }
 
     @Test
     void shouldReturnNullWhenProductIdIsNull() {
-        assertNull(normalizer.normalize(null));
+        assertNull(ProductIdNormalizer.normalize(null));
     }
 
     @Test
     void shouldReturnBlankWhenProductIdIsBlank() {
-        assertEquals(" ", normalizer.normalize(" "));
+        assertEquals(" ", ProductIdNormalizer.normalize(" "));
     }
 
     @Test
     void shouldReturnSameIdWhenProductHasNoParent() {
-        String productId = "prod-1";
-
-        Product product = new Product();
-        product.setId(productId);
-        product.setParentId(null);
-
-        when(productService.getProduct(productId)).thenReturn(product);
-
-        assertEquals(productId, normalizer.normalize(productId));
+        final String productId = "prod-1";
+        assertEquals(productId, ProductIdNormalizer.normalize(productId));
     }
 
     @Test
     void shouldReturnParentIdWhenProductHasParent() {
-        String productId = "child";
-        String parentId = "parent";
-
-        Product product = new Product();
-        product.setId(productId);
-        product.setParentId(parentId);
-
-        when(productService.getProduct(productId)).thenReturn(product);
-
-        assertEquals(parentId, normalizer.normalize(productId));
-    }
-
-    @Test
-    void shouldReturnSameIdWhenParentIsBlank() {
-        String productId = "prod-1";
-
-        Product product = new Product();
-        product.setId(productId);
-        product.setParentId(" ");
-
-        when(productService.getProduct(productId)).thenReturn(product);
-
-        assertEquals(productId, normalizer.normalize(productId));
+        final String productId = "child";
+        final String parentId = "parent";
+        assertEquals(parentId, ProductIdNormalizer.normalize(productId));
     }
 
     @Test
     void shouldReturnSameIdWhenProductNotFound() {
-        String productId = "unknown";
-
-        when(productService.getProduct(productId))
-                .thenThrow(new ProductNotFoundException("Not found"));
-
-        assertEquals(productId, normalizer.normalize(productId));
+        final String productId = "unknown";
+        assertEquals(productId, ProductIdNormalizer.normalize(productId));
     }
+
+    @Test
+    void shouldAddParentId() {
+        final String productId = "new-child";
+        final String parentId = "new-parent";
+        ProductIdNormalizer.addParentId(productId, parentId);
+        assertEquals(parentId, ProductIdNormalizer.normalize(productId));
+        assertEquals("parent", ProductIdNormalizer.normalize("child"));
+    }
+
+    @Test
+    void shouldClearParentIds() {
+        ProductIdNormalizer.clearParentIds();
+        assertEquals("child", ProductIdNormalizer.normalize("child"));
+    }
+
+    @Test
+    void shouldUpdateParentIds() {
+        ProductIdNormalizer.updateParentIds();
+        assertEquals("parent", ProductIdNormalizer.normalize("child"));
+        assertEquals("prod1", ProductIdNormalizer.normalize("prod1"));
+        assertEquals("prod1", ProductIdNormalizer.normalize("prod2"));
+    }
+
 }

@@ -17,8 +17,6 @@ import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
-import it.pagopa.selfcare.user.util.product.ProductIdNormalizer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -28,19 +26,10 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @TestHTTPEndpoint(InstitutionController.class)
 class InstitutionControllerTest {
-    @InjectMock
-    ProductIdNormalizer productIdNormalizer;
-
-    @BeforeEach
-    void setup() {
-        when(productIdNormalizer.normalize("prod-io")).thenReturn("prod-io");
-        when(productIdNormalizer.normalize("prod-pagopa")).thenReturn("prod-pagopa");
-    }
 
     @InjectMock
     private UserService userService;

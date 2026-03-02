@@ -10,6 +10,6 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @JacksonAnnotationsInside
-@JsonDeserialize(using = ProductIdDeserializer.class)
-public @interface ProductIdParam {
+@JsonDeserialize(using = ProductIdNormalizer.class)
+public @interface ProductId {
 }

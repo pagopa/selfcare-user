@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.user.controller.request;
 
-import it.pagopa.selfcare.user.util.product.ProductIdParam;
+import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
@@ -14,7 +14,7 @@ public class SendMailDto {
     private String institutionName;
 
     @NotEmpty(message = "productId is required")
-    @ProductIdParam
+    @ProductId
     private String productId;
 
 }

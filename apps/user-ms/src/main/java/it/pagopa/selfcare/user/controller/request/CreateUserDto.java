@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.user.controller.request;
 
-import it.pagopa.selfcare.user.util.product.ProductIdParam;
+import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -44,7 +44,7 @@ public class CreateUserDto {
     public static class Product {
 
         @NotEmpty(message = "productId is required")
-        @ProductIdParam
+        @ProductId
         private String productId;
 
         @NotNull(message = "role is required")

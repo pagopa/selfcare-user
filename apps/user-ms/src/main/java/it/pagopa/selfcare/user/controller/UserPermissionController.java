@@ -5,7 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.service.UserPermissionService;
 import it.pagopa.selfcare.user.util.UserUtils;
-import it.pagopa.selfcare.user.util.product.ProductIdParam;
+import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -44,7 +44,7 @@ public class UserPermissionController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Boolean> getPermission(
             @QueryParam("institutionId") String institutionId,
-            @ProductIdParam @QueryParam("productId") String productId,
+            @ProductId @QueryParam("productId") String productId,
             @NotNull(message = "Permission type is required") @QueryParam("permission") PermissionTypeEnum permission,
             @Context SecurityContext ctx) {
 
