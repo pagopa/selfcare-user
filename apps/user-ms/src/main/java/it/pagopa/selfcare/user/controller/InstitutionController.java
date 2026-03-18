@@ -59,8 +59,11 @@ public class InstitutionController {
     @Tag(name = "support-pnpg")
     @Tag(name = "Institution")
     @Produces(MediaType.APPLICATION_JSON)
-    public Multi<UserProductResponse> getInstitutionUsers(@PathParam(value = "institutionId") String institutionId) {
-        return userService.getUserProductsByInstitution(institutionId);
+    public Multi<UserProductResponse> getInstitutionUsers(@PathParam(value = "institutionId") String institutionId,
+                                                          @QueryParam(value = "products") List<String> products,
+                                                          @QueryParam(value = "roles") List<String> roles,
+                                                          @QueryParam(value = "userId") String userId) {
+        return userService.getUserProductsByInstitution(institutionId, products, roles, userId);
     }
 
     @Operation(
