@@ -53,7 +53,7 @@ class InstitutionControllerTest {
     }
 
     /**
-     * Method under test: {@link InstitutionController#getInstitutionUsers(String, List, List, List, String) }
+     * Method under test: {@link InstitutionController#getInstitutionUsers(String, List, List, String) }
      */
     @Test
     @TestSecurity(user = "userJwt")
