@@ -980,7 +980,7 @@ public class UserServiceImpl implements UserService {
                                             .map(m -> m.getEmail().getValue()).orElse(null));
                                     return Uni.createFrom().item(response);
                                 }).orElseThrow()))
-                .onFailure().invoke(t -> log.error("Error retrieving OTP email info for userId {}: {}", userId, t.getMessage(), t))
+                .onFailure().invoke(t -> log.error("Error retrieving OTP email info for userId {}: {}", Encode.forJava(userId), t.getMessage(), t))
                 .onFailure().transform(t -> new ResourceNotFoundException("No OTP info found for user"));
     }
 
