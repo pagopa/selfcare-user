@@ -5421,7 +5421,7 @@ Feature: User
     When I send a GET request to "users/{userId}/otp-info"
     Then The status code is 404
 
-  Scenario: Not found when retrieving user OTP info with wrong userId
+  Scenario: Unauthorized when retrieving user OTP info with bad token
     Given A bad jwt token
     And The following path params:
       | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
