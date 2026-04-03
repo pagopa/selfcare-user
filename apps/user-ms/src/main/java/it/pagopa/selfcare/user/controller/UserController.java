@@ -454,7 +454,7 @@ public class UserController {
                         .status(HttpStatus.SC_ACCEPTED).build());
     }
 
-    @Operation(description = "Get the user's email configured to receive the OTP")
+    @Operation(description = "Get the user's email configured to receive the OTP", summary = "Get user's email for OTP")
     @GET
     @Tag(name = "User")
     @Path(value = "/{userId}/otp-info")
