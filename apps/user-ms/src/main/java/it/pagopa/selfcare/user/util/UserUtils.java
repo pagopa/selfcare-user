@@ -23,6 +23,7 @@ import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.user_registry_json.model.*;
+import org.owasp.encoder.Encode;
 
 import java.util.*;
 
@@ -53,7 +54,7 @@ public class UserUtils {
                 for (String productRole : productRoles) {
                     if (StringUtils.isNotBlank(productRole)) {
                         productService.validateProductRole(productId, productRole, role);
-                        log.debug("Product role {} is valid for product {}", productRole, productId);
+                        log.debug("Product role {} is valid for product {}", Encode.forJava(productRole), Encode.forJava(productId));
                     }
                 }
             } catch (IllegalArgumentException e) {
